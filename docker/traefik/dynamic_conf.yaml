@@ -1,0 +1,24 @@
+http:
+    routers:
+        traefik:
+            rule: "Host(`traefik.localhost`)"
+            service: "api@internal"
+            tls:
+                domains:
+                    -   main: "traefik.localhost"
+
+    serversTransports:
+        longTimeout:
+            forwardingTimeouts:
+                dialTimeout: 300s
+                responseHeaderTimeout: 300s
+                idleConnTimeout: 300s
+        vite:
+            forwardingTimeouts:
+                dialTimeout: 300s
+                responseHeaderTimeout: 0s
+                idleConnTimeout: 0s
+tls:
+    certificates:
+        -   certFile: "/etc/certs/local-cert.pem"
+            keyFile: "/etc/certs/local-key.pem"

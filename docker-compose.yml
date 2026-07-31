@@ -1,0 +1,184 @@
+services:
+  reverse-proxy:
+    image: traefik:v3.3
+    container_name: "${DOCKER_CONTAINER_NAME}_traefik"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik=true"
+      - "traefik.http.routers.traefik.tls=true"
+      - "traefik.http.services.traefik.loadbalancer.server.port=8080"
+    ports:
+      - ${TRAEFIK_HTTP_PORT}:80
+      - ${TRAEFIK_HTTPS_PORT}:443
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - ./docker/traefik/dynamic_conf.yaml:/etc/traefik/dynamic_conf.yaml:ro
+      - ./docker/traefik/traefik.yaml:/etc/traefik/traefik.yaml:ro
+      - ./certs:/etc/certs:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - network
+
+  php:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: "${DOCKER_CONTAINER_NAME}_php"
+    working_dir: /var/www
+    volumes:
+      - ./laravel/:/var/www
+      - ./.env:/var/www/.env
+      - ~/.ssh:/root/tmp/.ssh:ro
+    environment:
+      - "DB_HOST=database"
+      - "DB_PORT=3306"
+      - "REDIS_HOST=redis"
+      - "REDIS_PORT=6379"
+    networks:
+      - network
+    depends_on:
+      database:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  webserver:
+    build:
+      context: ./docker/nginx
+    container_name: "${DOCKER_CONTAINER_NAME}_webserver"
+    working_dir: /var/www
+    volumes:
+      - ./laravel/:/var/www
+    networks:
+      - network
+    depends_on:
+      - 'php'
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.littlesteps_webserver.rule=Host(`${APP_URL_TRAEFIK}`)"
+      - "traefik.http.routers.littlesteps_webserver.tls=true"
+      - "traefik.http.services.littlesteps_webserver.loadbalancer.server.port=80"
+      - "traefik.http.services.littlesteps_webserver.loadbalancer.serversTransport=longTimeout@file"
+
+  database:
+    image: mysql:8.4
+    container_name: "${DOCKER_CONTAINER_NAME}_database"
+    command: --mysql-native-password=OFF
+    volumes:
+      - dbdata:/var/lib/mysql
+      - ./docker/mysql/init:/docker-entrypoint-initdb.d
+    environment:
+      - "MYSQL_DATABASE=${DB_DATABASE}"
+      - "MYSQL_USER=${DB_USERNAME}"
+      - "MYSQL_PASSWORD=${DB_PASSWORD}"
+      - "MYSQL_ROOT_PASSWORD=${DB_PASSWORD}"
+    ports:
+      - ${DB_FORWARD_PORT}:3306
+    networks:
+      - network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p${DB_PASSWORD}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+
+  redis:
+    image: redis:8-alpine
+    container_name: "${DOCKER_CONTAINER_NAME}_redis"
+    command: redis-server --appendonly yes --requirepass "${REDIS_PASSWORD}"
+    ports:
+      - ${REDIS_FORWARD_PORT}:6379
+    volumes:
+      - redisdata:/data
+    networks:
+      - network
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  node:
+    image: node:24-alpine
+    container_name: "${DOCKER_CONTAINER_NAME}_node"
+    working_dir: /var/www
+    tty: true
+    command: ["sh", "-c", "npm install && npm run dev"]
+    volumes:
+      - ./laravel/:/var/www
+      - ./.env:/var/www/.env
+    networks:
+      - network
+    labels:
+      - "traefik.enable=true"
+      # Traefik v3 takes a single path per PathPrefix, so the Vite dev-server
+      # prefixes have to be OR'd together explicitly.
+      - "traefik.http.routers.littlesteps_vite.rule=Host(`${APP_URL_TRAEFIK}`) && (PathPrefix(`/@vite`) || PathPrefix(`/@id`) || PathPrefix(`/@fs`) || PathPrefix(`/node_modules`) || PathPrefix(`/resources`))"
+      - "traefik.http.routers.littlesteps_vite.tls=true"
+      - "traefik.http.routers.littlesteps_vite.priority=200"
+      - "traefik.http.services.littlesteps_vite.loadbalancer.server.port=5173"
+      - "traefik.http.services.littlesteps_vite.loadbalancer.serversTransport=vite@file"
+
+  # Queue worker
+  queue:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: "${DOCKER_CONTAINER_NAME}_queue"
+    working_dir: /var/www
+    command: ["php", "artisan", "queue:work", "--tries=3", "--timeout=300"]
+    restart: unless-stopped
+    volumes:
+      - ./laravel/:/var/www
+      - ./.env:/var/www/.env
+    environment:
+      - "DB_HOST=database"
+      - "DB_PORT=3306"
+      - "REDIS_HOST=redis"
+      - "REDIS_PORT=6379"
+    networks:
+      - network
+    depends_on:
+      database:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # Scheduler (cron)
+  scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: "${DOCKER_CONTAINER_NAME}_scheduler"
+    working_dir: /var/www
+    command: ["sh", "-c", "while true; do php artisan schedule:run --no-interaction; sleep 60; done"]
+    restart: unless-stopped
+    volumes:
+      - ./laravel/:/var/www
+      - ./.env:/var/www/.env
+    environment:
+      - "DB_HOST=database"
+      - "DB_PORT=3306"
+      - "REDIS_HOST=redis"
+      - "REDIS_PORT=6379"
+    networks:
+      - network
+    depends_on:
+      database:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  dbdata:
+  redisdata:
+
+networks:
+  network:
+    name: "${DOCKER_CONTAINER_NAME}_network"
+    driver: bridge

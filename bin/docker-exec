@@ -1,0 +1,87 @@
+#!/usr/bin/env bash
+
+if [ -f "$PWD/.env" ]; then
+    export $(cat "$PWD/.env" | grep -v '#' | awk '/=/ {print $1}')
+fi
+
+RED_TEXT='\033[0;31m'
+WHITE_TEXT='\033[0m'
+
+# Ensure that Docker is running...
+if ! docker info >/dev/null 2>&1; then
+    echo -e "${RED_TEXT}Docker is not running.${WHITE_TEXT}" >&2
+
+    exit 1
+fi
+
+PHP_CONTAINER="${DOCKER_CONTAINER_NAME}_php"
+DATABASE_CONTAINER="${DOCKER_CONTAINER_NAME}_database"
+NODE_CONTAINER="${DOCKER_CONTAINER_NAME}_node"
+
+# Use TTY flags only when running in an interactive terminal
+if [ -t 1 ]; then
+    TTY="-it"
+else
+    TTY=""
+fi
+
+# Proxy PHP commands to the "php" binary on the PHP container...
+if [ "$1" == "php" ]; then
+    shift 1
+    docker exec $TTY "$PHP_CONTAINER" php "$@"
+
+# Proxy composer commands to the "composer" binary on the PHP container...
+elif [ "$1" == "composer" ]; then
+    shift 1
+    docker exec $TTY "$PHP_CONTAINER" composer "$@"
+
+# Proxy npm commands to the "npm" binary on the NODE container...
+elif [ "$1" == "npm" ]; then
+    shift 1
+    docker exec $TTY "$NODE_CONTAINER" npm "$@"
+
+# Proxy npx commands to the "npx" binary on the NODE container...
+elif [ "$1" == "npx" ]; then
+    shift 1
+    docker exec $TTY "$NODE_CONTAINER" npx "$@"
+
+# Proxy artisan commands to the "php artisan" binary on the PHP container...
+elif [ "$1" == "artisan" ]; then
+    shift 1
+    docker exec $TTY "$PHP_CONTAINER" php artisan "$@"
+
+# Migrate fresh and seed...
+elif [ "$1" == "mfs" ]; then
+    shift 1
+    docker exec $TTY "$PHP_CONTAINER" php artisan migrate:fresh --seed "$@"
+
+# Open a MySQL shell on the database container...
+elif [ "$1" == "mysql" ]; then
+    shift 1
+    docker exec $TTY "$DATABASE_CONTAINER" mysql -u"${DB_USERNAME}" -p"${DB_PASSWORD}" "${DB_DATABASE}" "$@"
+
+# Proxy shell commands to the PHP container...
+elif [ "$1" == "bash" ] || [ "$1" == "shell" ] || [ "$1" == "ssh" ]; then
+    shift 1
+    docker exec $TTY "$PHP_CONTAINER" bash "$@"
+
+# Proxy test command to the "php artisan" binary on the PHP container...
+elif [ "$1" == "test" ]; then
+    shift 1
+    docker exec $TTY "$PHP_CONTAINER" php artisan test "$@"
+
+# Code style...
+elif [ "$1" == "pint" ]; then
+    shift 1
+    docker exec $TTY "$PHP_CONTAINER" ./vendor/bin/pint "$@"
+
+# Static analysis...
+elif [ "$1" == "phpstan" ]; then
+    shift 1
+    docker exec $TTY "$PHP_CONTAINER" ./vendor/bin/phpstan analyse "$@"
+
+else
+    echo -e "${RED_TEXT}Command not found${WHITE_TEXT}"
+    echo "Usage: ./bin/docker-exec {php|composer|npm|npx|artisan|mfs|mysql|bash|test|pint|phpstan} [args...]"
+    exit 1
+fi
