@@ -1,0 +1,594 @@
+[
+  {
+    "category": "emotional",
+    "name": "What made your little one smile today?",
+    "icon": "happy-outline",
+    "months_from": null,
+    "months_to": null,
+    "sort_order": 10
+  },
+  {
+    "category": "daily-life",
+    "name": "What's their current favorite toy or object?",
+    "icon": "cube-outline",
+    "months_from": null,
+    "months_to": null,
+    "sort_order": 20
+  },
+  {
+    "category": "emotional",
+    "name": "What's the sweetest thing they did today?",
+    "icon": "heart-outline",
+    "months_from": null,
+    "months_to": null,
+    "sort_order": 30
+  },
+  {
+    "category": "daily-life",
+    "name": "What did they eat today that they loved?",
+    "icon": "restaurant-outline",
+    "months_from": null,
+    "months_to": null,
+    "sort_order": 40
+  },
+  {
+    "category": "emotional",
+    "name": "What's one thing about them that amazes you?",
+    "icon": "sparkles-outline",
+    "months_from": null,
+    "months_to": null,
+    "sort_order": 50
+  },
+  {
+    "category": "family",
+    "name": "Who did they spend time with today?",
+    "icon": "people-outline",
+    "months_from": null,
+    "months_to": null,
+    "sort_order": 60
+  },
+  {
+    "category": "daily-life",
+    "name": "Did anything funny happen today?",
+    "icon": "happy-outline",
+    "months_from": null,
+    "months_to": null,
+    "sort_order": 70
+  },
+  {
+    "category": "emotional",
+    "name": "What's their mood like today?",
+    "icon": "cloud-outline",
+    "months_from": null,
+    "months_to": null,
+    "sort_order": 80
+  },
+  {
+    "category": "creative",
+    "name": "Did they play any fun games today?",
+    "icon": "game-controller-outline",
+    "months_from": null,
+    "months_to": null,
+    "sort_order": 90
+  },
+  {
+    "category": "daily-life",
+    "name": "Take a photo of what they're doing right now!",
+    "icon": "camera-outline",
+    "months_from": null,
+    "months_to": null,
+    "sort_order": 100
+  },
+  {
+    "category": "emotional",
+    "name": "What new sound or word did they make today?",
+    "icon": "chatbubble-outline",
+    "months_from": null,
+    "months_to": null,
+    "sort_order": 110
+  },
+  {
+    "category": "family",
+    "name": "Write a short love note to your little one.",
+    "icon": "mail-outline",
+    "months_from": null,
+    "months_to": null,
+    "sort_order": 120
+  },
+  {
+    "category": "daily-life",
+    "name": "How did bedtime go tonight?",
+    "icon": "moon-outline",
+    "months_from": null,
+    "months_to": null,
+    "sort_order": 130
+  },
+  {
+    "category": "growth",
+    "name": "Have you noticed any new skills lately?",
+    "icon": "trending-up-outline",
+    "months_from": null,
+    "months_to": null,
+    "sort_order": 140
+  },
+  {
+    "category": "emotional",
+    "name": "What's the funniest face they made today?",
+    "icon": "happy-outline",
+    "months_from": null,
+    "months_to": null,
+    "sort_order": 150
+  },
+  {
+    "category": "emotional",
+    "name": "How many hours did you sleep last night? (It matters too!)",
+    "icon": "moon-outline",
+    "months_from": 0,
+    "months_to": 3,
+    "sort_order": 160
+  },
+  {
+    "category": "daily-life",
+    "name": "What's their favorite position to be held in?",
+    "icon": "body-outline",
+    "months_from": 0,
+    "months_to": 3,
+    "sort_order": 170
+  },
+  {
+    "category": "growth",
+    "name": "Did they track anything with their eyes today?",
+    "icon": "eye-outline",
+    "months_from": 0,
+    "months_to": 3,
+    "sort_order": 180
+  },
+  {
+    "category": "emotional",
+    "name": "What does their cry sound like today?",
+    "icon": "volume-high-outline",
+    "months_from": 0,
+    "months_to": 3,
+    "sort_order": 190
+  },
+  {
+    "category": "family",
+    "name": "Who's voice do they react to the most?",
+    "icon": "ear-outline",
+    "months_from": 0,
+    "months_to": 3,
+    "sort_order": 200
+  },
+  {
+    "category": "daily-life",
+    "name": "How did feeding go today? Anything new?",
+    "icon": "nutrition-outline",
+    "months_from": 0,
+    "months_to": 3,
+    "sort_order": 210
+  },
+  {
+    "category": "emotional",
+    "name": "What's the cutest thing they did while sleeping?",
+    "icon": "moon-outline",
+    "months_from": 0,
+    "months_to": 3,
+    "sort_order": 220
+  },
+  {
+    "category": "growth",
+    "name": "How does their tiny hand look in yours? Take a photo!",
+    "icon": "hand-left-outline",
+    "months_from": 0,
+    "months_to": 3,
+    "sort_order": 230
+  },
+  {
+    "category": "emotional",
+    "name": "What smell do they have right now? That newborn scent!",
+    "icon": "flower-outline",
+    "months_from": 0,
+    "months_to": 3,
+    "sort_order": 240
+  },
+  {
+    "category": "daily-life",
+    "name": "How many diapers did you change today?",
+    "icon": "refresh-outline",
+    "months_from": 0,
+    "months_to": 3,
+    "sort_order": 250
+  },
+  {
+    "category": "family",
+    "name": "How did your partner react when they held them today?",
+    "icon": "heart-outline",
+    "months_from": 0,
+    "months_to": 3,
+    "sort_order": 260
+  },
+  {
+    "category": "emotional",
+    "name": "What does their face look like when they're dreaming?",
+    "icon": "cloud-outline",
+    "months_from": 0,
+    "months_to": 3,
+    "sort_order": 270
+  },
+  {
+    "category": "daily-life",
+    "name": "What outfit are they wearing today? Snap a pic!",
+    "icon": "shirt-outline",
+    "months_from": 0,
+    "months_to": 3,
+    "sort_order": 280
+  },
+  {
+    "category": "growth",
+    "name": "Do they grip your finger when you touch their palm?",
+    "icon": "hand-left-outline",
+    "months_from": 0,
+    "months_to": 3,
+    "sort_order": 290
+  },
+  {
+    "category": "emotional",
+    "name": "What song or sound calms them down the fastest?",
+    "icon": "musical-notes-outline",
+    "months_from": 0,
+    "months_to": 3,
+    "sort_order": 300
+  },
+  {
+    "category": "daily-life",
+    "name": "How's bath time going? Do they love it or hate it?",
+    "icon": "water-outline",
+    "months_from": 0,
+    "months_to": 3,
+    "sort_order": 310
+  },
+  {
+    "category": "family",
+    "name": "What does your home feel like now with a baby? Describe the vibe.",
+    "icon": "home-outline",
+    "months_from": 0,
+    "months_to": 3,
+    "sort_order": 320
+  },
+  {
+    "category": "emotional",
+    "name": "What surprised you about parenthood today?",
+    "icon": "sparkles-outline",
+    "months_from": 0,
+    "months_to": 3,
+    "sort_order": 330
+  },
+  {
+    "category": "growth",
+    "name": "Compare their tiny feet to something — a coin? Your thumb?",
+    "icon": "footsteps-outline",
+    "months_from": 0,
+    "months_to": 3,
+    "sort_order": 340
+  },
+  {
+    "category": "daily-life",
+    "name": "What's the longest stretch of sleep they did last night?",
+    "icon": "moon-outline",
+    "months_from": 0,
+    "months_to": 3,
+    "sort_order": 350
+  },
+  {
+    "category": "emotional",
+    "name": "Write one sentence you want to tell them when they're older.",
+    "icon": "mail-outline",
+    "months_from": 0,
+    "months_to": 3,
+    "sort_order": 360
+  },
+  {
+    "category": "family",
+    "name": "Who visited you today? How did the baby react?",
+    "icon": "people-outline",
+    "months_from": 0,
+    "months_to": 3,
+    "sort_order": 370
+  },
+  {
+    "category": "growth",
+    "name": "Did they lift their head during tummy time today?",
+    "icon": "arrow-up-outline",
+    "months_from": 0,
+    "months_to": 3,
+    "sort_order": 380
+  },
+  {
+    "category": "emotional",
+    "name": "What's the hardest part of today? It's okay to say it.",
+    "icon": "heart-outline",
+    "months_from": 0,
+    "months_to": 3,
+    "sort_order": 390
+  },
+  {
+    "category": "daily-life",
+    "name": "What does their nursery/sleeping space look like right now?",
+    "icon": "bed-outline",
+    "months_from": 0,
+    "months_to": 3,
+    "sort_order": 400
+  },
+  {
+    "category": "emotional",
+    "name": "Did they make any new sounds or coos today?",
+    "icon": "chatbubble-outline",
+    "months_from": 0,
+    "months_to": 3,
+    "sort_order": 410
+  },
+  {
+    "category": "family",
+    "name": "How are the pets adjusting to the new family member?",
+    "icon": "paw-outline",
+    "months_from": 0,
+    "months_to": 3,
+    "sort_order": 420
+  },
+  {
+    "category": "growth",
+    "name": "Do they turn toward sounds? Try clapping gently!",
+    "icon": "ear-outline",
+    "months_from": 0,
+    "months_to": 3,
+    "sort_order": 430
+  },
+  {
+    "category": "emotional",
+    "name": "What's the best moment of today so far?",
+    "icon": "star-outline",
+    "months_from": 0,
+    "months_to": 3,
+    "sort_order": 440
+  },
+  {
+    "category": "daily-life",
+    "name": "Are they a morning baby or a night owl? What's the pattern?",
+    "icon": "sunny-outline",
+    "months_from": 0,
+    "months_to": 3,
+    "sort_order": 450
+  },
+  {
+    "category": "emotional",
+    "name": "Take a close-up of their eyelashes. They're perfect.",
+    "icon": "camera-outline",
+    "months_from": 0,
+    "months_to": 3,
+    "sort_order": 460
+  },
+  {
+    "category": "daily-life",
+    "name": "Are they grabbing at things? What's their target?",
+    "icon": "hand-left-outline",
+    "months_from": 3,
+    "months_to": 6,
+    "sort_order": 470
+  },
+  {
+    "category": "creative",
+    "name": "What sounds are they making? Any babbling?",
+    "icon": "chatbubble-outline",
+    "months_from": 3,
+    "months_to": 6,
+    "sort_order": 480
+  },
+  {
+    "category": "emotional",
+    "name": "What makes them do a big belly laugh?",
+    "icon": "happy-outline",
+    "months_from": 3,
+    "months_to": 6,
+    "sort_order": 490
+  },
+  {
+    "category": "daily-life",
+    "name": "How's tummy time going?",
+    "icon": "body-outline",
+    "months_from": 3,
+    "months_to": 6,
+    "sort_order": 500
+  },
+  {
+    "category": "daily-life",
+    "name": "What new food did they try this week?",
+    "icon": "restaurant-outline",
+    "months_from": 6,
+    "months_to": 12,
+    "sort_order": 510
+  },
+  {
+    "category": "firsts",
+    "name": "Are they pulling up on furniture yet?",
+    "icon": "arrow-up-outline",
+    "months_from": 6,
+    "months_to": 12,
+    "sort_order": 520
+  },
+  {
+    "category": "creative",
+    "name": "Do they clap or wave? Show me!",
+    "icon": "hand-right-outline",
+    "months_from": 6,
+    "months_to": 12,
+    "sort_order": 530
+  },
+  {
+    "category": "emotional",
+    "name": "Do they have a comfort object yet?",
+    "icon": "shield-outline",
+    "months_from": 6,
+    "months_to": 12,
+    "sort_order": 540
+  },
+  {
+    "category": "firsts",
+    "name": "Any new words today? What are they?",
+    "icon": "chatbubbles-outline",
+    "months_from": 12,
+    "months_to": 24,
+    "sort_order": 550
+  },
+  {
+    "category": "daily-life",
+    "name": "What's their current obsession?",
+    "icon": "star-outline",
+    "months_from": 12,
+    "months_to": 24,
+    "sort_order": 560
+  },
+  {
+    "category": "emotional",
+    "name": "How do they show you they love you?",
+    "icon": "heart-outline",
+    "months_from": 12,
+    "months_to": 24,
+    "sort_order": 570
+  },
+  {
+    "category": "creative",
+    "name": "Did they scribble or paint anything today?",
+    "icon": "brush-outline",
+    "months_from": 12,
+    "months_to": 24,
+    "sort_order": 580
+  },
+  {
+    "category": "creative",
+    "name": "What are they pretending to be today?",
+    "icon": "sparkles-outline",
+    "months_from": 24,
+    "months_to": 36,
+    "sort_order": 590
+  },
+  {
+    "category": "emotional",
+    "name": "What question did they ask you today?",
+    "icon": "help-outline",
+    "months_from": 24,
+    "months_to": 36,
+    "sort_order": 600
+  },
+  {
+    "category": "daily-life",
+    "name": "What's their favorite song to sing?",
+    "icon": "musical-notes-outline",
+    "months_from": 24,
+    "months_to": 36,
+    "sort_order": 610
+  },
+  {
+    "category": "firsts",
+    "name": "Did they play with other kids today? How'd it go?",
+    "icon": "people-outline",
+    "months_from": 24,
+    "months_to": 36,
+    "sort_order": 620
+  },
+  {
+    "category": "creative",
+    "name": "What did they draw or create today?",
+    "icon": "color-palette-outline",
+    "months_from": 36,
+    "months_to": 48,
+    "sort_order": 630
+  },
+  {
+    "category": "emotional",
+    "name": "What are they afraid of? How do you help?",
+    "icon": "flash-outline",
+    "months_from": 36,
+    "months_to": 48,
+    "sort_order": 640
+  },
+  {
+    "category": "daily-life",
+    "name": "What game are they into right now?",
+    "icon": "game-controller-outline",
+    "months_from": 36,
+    "months_to": 48,
+    "sort_order": 650
+  },
+  {
+    "category": "emotional",
+    "name": "What made them proudest today?",
+    "icon": "trophy-outline",
+    "months_from": 36,
+    "months_to": 48,
+    "sort_order": 660
+  },
+  {
+    "category": "creative",
+    "name": "Tell me a story they made up!",
+    "icon": "book-outline",
+    "months_from": 48,
+    "months_to": 60,
+    "sort_order": 670
+  },
+  {
+    "category": "firsts",
+    "name": "What did they learn at school today?",
+    "icon": "school-outline",
+    "months_from": 48,
+    "months_to": 60,
+    "sort_order": 680
+  },
+  {
+    "category": "emotional",
+    "name": "What do they want to be when they grow up today?",
+    "icon": "rocket-outline",
+    "months_from": 48,
+    "months_to": 60,
+    "sort_order": 690
+  },
+  {
+    "category": "daily-life",
+    "name": "What did they help you with today?",
+    "icon": "construct-outline",
+    "months_from": 48,
+    "months_to": 60,
+    "sort_order": 700
+  },
+  {
+    "category": "firsts",
+    "name": "What book are they reading right now?",
+    "icon": "book-outline",
+    "months_from": 60,
+    "months_to": 72,
+    "sort_order": 710
+  },
+  {
+    "category": "creative",
+    "name": "What's the coolest thing they built or created?",
+    "icon": "color-palette-outline",
+    "months_from": 60,
+    "months_to": 72,
+    "sort_order": 720
+  },
+  {
+    "category": "emotional",
+    "name": "What's their biggest dream right now?",
+    "icon": "rocket-outline",
+    "months_from": 60,
+    "months_to": 72,
+    "sort_order": 730
+  },
+  {
+    "category": "family",
+    "name": "What family story do they love hearing about?",
+    "icon": "people-outline",
+    "months_from": 60,
+    "months_to": 72,
+    "sort_order": 740
+  }
+]

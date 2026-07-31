@@ -1,0 +1,22 @@
+[
+  {
+    "key": "daily_free_entries",
+    "value": "1"
+  },
+  {
+    "key": "free_entry_xp",
+    "value": "10"
+  },
+  {
+    "key": "daily_step_entries",
+    "value": "5"
+  },
+  {
+    "key": "max_custom_steps_per_milestone",
+    "value": "10"
+  },
+  {
+    "key": "min_steps_to_complete_milestone",
+    "value": "10"
+  }
+]

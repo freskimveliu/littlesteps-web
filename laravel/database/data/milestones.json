@@ -1,0 +1,74 @@
+[
+  {
+    "slug": "0-3mo",
+    "name": "The First Hello",
+    "description": "Those first blurry, sleepless, wonderful weeks",
+    "icon": "happy",
+    "months_from": 0,
+    "xp": 150,
+    "sort_order": 10
+  },
+  {
+    "slug": "3-6mo",
+    "name": "Waking to the World",
+    "description": "Laughs, rolls, and the first real look around",
+    "icon": "search",
+    "months_from": 3,
+    "xp": 200,
+    "sort_order": 20
+  },
+  {
+    "slug": "6-12mo",
+    "name": "On the Move",
+    "description": "Sitting, crawling, and suddenly nowhere is safe",
+    "icon": "sunny",
+    "months_from": 6,
+    "xp": 250,
+    "sort_order": 30
+  },
+  {
+    "slug": "1-2y",
+    "name": "Little Explorer",
+    "description": "Walking, talking, and testing every limit",
+    "icon": "walk",
+    "months_from": 12,
+    "xp": 300,
+    "sort_order": 40
+  },
+  {
+    "slug": "2-3y",
+    "name": "Words and Wonder",
+    "description": "Questions, opinions, and very big feelings",
+    "icon": "chatbubbles",
+    "months_from": 24,
+    "xp": 350,
+    "sort_order": 50
+  },
+  {
+    "slug": "3-4y",
+    "name": "A Mind of Their Own",
+    "description": "Why? Why? Why? — and stories all their own",
+    "icon": "cloud",
+    "months_from": 36,
+    "xp": 400,
+    "sort_order": 60
+  },
+  {
+    "slug": "4-5y",
+    "name": "Making and Believing",
+    "description": "Drawing, building, pretending, befriending",
+    "icon": "color-palette",
+    "months_from": 48,
+    "xp": 450,
+    "sort_order": 70
+  },
+  {
+    "slug": "5-6y",
+    "name": "Ready for the World",
+    "description": "School, a lost tooth, and one very big kid",
+    "icon": "star",
+    "months_from": 60,
+    "xp": 500,
+    "sort_order": 80
+  }
+]

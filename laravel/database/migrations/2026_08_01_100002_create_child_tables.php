@@ -1,0 +1,134 @@
+<?php
+
+declare(strict_types=1);
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+/**
+ * The child's own journey.
+ *
+ * Chapters and steps are copied from the catalogue at provisioning and are
+ * never joined back at read time, so an admin rewording a step cannot rewrite
+ * what a parent already saved. An entry is written only on submit, which is
+ * what makes "this step is done" a single EXISTS.
+ */
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('child_milestones', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('child_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('template_milestone_id')->nullable()->constrained()->nullOnDelete();
+            $table->string('name');
+            $table->string('description')->nullable();
+            $table->string('icon')->nullable();
+            $table->unsignedSmallInteger('months_from')->nullable();
+            $table->unsignedSmallInteger('xp')->default(0);
+            $table->unsignedSmallInteger('sort_order')->default(0);
+            $table->boolean('is_editable')->default(false);
+            $table->boolean('is_hidden')->default(false);
+            $table->timestamp('completed_at')->nullable();
+            $table->foreignId('completed_by_user_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('created_by_user_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('updated_by_user_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->timestamps();
+
+            $table->index(['child_id', 'sort_order']);
+        });
+
+        Schema::create('child_steps', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('child_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('child_milestone_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('template_step_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('category_id')->nullable()->constrained()->nullOnDelete();
+            $table->string('name');
+            $table->string('icon')->nullable();
+            $table->unsignedSmallInteger('months_from')->nullable();
+            $table->unsignedSmallInteger('xp')->default(25);
+            $table->unsignedSmallInteger('sort_order')->default(0);
+            $table->boolean('is_editable')->default(false);
+            $table->boolean('is_hidden')->default(false);
+            $table->foreignId('created_by_user_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('updated_by_user_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->timestamps();
+
+            $table->index(['child_milestone_id', 'sort_order']);
+            $table->index(['child_id', 'is_hidden']);
+        });
+
+        Schema::create('child_entries', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('child_id')->constrained()->cascadeOnDelete();
+            // Unique, and nullable so the free memories — which have no step —
+            // can repeat: MySQL does not collide on repeated NULLs.
+            $table->foreignId('child_step_id')->nullable()->unique()->constrained()->cascadeOnDelete();
+            $table->text('description')->nullable();
+            $table->date('date');
+            $table->string('mood')->nullable();
+            $table->foreignId('created_by_user_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('updated_by_user_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->timestamps();
+
+            $table->index(['child_id', 'date']);
+            $table->index(['child_id', 'created_at']);
+        });
+
+        Schema::create('child_step_properties', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('child_step_id')->constrained()->cascadeOnDelete();
+            $table->string('key');
+            $table->string('name')->nullable();
+            $table->unsignedSmallInteger('sort_order')->default(0);
+            $table->timestamps();
+        });
+
+        Schema::create('child_entry_properties', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('child_entry_id')->constrained()->cascadeOnDelete();
+            $table->string('key');
+            $table->string('name')->nullable();
+            $table->string('value')->nullable();
+            $table->unsignedSmallInteger('sort_order')->default(0);
+            $table->timestamps();
+
+            $table->index(['key', 'child_entry_id']);
+        });
+
+        Schema::create('child_achievements', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('child_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('template_achievement_id')->constrained()->cascadeOnDelete();
+            $table->timestamp('unlocked_at');
+            $table->timestamps();
+
+            $table->unique(['child_id', 'template_achievement_id']);
+        });
+
+        Schema::create('child_rewards', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('child_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('child_achievement_id')->unique()->constrained()->cascadeOnDelete();
+            $table->string('type');
+            $table->string('status')->default('unclaimed');
+            $table->longText('content')->nullable();
+            $table->timestamp('claimed_at')->nullable();
+            $table->timestamp('generated_at')->nullable();
+            $table->timestamps();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('child_rewards');
+        Schema::dropIfExists('child_achievements');
+        Schema::dropIfExists('child_entry_properties');
+        Schema::dropIfExists('child_step_properties');
+        Schema::dropIfExists('child_entries');
+        Schema::dropIfExists('child_steps');
+        Schema::dropIfExists('child_milestones');
+    }
+};
