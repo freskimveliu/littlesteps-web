@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Child;
 use App\Models\ChildEntry;
+use App\Models\ChildReward;
 use App\Models\TemplateAchievement;
 use App\Models\TemplateLevel;
 use App\Models\TemplateMilestone;
@@ -31,10 +32,10 @@ class DashboardController extends Controller
                 ['label' => 'Prompts', 'value' => TemplatePrompt::count(), 'href' => '/admin/prompts'],
             ],
             'usage' => [
-                ['label' => 'Parents', 'value' => User::count()],
-                ['label' => 'Children', 'value' => Child::count()],
-                ['label' => 'Memories', 'value' => ChildEntry::count()],
-                ['label' => 'Free memories', 'value' => ChildEntry::free()->count()],
+                ['label' => 'Parents', 'value' => User::count(), 'href' => '/admin/users'],
+                ['label' => 'Children', 'value' => Child::count(), 'href' => '/admin/children'],
+                ['label' => 'Memories', 'value' => ChildEntry::count(), 'href' => null],
+                ['label' => 'Gifts earned', 'value' => ChildReward::count(), 'href' => '/admin/gifts'],
             ],
             'gifts' => TemplateAchievement::whereNotNull('reward')->orderBy('sort_order')->get([
                 'id', 'name', 'reward', 'metric', 'threshold',

@@ -9,6 +9,9 @@ import TrophyIcon from '@heroicons/vue/24/outline/esm/TrophyIcon.js';
 import ChartBarIcon from '@heroicons/vue/24/outline/esm/ChartBarIcon.js';
 import SparklesIcon from '@heroicons/vue/24/outline/esm/SparklesIcon.js';
 import Cog6ToothIcon from '@heroicons/vue/24/outline/esm/Cog6ToothIcon.js';
+import UsersIcon from '@heroicons/vue/24/outline/esm/UsersIcon.js';
+import FaceSmileIcon from '@heroicons/vue/24/outline/esm/FaceSmileIcon.js';
+import GiftIcon from '@heroicons/vue/24/outline/esm/GiftIcon.js';
 import ArrowRightStartOnRectangleIcon from '@heroicons/vue/24/outline/esm/ArrowRightStartOnRectangleIcon.js';
 import UiToast from '../components/ui/UiToast.vue';
 
@@ -16,18 +19,44 @@ const page = usePage();
 
 const user = computed(() => page.props.auth?.user as { name: string; email: string | null } | undefined);
 
-const nav = [
-    { label: 'Dashboard', href: '/admin', icon: Squares2X2Icon, exact: true },
-    { label: 'Chapters', href: '/admin/chapters', icon: BookOpenIcon },
-    { label: 'Steps', href: '/admin/steps', icon: FlagIcon },
-    { label: 'Categories', href: '/admin/categories', icon: TagIcon },
-    { label: 'Badges', href: '/admin/badges', icon: TrophyIcon },
-    { label: 'Levels', href: '/admin/levels', icon: ChartBarIcon },
-    { label: 'Prompts', href: '/admin/prompts', icon: SparklesIcon },
-    { label: 'Settings', href: '/admin/settings', icon: Cog6ToothIcon },
+interface NavItem {
+    label: string;
+    href: string;
+    icon: unknown;
+    exact?: boolean;
+}
+
+const groups: { title: string | null; items: NavItem[] }[] = [
+    {
+        title: null,
+        items: [{ label: 'Dashboard', href: '/admin', icon: Squares2X2Icon, exact: true }],
+    },
+    {
+        title: 'Families',
+        items: [
+            { label: 'Parents', href: '/admin/users', icon: UsersIcon },
+            { label: 'Children', href: '/admin/children', icon: FaceSmileIcon },
+            { label: 'Gifts', href: '/admin/gifts', icon: GiftIcon },
+        ],
+    },
+    {
+        title: 'Catalogue',
+        items: [
+            { label: 'Chapters', href: '/admin/chapters', icon: BookOpenIcon },
+            { label: 'Steps', href: '/admin/steps', icon: FlagIcon },
+            { label: 'Categories', href: '/admin/categories', icon: TagIcon },
+            { label: 'Badges', href: '/admin/badges', icon: TrophyIcon },
+            { label: 'Levels', href: '/admin/levels', icon: ChartBarIcon },
+            { label: 'Prompts', href: '/admin/prompts', icon: SparklesIcon },
+        ],
+    },
+    {
+        title: null,
+        items: [{ label: 'Settings', href: '/admin/settings', icon: Cog6ToothIcon }],
+    },
 ];
 
-function isActive(item: (typeof nav)[number]): boolean {
+function isActive(item: NavItem): boolean {
     const current = page.url.split('?')[0];
     return item.exact ? current === item.href : current.startsWith(item.href);
 }
@@ -46,20 +75,25 @@ function logout() {
             </div>
 
             <nav class="flex-1 px-3">
-                <Link
-                    v-for="item in nav"
-                    :key="item.href"
-                    :href="item.href"
-                    class="mb-0.5 flex items-center gap-3 rounded-ui px-3 py-2 text-body font-medium transition-colors"
-                    :class="
-                        isActive(item)
-                            ? 'bg-primary/10 text-primary-accessible'
-                            : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-                    "
-                >
-                    <component :is="item.icon" class="h-4 w-4 flex-shrink-0" />
-                    {{ item.label }}
-                </Link>
+                <div v-for="(group, i) in groups" :key="i" class="mb-4">
+                    <p v-if="group.title" class="mb-1 px-3 text-label font-semibold tracking-wide text-slate-400 uppercase">
+                        {{ group.title }}
+                    </p>
+                    <Link
+                        v-for="item in group.items"
+                        :key="item.href"
+                        :href="item.href"
+                        class="mb-0.5 flex items-center gap-3 rounded-ui px-3 py-2 text-body font-medium transition-colors"
+                        :class="
+                            isActive(item)
+                                ? 'bg-primary/10 text-primary-accessible'
+                                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                        "
+                    >
+                        <component :is="item.icon" class="h-4 w-4 flex-shrink-0" />
+                        {{ item.label }}
+                    </Link>
+                </div>
             </nav>
 
             <div class="border-t border-[#f0f4f8] px-5 py-4">

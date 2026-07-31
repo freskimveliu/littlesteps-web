@@ -8,7 +8,7 @@ import UiSectionLabel from '../../components/ui/UiSectionLabel.vue';
 
 defineProps<{
     catalogue: { label: string; value: number; href: string }[];
-    usage: { label: string; value: number }[];
+    usage: { label: string; value: number; href: string | null }[];
     gifts: { id: number; name: string; reward: string; metric: string; threshold: number }[];
 }>();
 
@@ -33,10 +33,17 @@ const rewardTone = { story: 'primary', image: 'success', book: 'gold' } as const
 
         <UiSectionLabel>Families</UiSectionLabel>
         <div class="mb-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
-            <UiCard v-for="stat in usage" :key="stat.label" body-class="px-5 py-4">
-                <p class="text-2xl font-bold text-slate-900">{{ stat.value }}</p>
-                <p class="text-body text-slate-500">{{ stat.label }}</p>
-            </UiCard>
+            <component
+                :is="stat.href ? Link : 'div'"
+                v-for="stat in usage"
+                :key="stat.label"
+                :href="stat.href ?? undefined"
+            >
+                <UiCard body-class="px-5 py-4">
+                    <p class="text-2xl font-bold text-slate-900">{{ stat.value }}</p>
+                    <p class="text-body text-slate-500">{{ stat.label }}</p>
+                </UiCard>
+            </component>
         </div>
 
         <UiSectionLabel>Badges that carry a gift</UiSectionLabel>

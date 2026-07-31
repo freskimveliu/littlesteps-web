@@ -18,6 +18,10 @@ use App\Http\Controllers\Admin\Chapters\IndexChaptersController;
 use App\Http\Controllers\Admin\Chapters\StoreChapterController;
 use App\Http\Controllers\Admin\Chapters\UpdateChapterController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\Families\IndexChildrenController;
+use App\Http\Controllers\Admin\Families\IndexGiftsController;
+use App\Http\Controllers\Admin\Families\ResetGiftController;
+use App\Http\Controllers\Admin\Families\ShowChildController;
 use App\Http\Controllers\Admin\Levels\DestroyLevelController;
 use App\Http\Controllers\Admin\Levels\IndexLevelsController;
 use App\Http\Controllers\Admin\Levels\StoreLevelController;
@@ -32,6 +36,10 @@ use App\Http\Controllers\Admin\Steps\DestroyStepController;
 use App\Http\Controllers\Admin\Steps\IndexStepsController;
 use App\Http\Controllers\Admin\Steps\StoreStepController;
 use App\Http\Controllers\Admin\Steps\UpdateStepController;
+use App\Http\Controllers\Admin\Users\IndexUsersController;
+use App\Http\Controllers\Admin\Users\RestoreUserController;
+use App\Http\Controllers\Admin\Users\ShowUserController;
+use App\Http\Controllers\Admin\Users\UpdateUserController;
 use App\Http\Middleware\EnsureUserIsAdmin;
 use Illuminate\Support\Facades\Route;
 
@@ -78,5 +86,16 @@ Route::prefix('admin')->group(function () {
 
         Route::get('settings', ShowSettingsController::class)->name('admin.settings');
         Route::put('settings', UpdateSettingsController::class);
+
+        Route::get('users', IndexUsersController::class)->name('admin.users');
+        Route::get('users/{user}', ShowUserController::class);
+        Route::put('users/{user}', UpdateUserController::class);
+        Route::post('users/{user}/restore', RestoreUserController::class);
+
+        Route::get('children', IndexChildrenController::class)->name('admin.children');
+        Route::get('children/{child}', ShowChildController::class);
+
+        Route::get('gifts', IndexGiftsController::class)->name('admin.gifts');
+        Route::post('gifts/{gift}/reset', ResetGiftController::class);
     });
 });
