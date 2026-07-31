@@ -86,6 +86,10 @@ services:
     container_name: "${DOCKER_CONTAINER_NAME}_queue"
     restart: unless-stopped
     command: ["php", "artisan", "queue:work", "--tries=3", "--timeout=300", "--max-time=3600"]
+    # The image's healthcheck curls nginx, which does not run here. Docker
+    # restarts the container if the worker exits, so no check is needed.
+    healthcheck:
+      disable: true
     env_file: .env
     environment:
       - "DB_HOST=database"
@@ -109,6 +113,9 @@ services:
     container_name: "${DOCKER_CONTAINER_NAME}_scheduler"
     restart: unless-stopped
     command: ["sh", "-c", "while true; do php artisan schedule:run --no-interaction; sleep 60; done"]
+    # Same as the queue worker: no nginx in this container.
+    healthcheck:
+      disable: true
     env_file: .env
     environment:
       - "DB_HOST=database"
