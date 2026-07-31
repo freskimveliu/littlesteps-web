@@ -17,7 +17,7 @@ const stack = [
 <template>
     <Head title="Welcome" />
 
-    <div class="flex min-h-full items-center justify-center bg-zinc-50 p-6 dark:bg-zinc-950">
+    <div class="flex min-h-dvh items-center justify-center bg-zinc-50 p-6 dark:bg-zinc-950">
         <main class="w-full max-w-2xl">
             <div
                 class="rounded-2xl border border-zinc-200 bg-white p-8 shadow-sm dark:border-zinc-800 dark:bg-zinc-900"

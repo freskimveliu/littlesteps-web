@@ -33,6 +33,9 @@ export default defineConfig(({ mode }) => {
         server: {
             host: '0.0.0.0',
             port: 5173,
+            // Requests arrive via Traefik, so the proxied hostnames have to be
+            // allowed explicitly or Vite rejects them with a 403.
+            allowedHosts: [env.VITE_HMR_HOST || 'localhost'],
             // Traefik terminates TLS in front of the dev server, so the browser
             // must be told to open the HMR socket over wss on the proxy's port.
             hmr: {

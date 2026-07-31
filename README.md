@@ -16,25 +16,33 @@ Laravel + Inertia + Vue + Tailwind, running on Docker behind Traefik with local 
 
 ```
 .
-├── Dockerfile              # multi-stage: base → development / builder → production
-├── docker-compose.yml      # dev stack
-├── .env                    # single source of truth (laravel/.env symlinks to it)
-├── bin/docker-exec         # command proxy into the containers
-├── certs/                  # mkcert TLS cert for the dev domain
+├── Dockerfile                      # multi-stage: base → development / builder → production
+├── docker-compose.yml              # dev stack
+├── docker-compose.production.yml   # server stack
+├── .env                            # single source of truth (laravel/.env symlinks to it)
+├── bin/docker-exec                 # command proxy into the containers
 ├── docker/
-│   ├── nginx/              # dev webserver image + vhost
-│   ├── traefik/            # static + dynamic Traefik config
-│   └── mysql/init/         # creates the `testing` database
-└── laravel/                # the application
+│   ├── nginx/                      # dev webserver image + vhost
+│   └── mysql/init/                 # creates the `testing` database
+└── laravel/                        # the application
 ```
+
+TLS and routing are **not** in this repo. A shared Traefik in `../proxy` owns
+80/443 and serves every project, so several apps can run at once on clean
+hostnames. This stack only publishes a container for Traefik to find.
+
+## Changing the domain
+
+`APP_URL_TRAEFIK` in `.env` is the only place the hostname is defined — the
+Traefik router label reads it. To move the app to another domain, change that
+value (and `APP_URL`/`VITE_HMR_HOST`), point DNS at the host, and restart.
+Nothing else is domain-specific.
 
 ## First-time setup
 
-1. Point the dev domain at localhost:
-
-   ```bash
-   echo "127.0.0.1 littlesteps.dev.freskimveliu.dev" | sudo tee -a /etc/hosts
-   ```
+1. Start the shared proxy — see `../proxy/README.md`. Once its wildcard DNS is
+   in place, any `*.dev.freskimveliu.dev` name resolves with no `/etc/hosts`
+   entry.
 
 2. Copy the env file and generate a key (already done on this checkout):
 
@@ -43,31 +51,19 @@ Laravel + Inertia + Vue + Tailwind, running on Docker behind Traefik with local 
    ./bin/docker-exec artisan key:generate
    ```
 
-3. Generate the local TLS certificate (already done on this checkout):
-
-   ```bash
-   mkcert -cert-file certs/local-cert.pem -key-file certs/local-key.pem littlesteps.dev.freskimveliu.dev
-   ```
-
-4. Start everything and migrate:
+3. Start everything and migrate:
 
    ```bash
    docker compose up -d
    ./bin/docker-exec artisan migrate
    ```
 
-The app is at **https://littlesteps.dev.freskimveliu.dev:8443**.
-
-> Ports 80/443 are used by another local stack, so Traefik listens on
-> `TRAEFIK_HTTP_PORT=8090` and `TRAEFIK_HTTPS_PORT=8443`. If those ports are
-> free on your machine, set both back to 80/443 in `.env` and drop the `:8443`
-> from `APP_URL` and `VITE_HMR_CLIENT_PORT`.
+The app is at **https://littlesteps.dev.freskimveliu.dev**.
 
 ## Services
 
 | Container                | Role                                                    |
 | ------------------------ | ------------------------------------------------------- |
-| `littlesteps_traefik`    | TLS termination and routing (`:8090` / `:8443`)         |
 | `littlesteps_webserver`  | Nginx, serves `laravel/public`                          |
 | `littlesteps_php`        | PHP-FPM 8.4 with Xdebug                                 |
 | `littlesteps_node`       | Vite dev server with HMR (proxied through Traefik)      |
@@ -112,13 +108,47 @@ Frontend type-checking:
   `resources/js/types/global.d.ts`.
 - Ziggy is installed, so `route()` is available in Vue components.
 
-## Production image
+## Deploying
+
+The shared proxy must be running on the server first — see
+`../proxy/README.md`. It gets certificates from Let's Encrypt automatically, so
+a new domain needs only an A record and the `APP_URL_TRAEFIK` value.
 
 ```bash
-docker build --target production -t littlesteps-prod .
+cp .env.example .env       # then edit: see below
+docker compose -f docker-compose.production.yml build
+docker compose -f docker-compose.production.yml up -d
+docker compose -f docker-compose.production.yml exec app php artisan migrate --force
 ```
+
+Before the first deploy, set in `.env`:
+
+| Variable            | Value                                        |
+| ------------------- | -------------------------------------------- |
+| `APP_ENV`           | `production`                                 |
+| `APP_DEBUG`         | `false`                                      |
+| `APP_KEY`           | generate a fresh one — do not reuse the dev key |
+| `APP_URL_TRAEFIK`   | the public hostname                          |
+| `APP_URL`           | `https://<that hostname>`                    |
+| `DB_PASSWORD`       | a real secret                                |
+| `DB_ROOT_PASSWORD`  | a different real secret                      |
+| `REDIS_PASSWORD`    | a real secret                                |
+
+The production stack differs from dev in ways worth knowing: no source is
+bind-mounted (code is baked into the image, so a deploy is rebuild + `up -d`),
+MySQL and Redis publish no host ports, `storage/` is a named volume so uploads
+survive rebuilds, and `queue`/`scheduler` reuse the app image rather than
+rebuilding it.
+
+### How the image is built
 
 The `builder` stage installs dependencies, runs `npm run build`, then reinstalls
 Composer packages with `--no-dev --optimize-autoloader`. The `production` stage
 runs nginx and php-fpm under supervisor on port 80, with opcache timestamp
 validation disabled and a `/up` healthcheck.
+
+### Backups
+
+Two volumes hold state that cannot be rebuilt: `littlesteps-web_dbdata` and
+`littlesteps-web_storage`. The proxy's `letsencrypt` volume holds `acme.json` —
+losing it forces certificate re-issue, which Let's Encrypt rate-limits.
