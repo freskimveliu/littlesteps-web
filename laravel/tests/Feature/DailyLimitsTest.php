@@ -36,21 +36,21 @@ it('awards free entry xp from the settings, not from the code', function () {
     freeMemory($child)->assertCreated()->assertJsonPath('data.xpEarned', 25);
 });
 
-it('allows five step memories a day, each worth its own step', function () {
+it('allows five milestone memories a day, each worth its own milestone', function () {
     [, $child] = family(ageMonths: 12);
 
-    $steps = $child->steps()->whereNull('months_from')->orWhere('months_from', '<=', 12)
+    $milestones = $child->milestones()->whereNull('months_from')->orWhere('months_from', '<=', 12)
         ->orderBy('sort_order')->take(6)->get();
 
-    foreach ($steps->take(5) as $step) {
+    foreach ($milestones->take(5) as $milestone) {
         test()->postJson("/api/v1/children/{$child->id}/entries", [
-            'child_step_id' => $step->id,
+            'child_milestone_id' => $milestone->id,
             'date' => now()->toDateString(),
         ])->assertCreated();
     }
 
     test()->postJson("/api/v1/children/{$child->id}/entries", [
-        'child_step_id' => $steps->last()->id,
+        'child_milestone_id' => $milestones->last()->id,
         'date' => now()->toDateString(),
     ])->assertJsonValidationErrorFor('date');
 
@@ -75,43 +75,43 @@ it('does not let back-dating a photo dodge the limit', function () {
     freeMemory($child, ['date' => now()->subMonth()->toDateString()])->assertJsonValidationErrorFor('date');
 });
 
-it('caps how many of a parent own steps one chapter can hold', function () {
+it('caps how many of a parent own milestones one chapter can hold', function () {
     [, $child] = family();
-    $milestone = $child->milestones()->first();
+    $chapter = $child->chapters()->first();
 
-    AppSetting::where('key', AppSettingKey::MaxCustomStepsPerMilestone->value)->update(['value' => '2']);
+    AppSetting::where('key', AppSettingKey::MaxCustomMilestonesPerChapter->value)->update(['value' => '2']);
 
     foreach (range(1, 2) as $i) {
-        $this->postJson("/api/v1/children/{$child->id}/steps", [
-            'child_milestone_id' => $milestone->id,
-            'name' => "Our own step {$i}",
+        $this->postJson("/api/v1/children/{$child->id}/milestones", [
+            'child_chapter_id' => $chapter->id,
+            'name' => "Our own milestone {$i}",
         ])->assertCreated();
     }
 
-    $this->postJson("/api/v1/children/{$child->id}/steps", [
-        'child_milestone_id' => $milestone->id,
+    $this->postJson("/api/v1/children/{$child->id}/milestones", [
+        'child_chapter_id' => $chapter->id,
         'name' => 'One too many',
-    ])->assertJsonValidationErrorFor('child_milestone_id');
+    ])->assertJsonValidationErrorFor('child_chapter_id');
 });
 
-it('refuses a second memory on the same step', function () {
+it('refuses a second memory on the same milestone', function () {
     [, $child] = family(ageMonths: 12);
-    $step = $child->steps()->where('name', 'Birth Day')->first();
+    $milestone = $child->milestones()->where('name', 'Birth Day')->first();
 
     $this->postJson("/api/v1/children/{$child->id}/entries", [
-        'child_step_id' => $step->id, 'date' => now()->toDateString(),
+        'child_milestone_id' => $milestone->id, 'date' => now()->toDateString(),
     ])->assertCreated();
 
     $this->postJson("/api/v1/children/{$child->id}/entries", [
-        'child_step_id' => $step->id, 'date' => now()->toDateString(),
-    ])->assertJsonValidationErrorFor('child_step_id');
+        'child_milestone_id' => $milestone->id, 'date' => now()->toDateString(),
+    ])->assertJsonValidationErrorFor('child_milestone_id');
 });
 
-it('refuses a memory on a step the child is too young for', function () {
+it('refuses a memory on a milestone the child is too young for', function () {
     [, $child] = family(ageMonths: 1);
-    $step = $child->steps()->where('name', 'Month 6')->first();
+    $milestone = $child->milestones()->where('name', 'Month 6')->first();
 
     $this->postJson("/api/v1/children/{$child->id}/entries", [
-        'child_step_id' => $step->id, 'date' => now()->toDateString(),
-    ])->assertJsonValidationErrorFor('child_step_id');
+        'child_milestone_id' => $milestone->id, 'date' => now()->toDateString(),
+    ])->assertJsonValidationErrorFor('child_milestone_id');
 });

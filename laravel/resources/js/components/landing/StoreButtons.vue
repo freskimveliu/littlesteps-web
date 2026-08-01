@@ -22,7 +22,7 @@ const STORES = [
             :class="
                 tone === 'dark'
                     ? 'bg-ink text-white shadow-lg shadow-ink/25'
-                    : 'bg-white/15 text-white ring-1 ring-white/25 backdrop-blur-sm'
+                    : 'bg-white/20 text-white ring-1 ring-white/35 backdrop-blur-sm'
             "
         >
             <Ion :name="store.icon" :size="26" />

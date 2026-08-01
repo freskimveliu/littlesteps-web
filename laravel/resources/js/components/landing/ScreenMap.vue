@@ -25,8 +25,7 @@ const NODES: Node[] = [
 const PATH =
     'M 63 42 C 63 82, 144 88, 144 128 C 144 168, 225 174, 225 214 C 225 254, 144 260, 144 300 C 144 340, 63 346, 63 386';
 
-const CHAPTERS = [
-    { name: 'The First Hello', count: '15/15', active: false, locked: false },
+const MILESTONES = [
     { name: 'On the Move', count: '23/23', active: false, locked: false },
     { name: 'Words and Wonder', count: '8/14', active: true, locked: false },
     { name: 'A Mind of Their Own', count: '', active: false, locked: true },
@@ -41,13 +40,13 @@ const CHAPTERS = [
                 <span class="flex h-4 w-4 items-center justify-center rounded-full bg-primary">
                     <Ion name="checkmark" :size="9" class="text-white" />
                 </span>
-                <span class="text-[11px] text-gray-500">34 of 48 steps completed</span>
+                <span class="text-[11px] text-gray-500">34 of 48 milestones completed</span>
             </div>
         </div>
 
         <div class="mt-3 flex gap-2 overflow-hidden px-5">
             <span
-                v-for="chapter in CHAPTERS"
+                v-for="chapter in MILESTONES"
                 :key="chapter.name"
                 class="flex shrink-0 items-center gap-1.5 rounded-2xl px-3 py-2 text-[11px] font-bold whitespace-nowrap"
                 :class="
@@ -69,7 +68,7 @@ const CHAPTERS = [
         <div class="mt-3 px-5">
             <div class="flex items-center justify-center gap-1.5 rounded-2xl bg-primary/10 py-2.5">
                 <Ion name="add-circle-outline" :size="15" class="text-primary" />
-                <span class="text-[11px] font-bold text-primary">Add a step to Words and Wonder</span>
+                <span class="text-[11px] font-bold text-primary">Add a milestone to Words and Wonder</span>
             </div>
         </div>
 
@@ -138,6 +137,6 @@ const CHAPTERS = [
             </div>
         </div>
 
-        <PhoneTabBar active="milestones" />
+        <PhoneTabBar active="chapters" />
     </div>
 </template>

@@ -43,8 +43,8 @@ const groups: { title: string | null; items: NavItem[] }[] = [
     {
         title: 'Catalogue',
         items: [
-            { label: 'Milestones', href: '/admin/milestones', icon: BookOpenIcon },
-            { label: 'Steps', href: '/admin/steps', icon: FlagIcon },
+            { label: 'Chapters', href: '/admin/chapters', icon: BookOpenIcon },
+            { label: 'Milestones', href: '/admin/milestones', icon: FlagIcon },
             { label: 'Categories', href: '/admin/categories', icon: TagIcon },
             { label: 'Badges', href: '/admin/badges', icon: TrophyIcon },
             { label: 'Levels', href: '/admin/levels', icon: ChartBarIcon },
@@ -98,9 +98,13 @@ function logout() {
             <div class="pointer-events-none absolute inset-0 bg-gradient-to-b from-primary/25 via-transparent to-primary/10" />
 
             <div class="relative flex items-center gap-3 px-5 py-6" :class="collapsed ? 'justify-center px-0' : ''">
-                <div class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-ui bg-primary font-bold">
-                    L
-                </div>
+                <img
+                    src="/img/app-icon.png"
+                    alt=""
+                    width="256"
+                    height="256"
+                    class="h-9 w-9 flex-shrink-0 rounded-[9px] object-cover"
+                />
                 <div v-if="!collapsed" class="min-w-0">
                     <p class="truncate text-sm font-bold">LittleSteps</p>
                     <p class="text-label text-white/50">Admin</p>

@@ -10,11 +10,11 @@ use App\Models\Category;
 use App\Models\Child;
 use App\Models\ChildEntry;
 use App\Models\ChildReward;
-use App\Models\TemplateAchievement;
-use App\Models\TemplateLevel;
-use App\Models\TemplateMilestone;
-use App\Models\TemplatePrompt;
-use App\Models\TemplateStep;
+use App\Models\Achievement;
+use App\Models\Level;
+use App\Models\Chapter;
+use App\Models\Prompt;
+use App\Models\Milestone;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
@@ -28,12 +28,12 @@ class DashboardController extends Controller
     {
         return Inertia::render('Admin/Dashboard', [
             'catalogue' => [
-                ['label' => 'Milestones', 'value' => TemplateMilestone::count(), 'href' => '/admin/milestones'],
-                ['label' => 'Steps', 'value' => TemplateStep::count(), 'href' => '/admin/steps'],
+                ['label' => 'Chapters', 'value' => Chapter::count(), 'href' => '/admin/chapters'],
+                ['label' => 'Milestones', 'value' => Milestone::count(), 'href' => '/admin/milestones'],
                 ['label' => 'Categories', 'value' => Category::count(), 'href' => '/admin/categories'],
-                ['label' => 'Badges', 'value' => TemplateAchievement::count(), 'href' => '/admin/badges'],
-                ['label' => 'Levels', 'value' => TemplateLevel::count(), 'href' => '/admin/levels'],
-                ['label' => 'Prompts', 'value' => TemplatePrompt::count(), 'href' => '/admin/prompts'],
+                ['label' => 'Badges', 'value' => Achievement::count(), 'href' => '/admin/badges'],
+                ['label' => 'Levels', 'value' => Level::count(), 'href' => '/admin/levels'],
+                ['label' => 'Prompts', 'value' => Prompt::count(), 'href' => '/admin/prompts'],
             ],
             'usage' => [
                 ['label' => 'Parents', 'value' => User::count(), 'href' => '/admin/users'],
@@ -45,15 +45,15 @@ class DashboardController extends Controller
             'memories' => $this->weekly(ChildEntry::query()),
             'memoryMix' => $this->memoryMix(),
             'giftStatus' => $this->giftStatus(),
-            'stepsPerMilestone' => TemplateMilestone::query()
-                ->withCount('steps')
+            'milestonesPerChapter' => Chapter::query()
+                ->withCount('milestones')
                 ->orderBy('sort_order')
                 ->get()
-                ->map(fn (TemplateMilestone $m) => [
+                ->map(fn (Chapter $m) => [
                     'label' => $m->name,
-                    'value' => $m->steps_count,
+                    'value' => $m->milestones_count,
                 ]),
-            'gifts' => TemplateAchievement::whereNotNull('reward')->orderBy('sort_order')->get([
+            'gifts' => Achievement::whereNotNull('reward')->orderBy('sort_order')->get([
                 'id', 'name', 'reward', 'metric', 'threshold',
             ]),
         ]);
@@ -91,10 +91,10 @@ class DashboardController extends Controller
     private function memoryMix(): array
     {
         $free = ChildEntry::free()->count();
-        $step = ChildEntry::whereNotNull('child_step_id')->count();
+        $milestone = ChildEntry::whereNotNull('child_milestone_id')->count();
 
         return [
-            ['label' => 'From a step', 'value' => $step, 'color' => '#7E5EBF'],
+            ['label' => 'From a milestone', 'value' => $milestone, 'color' => '#7E5EBF'],
             ['label' => 'Free memories', 'value' => $free, 'color' => '#FFE5A0'],
         ];
     }

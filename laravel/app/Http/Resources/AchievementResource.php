@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Resources;
 
-use App\Models\TemplateAchievement;
+use App\Models\Achievement;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -12,7 +12,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
  * A badge as the child sees it — the rule, plus how far along they are and
  * whether it carries a gift.
  *
- * @mixin TemplateAchievement
+ * @mixin Achievement
  */
 class AchievementResource extends JsonResource
 {

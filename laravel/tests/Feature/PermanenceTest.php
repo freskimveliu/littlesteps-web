@@ -4,49 +4,49 @@ declare(strict_types=1);
 
 beforeEach(fn () => seedCatalogue());
 
-it('lets a parent delete their own step while it is still empty', function () {
+it('lets a parent delete their own milestone while it is still empty', function () {
     [, $child] = family();
-    $milestone = $child->milestones()->first();
+    $chapter = $child->chapters()->first();
 
-    $step = $this->postJson("/api/v1/children/{$child->id}/steps", [
-        'child_milestone_id' => $milestone->id,
+    $milestone = $this->postJson("/api/v1/children/{$child->id}/milestones", [
+        'child_chapter_id' => $chapter->id,
         'name' => 'First trip to the sea',
     ])->assertCreated()->json('data.id');
 
-    $this->deleteJson("/api/v1/children/{$child->id}/steps/{$step}")->assertNoContent();
+    $this->deleteJson("/api/v1/children/{$child->id}/milestones/{$milestone}")->assertNoContent();
 });
 
-it('refuses to delete a step once it holds a memory, so the xp cannot be reclaimed', function () {
+it('refuses to delete a milestone once it holds a memory, so the xp cannot be reclaimed', function () {
     [, $child] = family();
-    $milestone = $child->milestones()->first();
+    $chapter = $child->chapters()->first();
 
-    $step = $this->postJson("/api/v1/children/{$child->id}/steps", [
-        'child_milestone_id' => $milestone->id,
+    $milestone = $this->postJson("/api/v1/children/{$child->id}/milestones", [
+        'child_chapter_id' => $chapter->id,
         'name' => 'First trip to the sea',
     ])->json('data.id');
 
     $this->postJson("/api/v1/children/{$child->id}/entries", [
-        'child_step_id' => $step,
+        'child_milestone_id' => $milestone,
         'date' => now()->toDateString(),
     ])->assertCreated();
 
-    $this->deleteJson("/api/v1/children/{$child->id}/steps/{$step}")->assertForbidden();
+    $this->deleteJson("/api/v1/children/{$child->id}/milestones/{$milestone}")->assertForbidden();
 });
 
-it('never lets a guided step be deleted or renamed', function () {
+it('never lets a guided milestone be deleted or renamed', function () {
     [, $child] = family();
-    $step = $child->steps()->where('name', 'Birth Day')->first();
+    $milestone = $child->milestones()->where('name', 'Birth Day')->first();
 
-    $this->deleteJson("/api/v1/children/{$child->id}/steps/{$step->id}")->assertForbidden();
-    $this->patchJson("/api/v1/children/{$child->id}/steps/{$step->id}", ['name' => 'Nope'])->assertForbidden();
+    $this->deleteJson("/api/v1/children/{$child->id}/milestones/{$milestone->id}")->assertForbidden();
+    $this->patchJson("/api/v1/children/{$child->id}/milestones/{$milestone->id}", ['name' => 'Nope'])->assertForbidden();
 });
 
-it('keeps a memory attached to a step forever, but allows editing it', function () {
+it('keeps a memory attached to a milestone forever, but allows editing it', function () {
     [, $child] = family(ageMonths: 12);
-    $step = $child->steps()->where('name', 'Birth Day')->first();
+    $milestone = $child->milestones()->where('name', 'Birth Day')->first();
 
     $entry = $this->postJson("/api/v1/children/{$child->id}/entries", [
-        'child_step_id' => $step->id,
+        'child_milestone_id' => $milestone->id,
         'date' => now()->toDateString(),
         'description' => 'The longest night.',
     ])->assertCreated()->assertJsonPath('data.entry.isDeletable', false)->json('data.entry.id');
@@ -83,18 +83,18 @@ it('keeps the xp when a free memory is deleted', function () {
     expect($child->fresh()->xp)->toBe(10);
 });
 
-it('hides a recorded step without touching its memory', function () {
+it('hides a recorded milestone without touching its memory', function () {
     [, $child] = family(ageMonths: 12);
-    $step = $child->steps()->where('name', 'Birth Day')->first();
+    $milestone = $child->milestones()->where('name', 'Birth Day')->first();
 
     $this->postJson("/api/v1/children/{$child->id}/entries", [
-        'child_step_id' => $step->id, 'date' => now()->toDateString(),
+        'child_milestone_id' => $milestone->id, 'date' => now()->toDateString(),
     ])->assertCreated();
 
-    $this->postJson("/api/v1/children/{$child->id}/steps/{$step->id}/hide")->assertOk();
+    $this->postJson("/api/v1/children/{$child->id}/milestones/{$milestone->id}/hide")->assertOk();
 
-    expect($step->fresh()->is_hidden)->toBeTrue()
-        ->and($child->entries()->where('child_step_id', $step->id)->exists())->toBeTrue();
+    expect($milestone->fresh()->is_hidden)->toBeTrue()
+        ->and($child->entries()->where('child_milestone_id', $milestone->id)->exists())->toBeTrue();
 });
 
 it('lets a viewer look but not write', function () {

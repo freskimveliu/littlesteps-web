@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Enums;
 
 /**
- * What a step can ask a parent to measure.
+ * What a milestone can ask a parent to measure.
  *
  * The known keys are what the growth chart reads, so they carry a fixed unit
  * and the app owns their wording. Custom is the escape hatch: the parent names

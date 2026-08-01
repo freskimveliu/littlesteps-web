@@ -30,7 +30,7 @@ interface Category {
     color: string;
     sort_order: number;
     is_active: boolean;
-    template_steps_count: number;
+    milestones_count: number;
 }
 
 const props = defineProps<{
@@ -107,7 +107,7 @@ function performDelete() {
     <Head title="Categories" />
 
     <AdminLayout>
-        <UiPageHeader title="Categories" subtitle="Each step belongs to one. The category owns the colour." />
+        <UiPageHeader title="Categories" subtitle="Each milestone belongs to one. The category owns the colour." />
 
         <UiTable :empty="categories.length === 0" empty-title="No categories yet">
             <template #toolbar>
@@ -130,13 +130,13 @@ function performDelete() {
                 </UiSortableTableHeader>
                 <UiTableHeader>Icon</UiTableHeader>
                 <UiSortableTableHeader
-                    sort-key="template_steps_count"
+                    sort-key="milestones_count"
                     align="right"
                     :active-key="sortKey"
                     :active-order="sortOrder"
                     @sort="toggleSort"
                 >
-                    Steps
+                    Milestones
                 </UiSortableTableHeader>
                 <UiSortableTableHeader
                     sort-key="sort_order"
@@ -162,7 +162,7 @@ function performDelete() {
                         </p>
                     </UiTableCell>
                     <UiTableCell cell-class="text-slate-500">{{ category.icon }}</UiTableCell>
-                    <UiTableCell align="right">{{ category.template_steps_count }}</UiTableCell>
+                    <UiTableCell align="right">{{ category.milestones_count }}</UiTableCell>
                     <UiTableCell align="right">{{ category.sort_order }}</UiTableCell>
                     <UiTableCell align="right">
                         <div class="flex items-center justify-end gap-2">

@@ -55,8 +55,8 @@ const metricHints: Record<string, string> = {
     days: 'Distinct days with a memory',
     months: 'Distinct calendar months with a memory',
     streak: 'Consecutive days',
-    on_time_steps: 'Steps recorded while the child was actually that age',
-    milestones: 'Milestones the parent has finished',
+    on_time_milestones: 'Milestones recorded while the child was actually that age',
+    chapters: 'Chapters the parent has finished',
     photos: 'Photos kept',
     categories: 'Different categories used',
 };

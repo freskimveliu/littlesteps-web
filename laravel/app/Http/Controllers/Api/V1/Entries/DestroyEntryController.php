@@ -12,8 +12,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 /**
- * A memory attached to a step is permanent — it can be edited, never deleted.
- * Otherwise deleting would hand back the XP-bearing slot and the step could be
+ * A memory attached to a milestone is permanent — it can be edited, never deleted.
+ * Otherwise deleting would hand back the XP-bearing slot and the milestone could be
  * re-recorded for XP again. A free memory has no such hold, so it can go.
  */
 class DestroyEntryController extends Controller
@@ -26,7 +26,7 @@ class DestroyEntryController extends Controller
         abort_unless(
             $entry->isDeletable(),
             403,
-            'This memory belongs to a step. You can edit it, but it stays in the story.',
+            'This memory belongs to a milestone. You can edit it, but it stays in the story.',
         );
 
         $entry->delete();

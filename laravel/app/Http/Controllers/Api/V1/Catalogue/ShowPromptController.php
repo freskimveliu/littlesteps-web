@@ -8,7 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\CategoryResource;
 use App\Http\Responses\ApiResponse;
 use App\Models\Child;
-use App\Models\TemplatePrompt;
+use App\Models\Prompt;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -24,7 +24,7 @@ class ShowPromptController extends Controller
     {
         $this->authorize('view', $child);
 
-        $prompt = TemplatePrompt::query()
+        $prompt = Prompt::query()
             ->forAge($child->ageInMonths())
             ->with('category')
             ->inRandomOrder()

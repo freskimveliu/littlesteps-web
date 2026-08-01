@@ -6,8 +6,8 @@ namespace App\Http\Controllers\Admin\Families;
 
 use App\Http\Controllers\Controller;
 use App\Models\Child;
-use App\Models\TemplateAchievement;
-use App\Support\Progress\Level;
+use App\Models\Achievement;
+use App\Support\Progress\LevelLadder;
 use App\Support\Progress\Metrics;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -23,10 +23,10 @@ class ShowChildController extends Controller
         $record = Child::with([
             'creator:id,name,email',
             'memberships.user:id,name,email',
-            'milestones' => fn ($q) => $q->orderBy('sort_order')
+            'chapters' => fn ($q) => $q->orderBy('sort_order')
                 ->withCount([
-                    'steps as steps_total' => fn ($s) => $s->where('is_hidden', false),
-                    'steps as steps_recorded' => fn ($s) => $s->where('is_hidden', false)->whereHas('entry'),
+                    'milestones as milestones_total' => fn ($s) => $s->where('is_hidden', false),
+                    'milestones as milestones_recorded' => fn ($s) => $s->where('is_hidden', false)->whereHas('entry'),
                 ]),
             'achievements.achievement',
             'rewards.childAchievement.achievement',
@@ -35,14 +35,14 @@ class ShowChildController extends Controller
         $counts = $metrics->for($record);
 
         $entries = $record->entries()
-            ->with(['step:id,name', 'properties', 'media'])
+            ->with(['milestone:id,name', 'properties', 'media'])
             ->orderByDesc('date')
             ->orderByDesc('id')
             ->limit(50)
             ->get()
             ->map(fn ($entry) => [
                 'id' => $entry->id,
-                'step' => $entry->step?->name,
+                'milestone' => $entry->milestone?->name,
                 'description' => $entry->description,
                 'date' => $entry->date->toDateString(),
                 'mood' => $entry->mood,
@@ -56,7 +56,7 @@ class ShowChildController extends Controller
                 'created_at' => $entry->created_at?->toIso8601String(),
             ]);
 
-        $held = $record->achievements->keyBy('template_achievement_id');
+        $held = $record->achievements->keyBy('achievement_id');
 
         return Inertia::render('Admin/Children/Show', [
             'child' => [
@@ -70,8 +70,8 @@ class ShowChildController extends Controller
                 'created_at' => $record->created_at?->toIso8601String(),
                 'creator' => $record->creator?->only(['id', 'name', 'email']),
             ],
-            'level' => Level::for($record->xp),
-            'levelCount' => Level::total(),
+            'level' => LevelLadder::for($record->xp),
+            'levelCount' => LevelLadder::total(),
             'metrics' => $counts,
             'members' => $record->memberships->map(fn ($m) => [
                 'id' => $m->id,
@@ -80,21 +80,21 @@ class ShowChildController extends Controller
                 'role' => $m->role,
                 'is_creator' => $m->user_id === $record->created_by_user_id,
             ]),
-            'milestones' => $record->milestones->map(fn ($milestone) => [
-                'id' => $milestone->id,
-                'name' => $milestone->name,
-                'months_from' => $milestone->months_from,
-                'xp' => $milestone->xp,
-                'is_hidden' => $milestone->is_hidden,
-                'completed_at' => $milestone->completed_at?->toIso8601String(),
-                'steps_total' => $milestone->steps_total,
-                'steps_recorded' => $milestone->steps_recorded,
+            'chapters' => $record->chapters->map(fn ($chapter) => [
+                'id' => $chapter->id,
+                'name' => $chapter->name,
+                'months_from' => $chapter->months_from,
+                'xp' => $chapter->xp,
+                'is_hidden' => $chapter->is_hidden,
+                'completed_at' => $chapter->completed_at?->toIso8601String(),
+                'milestones_total' => $chapter->milestones_total,
+                'milestones_recorded' => $chapter->milestones_recorded,
             ]),
-            'badges' => TemplateAchievement::query()
+            'badges' => Achievement::query()
                 ->active()
                 ->orderBy('sort_order')
                 ->get()
-                ->map(fn (TemplateAchievement $badge) => [
+                ->map(fn (Achievement $badge) => [
                     'id' => $badge->id,
                     'name' => $badge->name,
                     'metric' => $badge->metric,

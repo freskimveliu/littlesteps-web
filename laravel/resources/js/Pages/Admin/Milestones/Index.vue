@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { Head, Link, router, useForm } from '@inertiajs/vue3';
+import { Head, router, useForm } from '@inertiajs/vue3';
 import PlusIcon from '@heroicons/vue/24/outline/esm/PlusIcon.js';
 import PencilSquareIcon from '@heroicons/vue/24/outline/esm/PencilSquareIcon.js';
 import TrashIcon from '@heroicons/vue/24/outline/esm/TrashIcon.js';
+import XMarkIcon from '@heroicons/vue/24/outline/esm/XMarkIcon.js';
 import AdminLayout from '../../../layouts/AdminLayout.vue';
 import UiPageHeader from '../../../components/ui/UiPageHeader.vue';
 import UiTable from '../../../components/ui/UiTable.vue';
@@ -23,58 +24,80 @@ import UiSwitch from '../../../components/ui/UiSwitch.vue';
 import UiConfirmationModal from '../../../components/ui/UiConfirmationModal.vue';
 import { useIndexFilters } from '../../../composables/useIndexFilters';
 
+interface Property {
+    id?: number;
+    key: string;
+    name: string | null;
+}
+
 interface Milestone {
     id: number;
     name: string;
     description: string | null;
-    icon: string;
+    icon: string | null;
     months_from: number | null;
     xp: number;
     sort_order: number;
-    is_editable: boolean;
     is_active: boolean;
-    steps_count: number;
+    chapter_id: number;
+    category_id: number;
+    chapter: { id: number; name: string } | null;
+    category: { id: number; name: string; color: string } | null;
+    properties: Property[];
 }
 
 const props = defineProps<{
-    milestones: Milestone[];
-    filters: { search: string | null; sort: string | null; order: string | null };
+    milestones: { data: Milestone[]; current_page: number; last_page: number; total: number; links: unknown[] };
+    filters: { search: string | null; sort: string | null; order: string | null; chapter: number | null };
+    chapters: { id: number; name: string }[];
+    categories: { id: number; name: string; color: string }[];
     icons: string[];
+    propertyKeys: string[];
 }>();
 
-const { search, searching, sortKey, sortOrder, toggleSort } = useIndexFilters({
+const milestoneFilter = ref<string>(props.filters.chapter ? String(props.filters.chapter) : '');
+
+const { search, searching, sortKey, sortOrder, toggleSort, visit } = useIndexFilters({
     url: '/admin/milestones',
     search: props.filters.search,
     sortKey: props.filters.sort,
     sortOrder: props.filters.order as 'asc' | 'desc' | null,
 });
 
+function applyMilestone() {
+    visit({ chapter: milestoneFilter.value || undefined });
+}
+
 const formOpen = ref(false);
 const editing = ref<Milestone | null>(null);
 const toDelete = ref<Milestone | null>(null);
 
 const form = useForm({
+    chapter_id: props.chapters[0]?.id ?? 0,
+    category_id: props.categories[0]?.id ?? 0,
     name: '',
     description: '',
-    icon: 'star',
+    icon: '',
     months_from: 0,
-    xp: 150,
+    xp: 25,
     sort_order: 0,
-    is_editable: false,
     is_active: true,
+    properties: [] as Property[],
 });
 
 function startCreate() {
     editing.value = null;
     form.defaults({
+        chapter_id: Number(milestoneFilter.value) || props.chapters[0]?.id || 0,
+        category_id: props.categories[0]?.id ?? 0,
         name: '',
         description: '',
-        icon: 'star',
+        icon: '',
         months_from: 0,
-        xp: 150,
-        sort_order: (props.milestones.at(-1)?.sort_order ?? 0) + 10,
-        is_editable: false,
+        xp: 25,
+        sort_order: 0,
         is_active: true,
+        properties: [],
     });
     form.reset();
     form.clearErrors();
@@ -84,18 +107,24 @@ function startCreate() {
 function startEdit(milestone: Milestone) {
     editing.value = milestone;
     form.defaults({
+        chapter_id: milestone.chapter_id,
+        category_id: milestone.category_id,
         name: milestone.name,
         description: milestone.description ?? '',
-        icon: milestone.icon,
+        icon: milestone.icon ?? '',
         months_from: milestone.months_from ?? 0,
         xp: milestone.xp,
         sort_order: milestone.sort_order,
-        is_editable: milestone.is_editable,
         is_active: milestone.is_active,
+        properties: milestone.properties.map((p) => ({ key: p.key, name: p.name })),
     });
     form.reset();
     form.clearErrors();
     formOpen.value = true;
+}
+
+function addProperty() {
+    form.properties.push({ key: 'weight', name: null });
 }
 
 function submit() {
@@ -118,12 +147,23 @@ function performDelete() {
     <AdminLayout>
         <UiPageHeader
             title="Milestones"
-            subtitle="The eight parts of the journey. A milestone opens at its months_from and is finished by the parent."
+            :subtitle="`${milestones.total} questions across the journey. Editing one never rewrites what a parent already saved.`"
         />
 
-        <UiTable :empty="milestones.length === 0" empty-title="No milestones yet">
+        <UiTable :empty="milestones.data.length === 0" empty-title="No milestones match">
             <template #toolbar>
                 <UiSpinner v-if="searching" size="xs" tone="primary" class="mr-2" />
+                <div class="w-52">
+                    <UiSelect
+                        v-model="milestoneFilter"
+                        placeholder="All chapters"
+                        :options="[
+                            { value: '', label: 'All chapters' },
+                            ...chapters.map((c) => ({ value: String(c.id), label: c.name })),
+                        ]"
+                        @update:model-value="applyMilestone"
+                    />
+                </div>
                 <UiSearchInput v-model="search" placeholder="Search milestones…" />
                 <UiButton @click="startCreate">
                     <PlusIcon class="h-3.5 w-3.5" />
@@ -135,6 +175,9 @@ function performDelete() {
                 <UiSortableTableHeader sort-key="name" :active-key="sortKey" :active-order="sortOrder" @sort="toggleSort">
                     Name
                 </UiSortableTableHeader>
+                <UiTableHeader>Chapter</UiTableHeader>
+                <UiTableHeader>Category</UiTableHeader>
+                <UiTableHeader>Asks for</UiTableHeader>
                 <UiSortableTableHeader
                     sort-key="months_from"
                     align="right"
@@ -142,16 +185,7 @@ function performDelete() {
                     :active-order="sortOrder"
                     @sort="toggleSort"
                 >
-                    Opens at
-                </UiSortableTableHeader>
-                <UiSortableTableHeader
-                    sort-key="steps_count"
-                    align="right"
-                    :active-key="sortKey"
-                    :active-order="sortOrder"
-                    @sort="toggleSort"
-                >
-                    Steps
+                    Unlocks
                 </UiSortableTableHeader>
                 <UiSortableTableHeader
                     sort-key="xp"
@@ -166,23 +200,25 @@ function performDelete() {
             </template>
 
             <template #body>
-                <UiTableRow v-for="milestone in milestones" :key="milestone.id">
+                <UiTableRow v-for="milestone in milestones.data" :key="milestone.id">
                     <UiTableCell>
-                        <div class="flex items-center gap-2">
-                            <span class="font-medium text-slate-900">{{ milestone.name }}</span>
-                            <UiBadge v-if="!milestone.is_active" tone="danger">inactive</UiBadge>
+                        <span class="font-medium text-slate-900">{{ milestone.name }}</span>
+                    </UiTableCell>
+                    <UiTableCell cell-class="text-slate-500">{{ milestone.chapter?.name }}</UiTableCell>
+                    <UiTableCell>
+                        <div v-if="milestone.category" class="flex items-center gap-1.5">
+                            <span class="h-2.5 w-2.5 rounded-full" :style="{ backgroundColor: milestone.category.color }" />
+                            <span class="text-slate-600">{{ milestone.category.name }}</span>
                         </div>
-                        <p v-if="milestone.description" class="text-label text-slate-400">{{ milestone.description }}</p>
+                    </UiTableCell>
+                    <UiTableCell>
+                        <div class="flex flex-wrap gap-1">
+                            <UiBadge v-for="(p, i) in milestone.properties" :key="i" :tone="p.key === 'custom' ? 'neutral' : 'primary'">
+                                {{ p.name ?? p.key }}
+                            </UiBadge>
+                        </div>
                     </UiTableCell>
                     <UiTableCell align="right">{{ milestone.months_from }} mo</UiTableCell>
-                    <UiTableCell align="right">
-                        <Link
-                            :href="`/admin/steps?milestone=${milestone.id}`"
-                            class="text-primary-accessible hover:underline"
-                        >
-                            {{ milestone.steps_count }}
-                        </Link>
-                    </UiTableCell>
                     <UiTableCell align="right">{{ milestone.xp }}</UiTableCell>
                     <UiTableCell align="right">
                         <div class="flex items-center justify-end gap-2">
@@ -196,33 +232,74 @@ function performDelete() {
                     </UiTableCell>
                 </UiTableRow>
             </template>
+
+            <template #footer>
+                <div
+                    v-if="milestones.last_page > 1"
+                    class="flex items-center justify-between border-t border-[#f0f4f8] px-6 py-4 text-body text-slate-500"
+                >
+                    <span>Page {{ milestones.current_page }} of {{ milestones.last_page }}</span>
+                    <div class="flex gap-2">
+                        <UiButton
+                            variant="outline"
+                            :disabled="milestones.current_page === 1"
+                            @click="visit({ page: milestones.current_page - 1, chapter: milestoneFilter || undefined })"
+                        >
+                            Previous
+                        </UiButton>
+                        <UiButton
+                            variant="outline"
+                            :disabled="milestones.current_page === milestones.last_page"
+                            @click="visit({ page: milestones.current_page + 1, chapter: milestoneFilter || undefined })"
+                        >
+                            Next
+                        </UiButton>
+                    </div>
+                </div>
+            </template>
         </UiTable>
 
-        <UiModal v-model="formOpen" :title="editing ? 'Edit milestone' : 'New milestone'">
+        <UiModal v-model="formOpen" size="lg" :title="editing ? 'Edit milestone' : 'New milestone'">
             <form id="milestone-form" class="flex flex-col gap-4" @submit.prevent="submit">
-                <UiInput v-model="form.name" label="Name" required :error="form.errors.name" />
+                <div class="grid grid-cols-2 gap-3">
+                    <UiInput v-model="form.name" label="Name" required :error="form.errors.name" />
+                </div>
+
                 <UiInput v-model="form.description" label="Description" :error="form.errors.description" />
+
+                <div class="grid grid-cols-2 gap-3">
+                    <UiSelect
+                        v-model="form.chapter_id"
+                        label="Chapter"
+                        required
+                        :error="form.errors.chapter_id"
+                        :options="chapters.map((c) => ({ value: c.id, label: c.name }))"
+                    />
+                    <UiSelect
+                        v-model="form.category_id"
+                        label="Category"
+                        required
+                        :error="form.errors.category_id"
+                        :options="categories.map((c) => ({ value: c.id, label: c.name }))"
+                    />
+                </div>
+
                 <UiSelect
                     v-model="form.icon"
                     label="Icon"
-                    required
+                    hint="Leave empty to fall back to the category's icon"
                     :error="form.errors.icon"
-                    :options="icons.map((i) => ({ value: i, label: i }))"
+                    :options="[{ value: '', label: '— use the category icon —' }, ...icons.map((i) => ({ value: i, label: i }))]"
                 />
+
                 <div class="grid grid-cols-3 gap-3">
                     <UiInput
                         v-model="form.months_from"
                         type="number"
-                        label="Opens at (months)"
+                        label="Unlocks at (months)"
                         :error="form.errors.months_from"
                     />
-                    <UiInput
-                        v-model="form.xp"
-                        type="number"
-                        label="XP for finishing"
-                        required
-                        :error="form.errors.xp"
-                    />
+                    <UiInput v-model="form.xp" type="number" label="XP" required :error="form.errors.xp" />
                     <UiInput
                         v-model="form.sort_order"
                         type="number"
@@ -231,10 +308,42 @@ function performDelete() {
                         :error="form.errors.sort_order"
                     />
                 </div>
-                <div class="flex gap-6">
-                    <UiSwitch v-model="form.is_editable" label="Parents may rename it" />
-                    <UiSwitch v-model="form.is_active" label="Active" />
+
+                <div>
+                    <div class="mb-2 flex items-center justify-between">
+                        <p class="text-label font-semibold text-slate-900">What it asks for</p>
+                        <UiButton variant="outline" size="md" @click="addProperty">
+                            <PlusIcon class="h-3 w-3" />
+                            Add
+                        </UiButton>
+                    </div>
+
+                    <p v-if="form.properties.length === 0" class="text-body text-slate-400">
+                        Nothing measured — just the story and the day.
+                    </p>
+
+                    <div v-for="(property, i) in form.properties" :key="i" class="mb-2 flex items-end gap-2">
+                        <div class="w-40">
+                            <UiSelect
+                                v-model="property.key"
+                                :options="propertyKeys.map((k) => ({ value: k, label: k }))"
+                            />
+                        </div>
+                        <div class="flex-1">
+                            <UiInput
+                                v-model="property.name"
+                                :placeholder="property.key === 'custom' ? 'Label, e.g. Shoe size' : 'Uses the built-in label'"
+                                :disabled="property.key !== 'custom'"
+                                :error="(form.errors as Record<string, string>)[`properties.${i}.name`]"
+                            />
+                        </div>
+                        <UiActionButton title="Remove" variant="filled" tone="danger" @click="form.properties.splice(i, 1)">
+                            <XMarkIcon class="h-4 w-4" />
+                        </UiActionButton>
+                    </div>
                 </div>
+
+                <UiSwitch v-model="form.is_active" label="Active" />
             </form>
 
             <template #footer>

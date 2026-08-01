@@ -24,7 +24,7 @@ interface ChildRow {
     level_name: string;
     entries_count: number;
     achievements_count: number;
-    milestones_done_count: number;
+    chapters_done_count: number;
     creator: { id: number; name: string; email: string | null } | null;
 }
 
@@ -99,7 +99,7 @@ function age(months: number): string {
                 >
                     Badges
                 </UiSortableTableHeader>
-                <UiTableHeader align="right">Milestones</UiTableHeader>
+                <UiTableHeader align="right">Chapters</UiTableHeader>
                 <UiTableHeader align="right" />
             </template>
 
@@ -127,7 +127,7 @@ function age(months: number): string {
                     </UiTableCell>
                     <UiTableCell align="right">{{ child.entries_count }}</UiTableCell>
                     <UiTableCell align="right">{{ child.achievements_count }}</UiTableCell>
-                    <UiTableCell align="right">{{ child.milestones_done_count }} / 8</UiTableCell>
+                    <UiTableCell align="right">{{ child.chapters_done_count }} / 8</UiTableCell>
                     <UiTableCell align="right">
                         <UiButton variant="outline" :to="`/admin/children/${child.id}`">Open</UiButton>
                     </UiTableCell>

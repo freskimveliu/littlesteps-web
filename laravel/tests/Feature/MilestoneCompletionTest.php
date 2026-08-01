@@ -5,25 +5,25 @@ declare(strict_types=1);
 use App\Enums\AppSettingKey;
 use App\Models\AppSetting;
 use App\Models\Child;
-use App\Models\ChildMilestone;
+use App\Models\ChildChapter;
 
 beforeEach(fn () => seedCatalogue());
 
-/** Fill every visible step in a chapter, bypassing the daily cap. */
-function fillChapter(Child $child, ChildMilestone $chapter): void
+/** Fill every visible milestone in a chapter, bypassing the daily cap. */
+function fillChapter(Child $child, ChildChapter $chapter): void
 {
-    foreach ($chapter->steps()->visible()->get() as $step) {
+    foreach ($chapter->milestones()->visible()->get() as $milestone) {
         $child->entries()->create([
-            'child_step_id' => $step->id,
+            'child_milestone_id' => $milestone->id,
             'date' => now()->toDateString(),
             'created_by_user_id' => $child->created_by_user_id,
         ]);
     }
 }
 
-it('offers completion only once every visible step has a memory', function () {
+it('offers completion only once every visible milestone has a memory', function () {
     [, $child] = family(ageMonths: 6);
-    $chapter = $child->milestones()->first();
+    $chapter = $child->chapters()->first();
 
     expect(app(App\Support\Limits::class)->canCompleteMilestone($chapter))->toBeFalse();
 
@@ -34,15 +34,15 @@ it('offers completion only once every visible step has a memory', function () {
 
 it('awards the chapter xp and stamps who finished it', function () {
     [$user, $child] = family(ageMonths: 6);
-    $chapter = $child->milestones()->first();
+    $chapter = $child->chapters()->first();
     fillChapter($child, $chapter);
 
     $before = $child->fresh()->xp;
 
-    $this->postJson("/api/v1/children/{$child->id}/milestones/{$chapter->id}/complete")
+    $this->postJson("/api/v1/children/{$child->id}/chapters/{$chapter->id}/complete")
         ->assertOk()
         ->assertJsonPath('data.xpEarned', $chapter->xp)
-        ->assertJsonPath('data.milestone.isCompleted', true);
+        ->assertJsonPath('data.chapter.isCompleted', true);
 
     $chapter->refresh();
 
@@ -53,61 +53,61 @@ it('awards the chapter xp and stamps who finished it', function () {
         ->and($child->fresh()->xp)->toBe($before + $chapter->xp + 200);
 });
 
-it('refuses completion while a step is still empty', function () {
+it('refuses completion while a milestone is still empty', function () {
     [, $child] = family(ageMonths: 6);
-    $chapter = $child->milestones()->first();
+    $chapter = $child->chapters()->first();
 
-    $this->postJson("/api/v1/children/{$child->id}/milestones/{$chapter->id}/complete")
-        ->assertJsonValidationErrorFor('milestone');
+    $this->postJson("/api/v1/children/{$child->id}/chapters/{$chapter->id}/complete")
+        ->assertJsonValidationErrorFor('chapter');
 });
 
-it('will not let a parent hide a chapter down to a handful of steps and collect the gift', function () {
+it('will not let a parent hide a chapter down to a handful of milestones and collect the gift', function () {
     [, $child] = family(ageMonths: 6);
-    $chapter = $child->milestones()->first();
+    $chapter = $child->chapters()->first();
 
-    // Leave two visible, fill them both — under min_steps_to_complete_milestone.
-    $keep = $chapter->steps()->visible()->take(2)->pluck('id');
-    $chapter->steps()->whereNotIn('id', $keep)->update(['is_hidden' => true]);
+    // Leave two visible, fill them both — under min_milestones_to_complete_chapter.
+    $keep = $chapter->milestones()->visible()->take(2)->pluck('id');
+    $chapter->milestones()->whereNotIn('id', $keep)->update(['is_hidden' => true]);
     fillChapter($child, $chapter->fresh());
 
-    expect($chapter->fresh()->steps()->visible()->count())->toBe(2);
+    expect($chapter->fresh()->milestones()->visible()->count())->toBe(2);
 
-    $this->postJson("/api/v1/children/{$child->id}/milestones/{$chapter->id}/complete")
-        ->assertJsonValidationErrorFor('milestone');
+    $this->postJson("/api/v1/children/{$child->id}/chapters/{$chapter->id}/complete")
+        ->assertJsonValidationErrorFor('chapter');
 });
 
 it('respects a retuned minimum', function () {
     [, $child] = family(ageMonths: 6);
-    $chapter = $child->milestones()->first();
+    $chapter = $child->chapters()->first();
 
-    $keep = $chapter->steps()->visible()->take(2)->pluck('id');
-    $chapter->steps()->whereNotIn('id', $keep)->update(['is_hidden' => true]);
+    $keep = $chapter->milestones()->visible()->take(2)->pluck('id');
+    $chapter->milestones()->whereNotIn('id', $keep)->update(['is_hidden' => true]);
     fillChapter($child, $chapter->fresh());
 
-    AppSetting::where('key', AppSettingKey::MinStepsToCompleteMilestone->value)->update(['value' => '2']);
+    AppSetting::where('key', AppSettingKey::MinMilestonesToCompleteChapter->value)->update(['value' => '2']);
 
-    $this->postJson("/api/v1/children/{$child->id}/milestones/{$chapter->id}/complete")->assertOk();
+    $this->postJson("/api/v1/children/{$child->id}/chapters/{$chapter->id}/complete")->assertOk();
 });
 
 it('refuses to complete the same chapter twice', function () {
     [, $child] = family(ageMonths: 6);
-    $chapter = $child->milestones()->first();
+    $chapter = $child->chapters()->first();
     fillChapter($child, $chapter);
 
-    $this->postJson("/api/v1/children/{$child->id}/milestones/{$chapter->id}/complete")->assertOk();
-    $this->postJson("/api/v1/children/{$child->id}/milestones/{$chapter->id}/complete")
-        ->assertJsonValidationErrorFor('milestone');
+    $this->postJson("/api/v1/children/{$child->id}/chapters/{$chapter->id}/complete")->assertOk();
+    $this->postJson("/api/v1/children/{$child->id}/chapters/{$chapter->id}/complete")
+        ->assertJsonValidationErrorFor('chapter');
 });
 
-it('hides a chapter together with its steps', function () {
+it('hides a chapter together with its milestones', function () {
     [, $child] = family();
-    $chapter = $child->milestones()->first();
+    $chapter = $child->chapters()->first();
 
-    $this->postJson("/api/v1/children/{$child->id}/milestones/{$chapter->id}/hide", ['hidden' => true])
+    $this->postJson("/api/v1/children/{$child->id}/chapters/{$chapter->id}/hide", ['hidden' => true])
         ->assertOk();
 
     expect($chapter->fresh()->is_hidden)->toBeTrue()
-        ->and($chapter->steps()->where('is_hidden', false)->count())->toBe(0);
+        ->and($chapter->milestones()->where('is_hidden', false)->count())->toBe(0);
 
-    $this->getJson("/api/v1/children/{$child->id}/milestones")->assertJsonCount(7, 'data');
+    $this->getJson("/api/v1/children/{$child->id}/chapters")->assertJsonCount(7, 'data');
 });

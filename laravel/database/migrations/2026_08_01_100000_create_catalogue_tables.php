@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Schema;
  * The admin catalogue: shared by every family, copied onto a child at provisioning.
  *
  * These tables soft-delete because a child's rows keep a template_*_id pointing
- * back here; removing a step outright would break that trail.
+ * back here; removing a milestone outright would break that trail.
  */
 return new class extends Migration
 {
@@ -27,7 +27,7 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        Schema::create('template_milestones', function (Blueprint $table) {
+        Schema::create('chapters', function (Blueprint $table) {
             $table->id();
             $table->string('name');
             $table->string('description')->nullable();
@@ -43,9 +43,9 @@ return new class extends Migration
             $table->index('months_from');
         });
 
-        Schema::create('template_steps', function (Blueprint $table) {
+        Schema::create('milestones', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('template_milestone_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('chapter_id')->constrained()->cascadeOnDelete();
             $table->foreignId('category_id')->constrained();
             $table->string('name');
             $table->string('description')->nullable();
@@ -58,19 +58,19 @@ return new class extends Migration
             $table->softDeletes();
             $table->timestamps();
 
-            $table->index(['template_milestone_id', 'sort_order']);
+            $table->index(['chapter_id', 'sort_order']);
         });
 
-        Schema::create('template_step_properties', function (Blueprint $table) {
+        Schema::create('milestone_properties', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('template_step_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('milestone_id')->constrained()->cascadeOnDelete();
             $table->string('key');
             $table->string('name')->nullable();
             $table->unsignedSmallInteger('sort_order')->default(0);
             $table->timestamps();
         });
 
-        Schema::create('template_levels', function (Blueprint $table) {
+        Schema::create('levels', function (Blueprint $table) {
             $table->id();
             $table->string('name');
             $table->string('icon');
@@ -80,7 +80,7 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        Schema::create('template_achievements', function (Blueprint $table) {
+        Schema::create('achievements', function (Blueprint $table) {
             $table->id();
             $table->string('name');
             $table->string('description')->nullable();
@@ -97,7 +97,7 @@ return new class extends Migration
             $table->index(['metric', 'threshold']);
         });
 
-        Schema::create('template_prompts', function (Blueprint $table) {
+        Schema::create('prompts', function (Blueprint $table) {
             $table->id();
             $table->foreignId('category_id')->nullable()->constrained()->nullOnDelete();
             $table->string('name');
@@ -122,12 +122,12 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('app_settings');
-        Schema::dropIfExists('template_prompts');
-        Schema::dropIfExists('template_achievements');
-        Schema::dropIfExists('template_levels');
-        Schema::dropIfExists('template_step_properties');
-        Schema::dropIfExists('template_steps');
-        Schema::dropIfExists('template_milestones');
+        Schema::dropIfExists('prompts');
+        Schema::dropIfExists('achievements');
+        Schema::dropIfExists('levels');
+        Schema::dropIfExists('milestone_properties');
+        Schema::dropIfExists('milestones');
+        Schema::dropIfExists('chapters');
         Schema::dropIfExists('categories');
     }
 };

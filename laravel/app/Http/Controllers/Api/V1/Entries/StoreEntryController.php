@@ -13,7 +13,7 @@ use App\Http\Resources\ChildEntryResource;
 use App\Http\Responses\ApiResponse;
 use App\Models\Child;
 use App\Support\Limits;
-use App\Support\Progress\Level;
+use App\Support\Progress\LevelLadder;
 use Illuminate\Http\JsonResponse;
 
 class StoreEntryController extends Controller
@@ -34,13 +34,13 @@ class StoreEntryController extends Controller
             'entry' => new ChildEntryResource($result['entry']),
             'xpEarned' => $result['xp'],
             'xp' => $child->xp,
-            'level' => Level::for($child->xp),
+            'level' => LevelLadder::for($child->xp),
             'unlocked' => $result['unlocked']->map(
                 fn ($held) => new AchievementResource($held->achievement, $held->achievement->threshold, true)
             ),
             'limits' => [
                 'freeEntriesLeft' => $limits->freeEntriesLeft($child, $user),
-                'stepEntriesLeft' => $limits->stepEntriesLeft($child, $user),
+                'milestoneEntriesLeft' => $limits->milestoneEntriesLeft($child, $user),
             ],
         ], 'Memory captured.', 201);
     }

@@ -17,10 +17,10 @@ class IndexCategoriesController extends Controller
     public function __invoke(Request $request): Response
     {
         $categories = IndexQuery::apply(
-            Category::query()->withCount('templateSteps'),
+            Category::query()->withCount('milestones'),
             $request,
             searchable: ['name', 'description'],
-            sortable: ['name', 'sort_order', 'template_steps_count'],
+            sortable: ['name', 'sort_order', 'milestones_count'],
         )->get();
 
         return Inertia::render('Admin/Categories/Index', [

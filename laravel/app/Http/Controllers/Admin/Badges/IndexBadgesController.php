@@ -8,7 +8,7 @@ use App\Enums\AchievementMetric;
 use App\Enums\Icon;
 use App\Enums\RewardType;
 use App\Http\Controllers\Controller;
-use App\Models\TemplateAchievement;
+use App\Models\Achievement;
 use App\Support\Admin\IndexQuery;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -19,7 +19,7 @@ class IndexBadgesController extends Controller
     public function __invoke(Request $request): Response
     {
         $badges = IndexQuery::apply(
-            TemplateAchievement::query(),
+            Achievement::query(),
             $request,
             searchable: ['name', 'description'],
             sortable: ['name', 'metric', 'threshold', 'xp', 'sort_order'],

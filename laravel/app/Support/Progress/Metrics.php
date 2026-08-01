@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\DB;
  * The numbers every badge rule reads.
  *
  * Each one is gated by the calendar rather than by typing speed: the catalogue
- * holds a finite number of steps, so a raw entry count would let a determined
+ * holds a finite number of milestones, so a raw entry count would let a determined
  * parent clear the whole ladder in a fortnight.
  */
 class Metrics
@@ -25,8 +25,8 @@ class Metrics
             AchievementMetric::Days->value => $this->days($child),
             AchievementMetric::Months->value => $this->months($child),
             AchievementMetric::Streak->value => $this->streak($child),
-            AchievementMetric::OnTimeSteps->value => $this->onTimeSteps($child),
-            AchievementMetric::Milestones->value => $this->milestones($child),
+            AchievementMetric::OnTimeMilestones->value => $this->onTimeSteps($child),
+            AchievementMetric::Chapters->value => $this->chapters($child),
             AchievementMetric::Photos->value => $this->photos($child),
             AchievementMetric::Categories->value => $this->categories($child),
         ];
@@ -79,30 +79,30 @@ class Metrics
     }
 
     /**
-     * A step caught while the child was actually that age — recorded inside the
-     * quarter that opens at the step's months_from. Backfilling the first smile
+     * A milestone caught while the child was actually that age — recorded inside the
+     * quarter that opens at the milestone's months_from. Backfilling the first smile
      * at age four is still a memory, just not this badge.
      */
     public function onTimeSteps(Child $child): int
     {
         return ChildEntry::query()
             ->where('child_entries.child_id', $child->id)
-            ->join('child_steps', 'child_steps.id', '=', 'child_entries.child_step_id')
-            ->whereNotNull('child_steps.months_from')
+            ->join('child_milestones', 'child_milestones.id', '=', 'child_entries.child_milestone_id')
+            ->whereNotNull('child_milestones.months_from')
             ->whereRaw(
-                'child_entries.date >= DATE_ADD(?, INTERVAL child_steps.months_from MONTH)',
+                'child_entries.date >= DATE_ADD(?, INTERVAL child_milestones.months_from MONTH)',
                 [$child->birthday->toDateString()]
             )
             ->whereRaw(
-                'child_entries.date < DATE_ADD(?, INTERVAL child_steps.months_from + 3 MONTH)',
+                'child_entries.date < DATE_ADD(?, INTERVAL child_milestones.months_from + 3 MONTH)',
                 [$child->birthday->toDateString()]
             )
             ->count();
     }
 
-    public function milestones(Child $child): int
+    public function chapters(Child $child): int
     {
-        return $child->milestones()->whereNotNull('completed_at')->count();
+        return $child->chapters()->whereNotNull('completed_at')->count();
     }
 
     public function photos(Child $child): int
@@ -118,9 +118,9 @@ class Metrics
     {
         return ChildEntry::query()
             ->where('child_entries.child_id', $child->id)
-            ->join('child_steps', 'child_steps.id', '=', 'child_entries.child_step_id')
-            ->whereNotNull('child_steps.category_id')
+            ->join('child_milestones', 'child_milestones.id', '=', 'child_entries.child_milestone_id')
+            ->whereNotNull('child_milestones.category_id')
             ->distinct()
-            ->count('child_steps.category_id');
+            ->count('child_milestones.category_id');
     }
 }

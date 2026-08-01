@@ -85,16 +85,16 @@ class Child extends Model implements HasMedia
             ->withTimestamps();
     }
 
+    /** @return HasMany<ChildChapter, $this> */
+    public function chapters(): HasMany
+    {
+        return $this->hasMany(ChildChapter::class);
+    }
+
     /** @return HasMany<ChildMilestone, $this> */
     public function milestones(): HasMany
     {
         return $this->hasMany(ChildMilestone::class);
-    }
-
-    /** @return HasMany<ChildStep, $this> */
-    public function steps(): HasMany
-    {
-        return $this->hasMany(ChildStep::class);
     }
 
     /** @return HasMany<ChildEntry, $this> */

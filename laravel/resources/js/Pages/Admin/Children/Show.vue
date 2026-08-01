@@ -33,15 +33,15 @@ const props = defineProps<{
         role: string;
         is_creator: boolean;
     }[];
-    milestones: {
+    chapters: {
         id: number;
         name: string;
         months_from: number | null;
         xp: number;
         is_hidden: boolean;
         completed_at: string | null;
-        steps_total: number;
-        steps_recorded: number;
+        milestones_total: number;
+        milestones_recorded: number;
     }[];
     badges: {
         id: number;
@@ -63,7 +63,7 @@ const props = defineProps<{
     }[];
     entries: {
         id: number;
-        step: string | null;
+        milestone: string | null;
         description: string | null;
         date: string;
         mood: string | null;
@@ -130,8 +130,8 @@ function resetGift(id: number) {
                 <p class="text-body text-slate-500">Streak</p>
             </UiCard>
             <UiCard body-class="px-5 py-4">
-                <p class="text-2xl font-bold text-slate-900">{{ metrics.milestones }} / 8</p>
-                <p class="text-body text-slate-500">Milestones</p>
+                <p class="text-2xl font-bold text-slate-900">{{ metrics.chapters }} / 8</p>
+                <p class="text-body text-slate-500">Chapters</p>
             </UiCard>
             <UiCard body-class="px-5 py-4">
                 <p class="text-2xl font-bold text-slate-900">{{ age(child.age_months) }}</p>
@@ -151,40 +151,40 @@ function resetGift(id: number) {
             </UiButton>
         </div>
 
-        <UiTable v-if="tab === 'journey'" :empty="milestones.length === 0" empty-title="Not provisioned">
+        <UiTable v-if="tab === 'journey'" :empty="chapters.length === 0" empty-title="Not provisioned">
             <template #header>
-                <UiTableHeader>Milestone</UiTableHeader>
+                <UiTableHeader>Chapter</UiTableHeader>
                 <UiTableHeader align="right">Opens at</UiTableHeader>
                 <UiTableHeader>Progress</UiTableHeader>
                 <UiTableHeader align="right">Finished</UiTableHeader>
             </template>
             <template #body>
-                <UiTableRow v-for="milestone in milestones" :key="milestone.id">
+                <UiTableRow v-for="chapter in chapters" :key="chapter.id">
                     <UiTableCell>
                         <div class="flex items-center gap-2">
-                            <span class="font-medium text-slate-900">{{ milestone.name }}</span>
-                            <UiBadge v-if="milestone.is_hidden" tone="neutral">hidden</UiBadge>
+                            <span class="font-medium text-slate-900">{{ chapter.name }}</span>
+                            <UiBadge v-if="chapter.is_hidden" tone="neutral">hidden</UiBadge>
                         </div>
                     </UiTableCell>
-                    <UiTableCell align="right" cell-class="text-slate-500">{{ milestone.months_from }} mo</UiTableCell>
+                    <UiTableCell align="right" cell-class="text-slate-500">{{ chapter.months_from }} mo</UiTableCell>
                     <UiTableCell>
                         <div class="flex items-center gap-2">
                             <div class="h-1.5 w-32 overflow-hidden rounded-full bg-slate-100">
                                 <div
                                     class="h-full rounded-full bg-primary"
                                     :style="{
-                                        width: `${milestone.steps_total ? (milestone.steps_recorded / milestone.steps_total) * 100 : 0}%`,
+                                        width: `${chapter.milestones_total ? (chapter.milestones_recorded / chapter.milestones_total) * 100 : 0}%`,
                                     }"
                                 />
                             </div>
                             <span class="text-slate-500">
-                                {{ milestone.steps_recorded }} / {{ milestone.steps_total }}
+                                {{ chapter.milestones_recorded }} / {{ chapter.milestones_total }}
                             </span>
                         </div>
                     </UiTableCell>
                     <UiTableCell align="right">
-                        <UiBadge v-if="milestone.completed_at" tone="success">
-                            {{ milestone.completed_at.slice(0, 10) }}
+                        <UiBadge v-if="chapter.completed_at" tone="success">
+                            {{ chapter.completed_at.slice(0, 10) }}
                         </UiBadge>
                         <span v-else class="text-slate-300">—</span>
                     </UiTableCell>
@@ -200,7 +200,7 @@ function resetGift(id: number) {
         >
             <template #header>
                 <UiTableHeader>Date</UiTableHeader>
-                <UiTableHeader>Step</UiTableHeader>
+                <UiTableHeader>Milestone</UiTableHeader>
                 <UiTableHeader>Story</UiTableHeader>
                 <UiTableHeader>Measured</UiTableHeader>
                 <UiTableHeader align="right">Photos</UiTableHeader>
@@ -209,7 +209,7 @@ function resetGift(id: number) {
                 <UiTableRow v-for="entry in entries" :key="entry.id">
                     <UiTableCell cell-class="whitespace-nowrap text-slate-500">{{ entry.date }}</UiTableCell>
                     <UiTableCell>
-                        <span v-if="entry.step" class="text-slate-800">{{ entry.step }}</span>
+                        <span v-if="entry.milestone" class="text-slate-800">{{ entry.milestone }}</span>
                         <UiBadge v-else tone="neutral">free</UiBadge>
                     </UiTableCell>
                     <UiTableCell cell-class="max-w-md">

@@ -6,12 +6,12 @@ namespace App\Http\Controllers\Admin\Prompts;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\PromptRequest;
-use App\Models\TemplatePrompt;
+use App\Models\Prompt;
 use Illuminate\Http\RedirectResponse;
 
 class UpdatePromptController extends Controller
 {
-    public function __invoke(PromptRequest $request, TemplatePrompt $prompt): RedirectResponse
+    public function __invoke(PromptRequest $request, Prompt $prompt): RedirectResponse
     {
         $prompt->update($request->validated());
 

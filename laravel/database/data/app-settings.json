@@ -8,15 +8,15 @@
     "value": "10"
   },
   {
-    "key": "daily_step_entries",
+    "key": "daily_milestone_entries",
     "value": "5"
   },
   {
-    "key": "max_custom_steps_per_milestone",
+    "key": "max_custom_milestones_per_chapter",
     "value": "10"
   },
   {
-    "key": "min_steps_to_complete_milestone",
+    "key": "min_milestones_to_complete_chapter",
     "value": "10"
   }
 ]

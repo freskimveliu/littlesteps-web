@@ -15,10 +15,10 @@ class ShowSettingsController extends Controller
     /** What each number actually does, so the admin is not guessing. */
     private const HINTS = [
         'daily_free_entries' => 'Free memories a parent can capture in one day. One keeps it precious.',
-        'free_entry_xp' => 'XP a free memory is worth. Step memories are worth their own step instead.',
-        'daily_step_entries' => 'Step memories a parent can record in one day.',
-        'max_custom_steps_per_milestone' => 'How many of their own steps a parent can add to one chapter.',
-        'min_steps_to_complete_milestone' => 'Visible steps a chapter needs before it can be finished — the guard against hiding a chapter down to a handful and collecting the gift.',
+        'free_entry_xp' => 'XP a free memory is worth. Milestone memories are worth their own milestone instead.',
+        'daily_milestone_entries' => 'Milestone memories a parent can record in one day.',
+        'max_custom_milestones_per_chapter' => 'How many of their own milestones a parent can add to one chapter.',
+        'min_milestones_to_complete_chapter' => 'Visible milestones a chapter needs before it can be finished — the guard against hiding a chapter down to a handful and collecting the gift.',
     ];
 
     public function __invoke(): Response

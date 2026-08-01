@@ -7,7 +7,7 @@ namespace App\Actions\Progress;
 use App\Enums\RewardStatus;
 use App\Models\Child;
 use App\Models\ChildAchievement;
-use App\Models\TemplateAchievement;
+use App\Models\Achievement;
 use App\Support\Progress\Metrics;
 use Illuminate\Support\Collection;
 
@@ -29,17 +29,17 @@ class EvaluateAchievements
     public function handle(Child $child): Collection
     {
         $metrics = $this->metrics->for($child);
-        $held = $child->achievements()->pluck('template_achievement_id');
+        $held = $child->achievements()->pluck('achievement_id');
 
-        $earned = TemplateAchievement::query()
+        $earned = Achievement::query()
             ->active()
             ->whereNotIn('id', $held)
             ->get()
-            ->filter(fn (TemplateAchievement $badge) => ($metrics[$badge->metric->value] ?? 0) >= $badge->threshold);
+            ->filter(fn (Achievement $badge) => ($metrics[$badge->metric->value] ?? 0) >= $badge->threshold);
 
-        return $earned->map(function (TemplateAchievement $badge) use ($child) {
+        return $earned->map(function (Achievement $badge) use ($child) {
             $unlocked = $child->achievements()->create([
-                'template_achievement_id' => $badge->id,
+                'achievement_id' => $badge->id,
                 'unlocked_at' => now(),
             ]);
 

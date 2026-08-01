@@ -13,18 +13,18 @@ enum AppSettingKey: string
 {
     case DailyFreeEntries = 'daily_free_entries';
     case FreeEntryXp = 'free_entry_xp';
-    case DailyStepEntries = 'daily_step_entries';
-    case MaxCustomStepsPerMilestone = 'max_custom_steps_per_milestone';
-    case MinStepsToCompleteMilestone = 'min_steps_to_complete_milestone';
+    case DailyMilestoneEntries = 'daily_milestone_entries';
+    case MaxCustomMilestonesPerChapter = 'max_custom_milestones_per_chapter';
+    case MinMilestonesToCompleteChapter = 'min_milestones_to_complete_chapter';
 
     public function default(): int
     {
         return match ($this) {
             self::DailyFreeEntries => 1,
             self::FreeEntryXp => 10,
-            self::DailyStepEntries => 5,
-            self::MaxCustomStepsPerMilestone => 10,
-            self::MinStepsToCompleteMilestone => 10,
+            self::DailyMilestoneEntries => 5,
+            self::MaxCustomMilestonesPerChapter => 10,
+            self::MinMilestonesToCompleteChapter => 10,
         };
     }
 }

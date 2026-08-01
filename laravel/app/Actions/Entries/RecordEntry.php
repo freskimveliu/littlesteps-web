@@ -10,7 +10,7 @@ use App\Data\EntryData;
 use App\Models\Child;
 use App\Models\ChildAchievement;
 use App\Models\ChildEntry;
-use App\Models\ChildStep;
+use App\Models\ChildMilestone;
 use App\Models\User;
 use App\Support\Limits;
 use Illuminate\Support\Collection;
@@ -29,7 +29,7 @@ class RecordEntry
     /** @return array{entry: ChildEntry, xp: int, unlocked: Collection<int, ChildAchievement>} */
     public function handle(Child $child, User $user, EntryData $data): array
     {
-        $step = $data->isFree() ? null : $this->step($child, $data->childStepId);
+        $milestone = $data->isFree() ? null : $this->milestone($child, $data->childStepId);
 
         $this->guardLimits($child, $user, $data);
 
@@ -46,47 +46,47 @@ class RecordEntry
             return $entry;
         });
 
-        $xp = $step?->xp ?? $this->limits->freeEntryXp();
+        $xp = $milestone?->xp ?? $this->limits->freeEntryXp();
         $this->awardXp->handle($child, $xp);
         $this->streak->handle($user, $entry);
 
         return [
-            'entry' => $entry->load(['properties', 'step']),
+            'entry' => $entry->load(['properties', 'milestone']),
             'xp' => $xp,
             'unlocked' => $this->achievements->handle($child->refresh()),
         ];
     }
 
-    private function step(Child $child, int $stepId): ChildStep
+    private function milestone(Child $child, int $stepId): ChildMilestone
     {
-        $step = $child->steps()->with('entry')->find($stepId);
+        $milestone = $child->milestones()->with('entry')->find($stepId);
 
-        if (! $step) {
+        if (! $milestone) {
             throw ValidationException::withMessages([
-                'child_step_id' => 'That step does not belong to this child.',
+                'child_milestone_id' => 'That milestone does not belong to this child.',
             ]);
         }
 
-        if ($step->isRecorded()) {
+        if ($milestone->isRecorded()) {
             throw ValidationException::withMessages([
-                'child_step_id' => 'This step already has a memory. Edit it instead.',
+                'child_milestone_id' => 'This milestone already has a memory. Edit it instead.',
             ]);
         }
 
-        if ($step->isLockedFor($child)) {
+        if ($milestone->isLockedFor($child)) {
             throw ValidationException::withMessages([
-                'child_step_id' => 'This step is not open yet.',
+                'child_milestone_id' => 'This milestone is not open yet.',
             ]);
         }
 
-        return $step;
+        return $milestone;
     }
 
     private function guardLimits(Child $child, User $user, EntryData $data): void
     {
         $left = $data->isFree()
             ? $this->limits->freeEntriesLeft($child, $user)
-            : $this->limits->stepEntriesLeft($child, $user);
+            : $this->limits->milestoneEntriesLeft($child, $user);
 
         if ($left > 0) {
             return;
@@ -95,7 +95,7 @@ class RecordEntry
         throw ValidationException::withMessages([
             'date' => $data->isFree()
                 ? 'One memory a day keeps it precious. Come back tomorrow for the next one.'
-                : 'That is enough steps for today — the rest will keep until tomorrow.',
+                : 'That is enough milestones for today — the rest will keep until tomorrow.',
         ]);
     }
 }

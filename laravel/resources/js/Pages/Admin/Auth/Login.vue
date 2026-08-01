@@ -17,6 +17,13 @@ function submit() {
     <div class="flex min-h-screen items-center justify-center px-4">
         <div class="w-full max-w-sm">
             <div class="mb-6 text-center">
+                <img
+                    src="/img/app-icon.png"
+                    alt=""
+                    width="256"
+                    height="256"
+                    class="mx-auto mb-3 h-14 w-14 rounded-[14px] object-cover shadow-lg shadow-primary/20"
+                />
                 <p class="text-xl font-bold text-slate-900">LittleSteps</p>
                 <p class="text-body text-slate-500">Admin</p>
             </div>

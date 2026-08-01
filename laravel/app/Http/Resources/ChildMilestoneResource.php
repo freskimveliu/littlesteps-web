@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Http\Resources;
 
 use App\Models\ChildMilestone;
-use App\Support\Limits;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -16,27 +15,23 @@ class ChildMilestoneResource extends JsonResource
     public function toArray(Request $request): array
     {
         $child = $this->child;
-        $steps = $this->whenLoaded('steps');
-        $visible = $this->relationLoaded('steps') ? $this->steps->where('is_hidden', false) : collect();
-        $recorded = $visible->filter(fn ($step) => $step->isRecorded());
 
         return [
             'id' => $this->id,
+            'milestoneId' => $this->child_chapter_id,
             'name' => $this->name,
-            'description' => $this->description,
-            'icon' => $this->icon,
+            'icon' => $this->icon?->value ?? $this->whenLoaded('category', fn () => $this->category?->icon->value),
             'monthsFrom' => $this->months_from,
             'xp' => $this->xp,
             'sortOrder' => $this->sort_order,
+            'category' => new CategoryResource($this->whenLoaded('category')),
             'isEditable' => $this->is_editable,
             'isHidden' => $this->is_hidden,
-            'isUnlocked' => $child ? $this->isUnlockedFor($child) : true,
-            'isCompleted' => $this->isCompleted(),
-            'completedAt' => $this->completed_at?->toIso8601String(),
-            'isCompletable' => app(Limits::class)->canCompleteMilestone($this->resource),
-            'stepsTotal' => $visible->count(),
-            'stepsRecorded' => $recorded->count(),
-            'steps' => ChildStepResource::collection($steps),
+            'isLocked' => $child ? $this->isLockedFor($child) : false,
+            'isRecorded' => $this->isRecorded(),
+            'isDeletable' => $this->isDeletable(),
+            'properties' => ChildMilestonePropertyResource::collection($this->whenLoaded('properties')),
+            'entry' => new ChildEntryResource($this->whenLoaded('entry')),
         ];
     }
 }

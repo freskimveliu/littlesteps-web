@@ -20,7 +20,7 @@ defineProps<{
     memories: Point[];
     memoryMix: { label: string; value: number; color: string }[];
     giftStatus: { label: string; value: number; color: string }[];
-    stepsPerMilestone: Point[];
+    milestonesPerChapter: Point[];
     gifts: { id: number; name: string; reward: string; metric: string; threshold: number }[];
 }>();
 
@@ -63,7 +63,7 @@ const rewardTone = { story: 'primary', image: 'success', book: 'gold' } as const
         <div class="mb-8 grid gap-4 lg:grid-cols-2">
             <UiCard title="Where memories come from">
                 <p class="mb-4 text-body text-slate-500">
-                    A step memory is worth its own XP; a free one is capped at one a day.
+                    A milestone memory is worth its own XP; a free one is capped at one a day.
                 </p>
                 <UiSplitBar :slices="memoryMix" />
             </UiCard>
@@ -87,11 +87,11 @@ const rewardTone = { story: 'primary', image: 'success', book: 'gold' } as const
         </div>
 
         <div class="mb-6 grid gap-4 lg:grid-cols-2">
-            <UiCard title="Steps in each milestone">
+            <UiCard title="Milestones in each chapter">
                 <p class="mb-4 text-body text-slate-500">
-                    A milestone needs at least ten visible steps before a parent can finish it.
+                    A chapter needs at least ten visible milestones before a parent can finish it.
                 </p>
-                <UiBarChart :points="stepsPerMilestone" :height="100" />
+                <UiBarChart :points="milestonesPerChapter" :height="100" />
             </UiCard>
 
             <UiCard title="Badges that carry a gift">

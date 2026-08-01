@@ -6,14 +6,14 @@ namespace App\Http\Controllers\Admin\Levels;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\LevelRequest;
-use App\Models\TemplateLevel;
+use App\Models\Level;
 use Illuminate\Http\RedirectResponse;
 
 class StoreLevelController extends Controller
 {
     public function __invoke(LevelRequest $request): RedirectResponse
     {
-        TemplateLevel::create($request->validated());
+        Level::create($request->validated());
 
         return back()->with('success', 'Level created.');
     }

@@ -7,7 +7,7 @@ namespace App\Http\Controllers\Admin\Families;
 use App\Http\Controllers\Controller;
 use App\Models\Child;
 use App\Support\Admin\IndexQuery;
-use App\Support\Progress\Level;
+use App\Support\Progress\LevelLadder;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -19,7 +19,7 @@ class IndexChildrenController extends Controller
         $children = IndexQuery::apply(
             Child::query()
                 ->with('creator:id,name,email')
-                ->withCount(['entries', 'achievements', 'milestones as milestones_done_count' => fn ($q) => $q->whereNotNull('completed_at')]),
+                ->withCount(['entries', 'achievements', 'chapters as chapters_done_count' => fn ($q) => $q->whereNotNull('completed_at')]),
             $request,
             searchable: ['name'],
             sortable: ['name', 'birthday', 'xp', 'entries_count', 'achievements_count', 'created_at'],
@@ -33,11 +33,11 @@ class IndexChildrenController extends Controller
             'age_months' => $child->ageInMonths(),
             'gender' => $child->gender,
             'xp' => $child->xp,
-            'level' => Level::for($child->xp)['level'],
-            'level_name' => Level::for($child->xp)['name'],
+            'level' => LevelLadder::for($child->xp)['level'],
+            'level_name' => LevelLadder::for($child->xp)['name'],
             'entries_count' => $child->entries_count,
             'achievements_count' => $child->achievements_count,
-            'milestones_done_count' => $child->milestones_done_count,
+            'chapters_done_count' => $child->chapters_done_count,
             'creator' => $child->creator?->only(['id', 'name', 'email']),
         ]);
 

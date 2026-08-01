@@ -18,7 +18,7 @@ const BADGES: Badge[] = [
     { title: 'First Week', description: 'A memory on seven different days', icon: 'flame', xp: 60, unlocked: true },
     { title: 'First Chapter', description: 'You finished a whole chapter', icon: 'ribbon', xp: 200, unlocked: true },
     { title: 'Shutterbug', description: 'Twenty-five photos kept', icon: 'camera', xp: 100, unlocked: false, current: 18, target: 25 },
-    { title: 'Hundred Days', description: 'One hundred days of memories', icon: 'calendar', xp: 250, unlocked: false, current: 62, target: 100 },
+    { title: 'A Month of Moments', description: 'Thirty days of remembering', icon: 'calendar', xp: 150, unlocked: false, current: 22, target: 30 },
 ];
 
 const RING = 2 * Math.PI * 34;

@@ -15,7 +15,7 @@ class StoreEntryRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'child_step_id' => ['nullable', 'integer'],
+            'child_milestone_id' => ['nullable', 'integer'],
             'description' => ['nullable', 'string', 'max:5000'],
             'date' => ['required', 'date', 'before_or_equal:today'],
             'mood' => ['nullable', Rule::enum(Mood::class)],

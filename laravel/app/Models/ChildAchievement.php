@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
-#[Fillable(['child_id', 'template_achievement_id', 'unlocked_at'])]
+#[Fillable(['child_id', 'achievement_id', 'unlocked_at'])]
 class ChildAchievement extends Model
 {
     protected function casts(): array
@@ -23,10 +23,10 @@ class ChildAchievement extends Model
         return $this->belongsTo(Child::class);
     }
 
-    /** @return BelongsTo<TemplateAchievement, $this> */
+    /** @return BelongsTo<Achievement, $this> */
     public function achievement(): BelongsTo
     {
-        return $this->belongsTo(TemplateAchievement::class, 'template_achievement_id');
+        return $this->belongsTo(Achievement::class, 'achievement_id');
     }
 
     /** @return HasOne<ChildReward, $this> */

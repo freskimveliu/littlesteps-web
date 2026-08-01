@@ -17,8 +17,8 @@ class ChildEntryResource extends JsonResource
         return [
             'id' => $this->id,
             'childId' => $this->child_id,
-            'stepId' => $this->child_step_id,
-            'name' => $this->whenLoaded('step', fn () => $this->step?->name),
+            'stepId' => $this->child_milestone_id,
+            'name' => $this->whenLoaded('milestone', fn () => $this->milestone?->name),
             'description' => $this->description,
             'date' => $this->date->toDateString(),
             'mood' => $this->mood,

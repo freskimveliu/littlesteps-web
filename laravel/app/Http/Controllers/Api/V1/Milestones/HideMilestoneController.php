@@ -12,11 +12,6 @@ use App\Models\ChildMilestone;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
-/**
- * Hiding is how a parent says "not for us" without losing anything: the rows
- * stay, the XP stops counting, and any memory already written keeps its place
- * in the timeline.
- */
 class HideMilestoneController extends Controller
 {
     public function __invoke(Request $request, Child $child, ChildMilestone $milestone): JsonResponse
@@ -31,11 +26,9 @@ class HideMilestoneController extends Controller
             'updated_by_user_id' => $request->user()->id,
         ]);
 
-        $milestone->steps()->update(['is_hidden' => $hidden]);
-
         return ApiResponse::success(
-            new ChildMilestoneResource($milestone->fresh()->load(['child', 'steps'])),
-            $hidden ? 'Chapter hidden.' : 'Chapter restored.',
+            new ChildMilestoneResource($milestone->fresh()->load(['category', 'properties', 'entry', 'child'])),
+            $hidden ? 'Milestone hidden.' : 'Milestone restored.',
         );
     }
 }

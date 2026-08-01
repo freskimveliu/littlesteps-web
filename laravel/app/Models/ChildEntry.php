@@ -16,7 +16,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 #[Fillable([
-    'child_id', 'child_step_id', 'description', 'date', 'mood',
+    'child_id', 'child_milestone_id', 'description', 'date', 'mood',
     'created_by_user_id', 'updated_by_user_id',
 ])]
 class ChildEntry extends Model implements HasMedia
@@ -67,12 +67,12 @@ class ChildEntry extends Model implements HasMedia
 
     public function isFree(): bool
     {
-        return $this->child_step_id === null;
+        return $this->child_milestone_id === null;
     }
 
     /**
-     * A memory attached to a step is permanent — the XP is already awarded and
-     * the step has no other way of being un-recorded. A free one can go.
+     * A memory attached to a milestone is permanent — the XP is already awarded and
+     * the milestone has no other way of being un-recorded. A free one can go.
      */
     public function isDeletable(): bool
     {
@@ -85,10 +85,10 @@ class ChildEntry extends Model implements HasMedia
         return $this->belongsTo(Child::class);
     }
 
-    /** @return BelongsTo<ChildStep, $this> */
-    public function step(): BelongsTo
+    /** @return BelongsTo<ChildMilestone, $this> */
+    public function milestone(): BelongsTo
     {
-        return $this->belongsTo(ChildStep::class, 'child_step_id');
+        return $this->belongsTo(ChildMilestone::class, 'child_milestone_id');
     }
 
     /** @return HasMany<ChildEntryProperty, $this> */
@@ -100,6 +100,6 @@ class ChildEntry extends Model implements HasMedia
     /** @param Builder<$this> $query */
     public function scopeFree(Builder $query): void
     {
-        $query->whereNull('child_step_id');
+        $query->whereNull('child_milestone_id');
     }
 }

@@ -7,7 +7,7 @@ namespace App\Support;
 use App\Enums\AppSettingKey;
 use App\Models\AppSetting;
 use App\Models\Child;
-use App\Models\ChildMilestone;
+use App\Models\ChildChapter;
 use App\Models\User;
 
 /**
@@ -30,41 +30,41 @@ class Limits
         return max(0, AppSetting::number(AppSettingKey::DailyFreeEntries) - $used);
     }
 
-    public function stepEntriesLeft(Child $child, User $user): int
+    public function milestoneEntriesLeft(Child $child, User $user): int
     {
         $used = $child->entries()
-            ->whereNotNull('child_step_id')
+            ->whereNotNull('child_milestone_id')
             ->whereBetween('created_at', $this->today($user))
             ->count();
 
-        return max(0, AppSetting::number(AppSettingKey::DailyStepEntries) - $used);
+        return max(0, AppSetting::number(AppSettingKey::DailyMilestoneEntries) - $used);
     }
 
-    public function canAddCustomStep(ChildMilestone $milestone): bool
+    public function canAddCustomStep(ChildChapter $chapter): bool
     {
-        $custom = $milestone->steps()->where('is_editable', true)->count();
+        $custom = $chapter->milestones()->where('is_editable', true)->count();
 
-        return $custom < AppSetting::number(AppSettingKey::MaxCustomStepsPerMilestone);
+        return $custom < AppSetting::number(AppSettingKey::MaxCustomMilestonesPerChapter);
     }
 
     /**
-     * A chapter can be finished once every visible step in it has a memory —
+     * A chapter can be finished once every visible milestone in it has a memory —
      * and only if there are enough of them, which is what stops a parent hiding
-     * a chapter down to two steps, filling both, and collecting the gift.
+     * a chapter down to two milestones, filling both, and collecting the gift.
      */
-    public function canCompleteMilestone(ChildMilestone $milestone): bool
+    public function canCompleteMilestone(ChildChapter $chapter): bool
     {
-        if ($milestone->completed_at !== null) {
+        if ($chapter->completed_at !== null) {
             return false;
         }
 
-        $visible = $milestone->steps()->visible()->count();
+        $visible = $chapter->milestones()->visible()->count();
 
-        if ($visible < AppSetting::number(AppSettingKey::MinStepsToCompleteMilestone)) {
+        if ($visible < AppSetting::number(AppSettingKey::MinMilestonesToCompleteChapter)) {
             return false;
         }
 
-        $recorded = $milestone->steps()->visible()->whereHas('entry')->count();
+        $recorded = $chapter->milestones()->visible()->whereHas('entry')->count();
 
         return $recorded === $visible;
     }

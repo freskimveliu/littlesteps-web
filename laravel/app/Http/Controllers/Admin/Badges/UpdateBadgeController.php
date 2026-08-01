@@ -6,7 +6,7 @@ namespace App\Http\Controllers\Admin\Badges;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\BadgeRequest;
-use App\Models\TemplateAchievement;
+use App\Models\Achievement;
 use Illuminate\Http\RedirectResponse;
 
 /**
@@ -15,7 +15,7 @@ use Illuminate\Http\RedirectResponse;
  */
 class UpdateBadgeController extends Controller
 {
-    public function __invoke(BadgeRequest $request, TemplateAchievement $badge): RedirectResponse
+    public function __invoke(BadgeRequest $request, Achievement $badge): RedirectResponse
     {
         $badge->update($request->validated());
 

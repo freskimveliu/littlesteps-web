@@ -13,10 +13,10 @@ use App\Http\Controllers\Admin\Categories\DestroyCategoryController;
 use App\Http\Controllers\Admin\Categories\IndexCategoriesController;
 use App\Http\Controllers\Admin\Categories\StoreCategoryController;
 use App\Http\Controllers\Admin\Categories\UpdateCategoryController;
-use App\Http\Controllers\Admin\Milestones\DestroyMilestoneController;
-use App\Http\Controllers\Admin\Milestones\IndexMilestonesController;
-use App\Http\Controllers\Admin\Milestones\StoreMilestoneController;
-use App\Http\Controllers\Admin\Milestones\UpdateMilestoneController;
+use App\Http\Controllers\Admin\Chapters\DestroyChapterController;
+use App\Http\Controllers\Admin\Chapters\IndexChaptersController;
+use App\Http\Controllers\Admin\Chapters\StoreChapterController;
+use App\Http\Controllers\Admin\Chapters\UpdateChapterController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\Families\IndexChildrenController;
 use App\Http\Controllers\Admin\Families\IndexGiftsController;
@@ -32,10 +32,10 @@ use App\Http\Controllers\Admin\Prompts\StorePromptController;
 use App\Http\Controllers\Admin\Prompts\UpdatePromptController;
 use App\Http\Controllers\Admin\Settings\ShowSettingsController;
 use App\Http\Controllers\Admin\Settings\UpdateSettingsController;
-use App\Http\Controllers\Admin\Steps\DestroyStepController;
-use App\Http\Controllers\Admin\Steps\IndexStepsController;
-use App\Http\Controllers\Admin\Steps\StoreStepController;
-use App\Http\Controllers\Admin\Steps\UpdateStepController;
+use App\Http\Controllers\Admin\Milestones\DestroyMilestoneController;
+use App\Http\Controllers\Admin\Milestones\IndexMilestonesController;
+use App\Http\Controllers\Admin\Milestones\StoreMilestoneController;
+use App\Http\Controllers\Admin\Milestones\UpdateMilestoneController;
 use App\Http\Controllers\Admin\Users\IndexUsersController;
 use App\Http\Controllers\Admin\Users\RestoreUserController;
 use App\Http\Controllers\Admin\Users\ShowUserController;
@@ -56,15 +56,15 @@ Route::prefix('admin')->group(function () {
     Route::middleware(['auth', EnsureUserIsAdmin::class])->group(function () {
         Route::get('/', DashboardController::class)->name('admin.dashboard');
 
+        Route::get('chapters', IndexChaptersController::class)->name('admin.chapters');
+        Route::post('chapters', StoreChapterController::class);
+        Route::put('chapters/{chapter}', UpdateChapterController::class);
+        Route::delete('chapters/{chapter}', DestroyChapterController::class);
+
         Route::get('milestones', IndexMilestonesController::class)->name('admin.milestones');
         Route::post('milestones', StoreMilestoneController::class);
         Route::put('milestones/{milestone}', UpdateMilestoneController::class);
         Route::delete('milestones/{milestone}', DestroyMilestoneController::class);
-
-        Route::get('steps', IndexStepsController::class)->name('admin.steps');
-        Route::post('steps', StoreStepController::class);
-        Route::put('steps/{step}', UpdateStepController::class);
-        Route::delete('steps/{step}', DestroyStepController::class);
 
         Route::get('categories', IndexCategoriesController::class)->name('admin.categories');
         Route::post('categories', StoreCategoryController::class);

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use App\Enums\RewardStatus;
 use App\Models\Child;
-use App\Models\TemplateAchievement;
+use App\Models\Achievement;
 use App\Support\Progress\Metrics;
 
 beforeEach(fn () => seedCatalogue());
@@ -52,13 +52,13 @@ it('breaks the streak on a missed day', function () {
     expect(app(Metrics::class)->streak($child))->toBe(2);
 });
 
-it('only counts a step as on time when it was caught at the right age', function () {
+it('only counts a milestone as on time when it was caught at the right age', function () {
     [, $child] = family(ageMonths: 12);
-    $step = $child->steps()->where('name', 'Month 1')->first();
+    $milestone = $child->milestones()->where('name', 'Month 1')->first();
 
     // Recorded at eleven months old: a memory, but not an on-time one.
     $entry = $child->entries()->create([
-        'child_step_id' => $step->id,
+        'child_milestone_id' => $milestone->id,
         'date' => $child->birthday->copy()->addMonths(11)->toDateString(),
         'created_by_user_id' => $child->created_by_user_id,
     ]);
@@ -72,13 +72,13 @@ it('only counts a step as on time when it was caught at the right age', function
 
 it('unlocks a badge and awards its xp once the rule passes', function () {
     [, $child] = family();
-    $badge = TemplateAchievement::where('name', 'First Week')->first();
+    $badge = Achievement::where('name', 'First Week')->first();
 
     memoriesOn($child, collect(range(0, 6))->map(fn ($i) => now()->subDays($i)->toDateString())->all());
 
     $unlocked = app(App\Actions\Progress\EvaluateAchievements::class)->handle($child);
 
-    expect($unlocked->pluck('template_achievement_id'))->toContain($badge->id)
+    expect($unlocked->pluck('achievement_id'))->toContain($badge->id)
         ->and($child->fresh()->xp)->toBeGreaterThanOrEqual($badge->xp);
 });
 
@@ -90,7 +90,7 @@ it('never awards the same badge twice', function () {
     $second = app(App\Actions\Progress\EvaluateAchievements::class)->handle($child->fresh());
 
     expect($second)->toBeEmpty()
-        ->and($child->achievements()->where('template_achievement_id', TemplateAchievement::where('name', 'First Week')->value('id'))->count())
+        ->and($child->achievements()->where('achievement_id', Achievement::where('name', 'First Week')->value('id'))->count())
         ->toBe(1);
 });
 
@@ -108,17 +108,17 @@ it('keeps a badge even after the memories behind it are gone', function () {
 
 it('reserves a gift unclaimed rather than generating it', function () {
     [, $child] = family(ageMonths: 6);
-    $chapter = $child->milestones()->first();
+    $chapter = $child->chapters()->first();
 
-    foreach ($chapter->steps()->visible()->get() as $step) {
+    foreach ($chapter->milestones()->visible()->get() as $milestone) {
         $child->entries()->create([
-            'child_step_id' => $step->id,
+            'child_milestone_id' => $milestone->id,
             'date' => now()->toDateString(),
             'created_by_user_id' => $child->created_by_user_id,
         ]);
     }
 
-    $this->postJson("/api/v1/children/{$child->id}/milestones/{$chapter->id}/complete")->assertOk();
+    $this->postJson("/api/v1/children/{$child->id}/chapters/{$chapter->id}/complete")->assertOk();
 
     $reward = $child->rewards()->first();
 
@@ -130,16 +130,16 @@ it('reserves a gift unclaimed rather than generating it', function () {
 
 it('starts a generation only when the parent claims it', function () {
     [, $child] = family(ageMonths: 6);
-    $chapter = $child->milestones()->first();
+    $chapter = $child->chapters()->first();
 
-    foreach ($chapter->steps()->visible()->get() as $step) {
+    foreach ($chapter->milestones()->visible()->get() as $milestone) {
         $child->entries()->create([
-            'child_step_id' => $step->id, 'date' => now()->toDateString(),
+            'child_milestone_id' => $milestone->id, 'date' => now()->toDateString(),
             'created_by_user_id' => $child->created_by_user_id,
         ]);
     }
 
-    $this->postJson("/api/v1/children/{$child->id}/milestones/{$chapter->id}/complete")->assertOk();
+    $this->postJson("/api/v1/children/{$child->id}/chapters/{$chapter->id}/complete")->assertOk();
     $reward = $child->rewards()->first();
 
     $this->postJson("/api/v1/children/{$child->id}/rewards/{$reward->id}/claim")

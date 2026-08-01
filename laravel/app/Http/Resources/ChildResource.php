@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Resources;
 
 use App\Models\Child;
-use App\Support\Progress\Level;
+use App\Support\Progress\LevelLadder;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -24,8 +24,8 @@ class ChildResource extends JsonResource
             'ageMonths' => $this->ageInMonths(),
             'gender' => $this->gender,
             'xp' => $this->xp,
-            'level' => Level::for($this->xp),
-            'levelCount' => Level::total(),
+            'level' => LevelLadder::for($this->xp),
+            'levelCount' => LevelLadder::total(),
             'photo' => $this->photoUrl() ? [
                 'url' => $this->photoUrl(),
                 'thumb' => $this->photoThumbUrl(),

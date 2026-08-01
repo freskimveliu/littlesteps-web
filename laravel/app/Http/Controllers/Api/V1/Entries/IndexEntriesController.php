@@ -18,7 +18,7 @@ class IndexEntriesController extends Controller
         $this->authorize('view', $child);
 
         $entries = $child->entries()
-            ->with(['step', 'properties', 'media'])
+            ->with(['milestone', 'properties', 'media'])
             ->orderByDesc('date')
             ->orderByDesc('id')
             ->paginate($request->integer('per_page', 30));

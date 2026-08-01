@@ -20,9 +20,9 @@ class Category extends Model
         ];
     }
 
-    /** @return HasMany<TemplateStep, $this> */
-    public function templateSteps(): HasMany
+    /** @return HasMany<Milestone, $this> */
+    public function milestones(): HasMany
     {
-        return $this->hasMany(TemplateStep::class);
+        return $this->hasMany(Milestone::class);
     }
 }

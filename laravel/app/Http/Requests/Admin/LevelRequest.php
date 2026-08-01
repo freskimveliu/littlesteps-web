@@ -19,7 +19,7 @@ class LevelRequest extends FormRequest
             'name' => ['required', 'string', 'max:60'],
             'icon' => ['required', Rule::enum(Icon::class)],
             // The ladder is ordered by min_xp, so two levels cannot share a rung.
-            'min_xp' => ['required', 'integer', 'min:0', Rule::unique('template_levels', 'min_xp')->ignore($id)],
+            'min_xp' => ['required', 'integer', 'min:0', Rule::unique('levels', 'min_xp')->ignore($id)],
             'is_active' => ['boolean'],
         ];
     }

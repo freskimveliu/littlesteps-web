@@ -30,7 +30,7 @@ readonly class EntryData
             ->all();
 
         return new self(
-            childStepId: $request->integer('child_step_id') ?: null,
+            childStepId: $request->integer('child_milestone_id') ?: null,
             description: $request->filled('description') ? $request->string('description')->toString() : null,
             date: $request->date('date')?->toDateString() ?? now()->toDateString(),
             mood: $request->filled('mood') ? Mood::from($request->string('mood')->toString()) : null,
@@ -42,7 +42,7 @@ readonly class EntryData
     public function toAttributes(): array
     {
         return [
-            'child_step_id' => $this->childStepId,
+            'child_milestone_id' => $this->childStepId,
             'description' => $this->description,
             'date' => $this->date,
             'mood' => $this->mood,

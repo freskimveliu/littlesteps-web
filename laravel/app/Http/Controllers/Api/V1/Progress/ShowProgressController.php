@@ -8,9 +8,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\AchievementResource;
 use App\Http\Responses\ApiResponse;
 use App\Models\Child;
-use App\Models\TemplateAchievement;
+use App\Models\Achievement;
 use App\Support\Limits;
-use App\Support\Progress\Level;
+use App\Support\Progress\LevelLadder;
 use App\Support\Progress\Metrics;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -26,13 +26,13 @@ class ShowProgressController extends Controller
         $this->authorize('view', $child);
 
         $counts = $metrics->for($child);
-        $held = $child->achievements()->pluck('unlocked_at', 'template_achievement_id');
+        $held = $child->achievements()->pluck('unlocked_at', 'achievement_id');
 
-        $badges = TemplateAchievement::query()
+        $badges = Achievement::query()
             ->active()
             ->orderBy('sort_order')
             ->get()
-            ->map(fn (TemplateAchievement $badge) => new AchievementResource(
+            ->map(fn (Achievement $badge) => new AchievementResource(
                 $badge,
                 $counts[$badge->metric->value] ?? 0,
                 $held->has($badge->id),
@@ -42,15 +42,15 @@ class ShowProgressController extends Controller
 
         return ApiResponse::success([
             'xp' => $child->xp,
-            'level' => Level::for($child->xp),
-            'levelCount' => Level::total(),
+            'level' => LevelLadder::for($child->xp),
+            'levelCount' => LevelLadder::total(),
             'metrics' => $counts,
             'badges' => $badges,
             'badgesUnlocked' => $held->count(),
             'badgesTotal' => $badges->count(),
             'limits' => [
                 'freeEntriesLeft' => $limits->freeEntriesLeft($child, $user),
-                'stepEntriesLeft' => $limits->stepEntriesLeft($child, $user),
+                'milestoneEntriesLeft' => $limits->milestoneEntriesLeft($child, $user),
             ],
         ]);
     }

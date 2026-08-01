@@ -7,7 +7,7 @@ namespace App\Http\Controllers\Admin\Prompts;
 use App\Enums\Icon;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
-use App\Models\TemplatePrompt;
+use App\Models\Prompt;
 use App\Support\Admin\IndexQuery;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -18,7 +18,7 @@ class IndexPromptsController extends Controller
     public function __invoke(Request $request): Response
     {
         $prompts = IndexQuery::apply(
-            TemplatePrompt::query()->with('category:id,name,color'),
+            Prompt::query()->with('category:id,name,color'),
             $request,
             searchable: ['name'],
             sortable: ['name', 'months_from', 'months_to', 'sort_order'],

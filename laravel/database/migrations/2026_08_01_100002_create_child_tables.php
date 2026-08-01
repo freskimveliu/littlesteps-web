@@ -9,19 +9,19 @@ use Illuminate\Support\Facades\Schema;
 /**
  * The child's own journey.
  *
- * Chapters and steps are copied from the catalogue at provisioning and are
- * never joined back at read time, so an admin rewording a step cannot rewrite
+ * Chapters and milestones are copied from the catalogue at provisioning and are
+ * never joined back at read time, so an admin rewording a milestone cannot rewrite
  * what a parent already saved. An entry is written only on submit, which is
- * what makes "this step is done" a single EXISTS.
+ * what makes "this milestone is done" a single EXISTS.
  */
 return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('child_milestones', function (Blueprint $table) {
+        Schema::create('child_chapters', function (Blueprint $table) {
             $table->id();
             $table->foreignId('child_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('template_milestone_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('chapter_id')->nullable()->constrained()->nullOnDelete();
             $table->string('name');
             $table->string('description')->nullable();
             $table->string('icon')->nullable();
@@ -39,11 +39,11 @@ return new class extends Migration
             $table->index(['child_id', 'sort_order']);
         });
 
-        Schema::create('child_steps', function (Blueprint $table) {
+        Schema::create('child_milestones', function (Blueprint $table) {
             $table->id();
             $table->foreignId('child_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('child_milestone_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('template_step_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('child_chapter_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('milestone_id')->nullable()->constrained()->nullOnDelete();
             $table->foreignId('category_id')->nullable()->constrained()->nullOnDelete();
             $table->string('name');
             $table->string('icon')->nullable();
@@ -56,16 +56,16 @@ return new class extends Migration
             $table->foreignId('updated_by_user_id')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
 
-            $table->index(['child_milestone_id', 'sort_order']);
+            $table->index(['child_chapter_id', 'sort_order']);
             $table->index(['child_id', 'is_hidden']);
         });
 
         Schema::create('child_entries', function (Blueprint $table) {
             $table->id();
             $table->foreignId('child_id')->constrained()->cascadeOnDelete();
-            // Unique, and nullable so the free memories — which have no step —
+            // Unique, and nullable so the free memories — which have no milestone —
             // can repeat: MySQL does not collide on repeated NULLs.
-            $table->foreignId('child_step_id')->nullable()->unique()->constrained()->cascadeOnDelete();
+            $table->foreignId('child_milestone_id')->nullable()->unique()->constrained()->cascadeOnDelete();
             $table->text('description')->nullable();
             $table->date('date');
             $table->string('mood')->nullable();
@@ -77,9 +77,9 @@ return new class extends Migration
             $table->index(['child_id', 'created_at']);
         });
 
-        Schema::create('child_step_properties', function (Blueprint $table) {
+        Schema::create('child_milestone_properties', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('child_step_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('child_milestone_id')->constrained()->cascadeOnDelete();
             $table->string('key');
             $table->string('name')->nullable();
             $table->unsignedSmallInteger('sort_order')->default(0);
@@ -101,11 +101,11 @@ return new class extends Migration
         Schema::create('child_achievements', function (Blueprint $table) {
             $table->id();
             $table->foreignId('child_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('template_achievement_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('achievement_id')->constrained()->cascadeOnDelete();
             $table->timestamp('unlocked_at');
             $table->timestamps();
 
-            $table->unique(['child_id', 'template_achievement_id']);
+            $table->unique(['child_id', 'achievement_id']);
         });
 
         Schema::create('child_rewards', function (Blueprint $table) {
@@ -126,9 +126,9 @@ return new class extends Migration
         Schema::dropIfExists('child_rewards');
         Schema::dropIfExists('child_achievements');
         Schema::dropIfExists('child_entry_properties');
-        Schema::dropIfExists('child_step_properties');
+        Schema::dropIfExists('child_milestone_properties');
         Schema::dropIfExists('child_entries');
-        Schema::dropIfExists('child_steps');
         Schema::dropIfExists('child_milestones');
+        Schema::dropIfExists('child_chapters');
     }
 };

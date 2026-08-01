@@ -3,7 +3,7 @@ import Ion from './Ion.vue';
 import type { IconName } from './icons';
 
 interface Props {
-    active: 'home' | 'timeline' | 'milestones' | 'awards' | 'profile';
+    active: 'home' | 'timeline' | 'chapters' | 'awards' | 'profile';
 }
 
 defineProps<Props>();
@@ -11,7 +11,7 @@ defineProps<Props>();
 const TABS: { key: Props['active']; label: string; icon: IconName; outline: IconName }[] = [
     { key: 'home', label: 'Home', icon: 'home', outline: 'home-outline' },
     { key: 'timeline', label: 'Timeline', icon: 'time', outline: 'time-outline' },
-    { key: 'milestones', label: 'Milestones', icon: 'star', outline: 'star-outline' },
+    { key: 'chapters', label: 'Chapters', icon: 'star', outline: 'star-outline' },
     { key: 'awards', label: 'Awards', icon: 'trophy', outline: 'trophy-outline' },
     { key: 'profile', label: 'Profile', icon: 'person', outline: 'person-outline' },
 ];

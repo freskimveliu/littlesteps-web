@@ -6,14 +6,14 @@ use App\Enums\PropertyKey;
 
 beforeEach(fn () => seedCatalogue());
 
-it('records measurements against a step and charts them by age', function () {
+it('records measurements against a milestone and charts them by age', function () {
     [, $child] = family(ageMonths: 12);
 
     foreach ([1, 2] as $month) {
-        $step = $child->steps()->where('name', "Month {$month}")->first();
+        $milestone = $child->milestones()->where('name', "Month {$month}")->first();
 
         $child->entries()->create([
-            'child_step_id' => $step->id,
+            'child_milestone_id' => $milestone->id,
             'date' => $child->birthday->copy()->addMonths($month)->toDateString(),
             'created_by_user_id' => $child->created_by_user_id,
         ])->properties()->createMany([
@@ -48,12 +48,12 @@ it('keeps custom properties out of the chart', function () {
     $this->getJson("/api/v1/children/{$child->id}/growth")->assertOk()->assertJsonCount(0, 'data');
 });
 
-it('lets a parent add their own step with a custom property', function () {
+it('lets a parent add their own milestone with a custom property', function () {
     [, $child] = family();
-    $milestone = $child->milestones()->first();
+    $chapter = $child->chapters()->first();
 
-    $response = $this->postJson("/api/v1/children/{$child->id}/steps", [
-        'child_milestone_id' => $milestone->id,
+    $response = $this->postJson("/api/v1/children/{$child->id}/milestones", [
+        'child_chapter_id' => $chapter->id,
         'name' => 'First pair of shoes',
         'properties' => [
             ['key' => 'custom', 'name' => 'Shoe size'],
@@ -67,10 +67,10 @@ it('lets a parent add their own step with a custom property', function () {
 
 it('requires a name for a custom property', function () {
     [, $child] = family();
-    $milestone = $child->milestones()->first();
+    $chapter = $child->chapters()->first();
 
-    $this->postJson("/api/v1/children/{$child->id}/steps", [
-        'child_milestone_id' => $milestone->id,
+    $this->postJson("/api/v1/children/{$child->id}/milestones", [
+        'child_chapter_id' => $chapter->id,
         'name' => 'Something',
         'properties' => [['key' => 'custom']],
     ])->assertJsonValidationErrorFor('properties.0.name');

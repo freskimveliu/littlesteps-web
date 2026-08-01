@@ -26,7 +26,7 @@ class StoreEntryPhotoController extends Controller
         $entry->addMediaFromRequest('photo')->toMediaCollection(ChildEntry::PHOTOS);
 
         return ApiResponse::success(
-            new ChildEntryResource($entry->fresh()->load(['step', 'properties', 'media'])),
+            new ChildEntryResource($entry->fresh()->load(['milestone', 'properties', 'media'])),
             'Photo added.',
             201,
         );

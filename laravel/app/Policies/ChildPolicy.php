@@ -30,7 +30,7 @@ class ChildPolicy
         return $child->created_by_user_id === $user->id;
     }
 
-    /** Adding and editing memories, steps and chapters. */
+    /** Adding and editing memories, milestones and chapters. */
     public function contribute(User $user, Child $child): bool
     {
         if ($child->created_by_user_id === $user->id) {

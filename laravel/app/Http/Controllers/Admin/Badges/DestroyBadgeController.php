@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Admin\Badges;
 
 use App\Http\Controllers\Controller;
-use App\Models\TemplateAchievement;
+use App\Models\Achievement;
 use Illuminate\Http\RedirectResponse;
 
 class DestroyBadgeController extends Controller
 {
-    public function __invoke(TemplateAchievement $badge): RedirectResponse
+    public function __invoke(Achievement $badge): RedirectResponse
     {
         $badge->delete();
 

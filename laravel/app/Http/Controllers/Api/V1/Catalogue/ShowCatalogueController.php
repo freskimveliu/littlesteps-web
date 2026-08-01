@@ -10,7 +10,7 @@ use App\Http\Resources\CategoryResource;
 use App\Http\Responses\ApiResponse;
 use App\Models\AppSetting;
 use App\Models\Category;
-use App\Support\Progress\Level;
+use App\Support\Progress\LevelLadder;
 use Illuminate\Http\JsonResponse;
 
 /**
@@ -25,7 +25,7 @@ class ShowCatalogueController extends Controller
             'categories' => CategoryResource::collection(
                 Category::where('is_active', true)->orderBy('sort_order')->get()
             ),
-            'levels' => Level::ladder()->values()->map(fn ($level, $i) => [
+            'levels' => LevelLadder::ladder()->values()->map(fn ($level, $i) => [
                 'level' => $i + 1,
                 'name' => $level->name,
                 'icon' => $level->icon,

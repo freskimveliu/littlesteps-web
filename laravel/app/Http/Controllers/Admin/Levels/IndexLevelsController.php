@@ -6,7 +6,7 @@ namespace App\Http\Controllers\Admin\Levels;
 
 use App\Enums\Icon;
 use App\Http\Controllers\Controller;
-use App\Models\TemplateLevel;
+use App\Models\Level;
 use App\Support\Admin\IndexQuery;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -17,7 +17,7 @@ class IndexLevelsController extends Controller
     public function __invoke(Request $request): Response
     {
         $levels = IndexQuery::apply(
-            TemplateLevel::query(),
+            Level::query(),
             $request,
             searchable: ['name'],
             sortable: ['name', 'min_xp'],

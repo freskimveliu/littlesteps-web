@@ -4,7 +4,7 @@ import KidAvatar from './KidAvatar.vue';
 import PhoneTabBar from './PhoneTabBar.vue';
 
 const STATS = [
-    { value: '34/48', label: 'Steps' },
+    { value: '34/48', label: 'Milestones' },
     { value: '62', label: 'Memories' },
     { value: '9', label: 'Badges' },
 ];
@@ -137,11 +137,11 @@ const STATS = [
             </div>
 
             <div class="mt-2 ml-6 space-y-1.5 border-l-2 border-primary/12 pl-5">
-                <div v-for="(step, i) in ['First Show of Empathy', 'Favorite Bedtime Story']" :key="step" class="flex items-center gap-2.5 py-0.5">
+                <div v-for="(milestone, i) in ['First Show of Empathy', 'Favorite Bedtime Story']" :key="milestone" class="flex items-center gap-2.5 py-0.5">
                     <span class="flex h-6 w-6 items-center justify-center rounded-full border-2 border-primary/15 bg-gray-100 text-[9px] font-extrabold text-gray-400">
                         {{ i + 2 }}
                     </span>
-                    <span class="text-[11px] font-medium text-gray-400">{{ step }}</span>
+                    <span class="text-[11px] font-medium text-gray-400">{{ milestone }}</span>
                 </div>
             </div>
         </div>

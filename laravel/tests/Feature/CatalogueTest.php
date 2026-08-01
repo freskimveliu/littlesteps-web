@@ -6,30 +6,30 @@ use App\Enums\AppSettingKey;
 use App\Enums\PropertyKey;
 use App\Models\AppSetting;
 use App\Models\Category;
-use App\Models\TemplateAchievement;
-use App\Models\TemplateLevel;
-use App\Models\TemplateMilestone;
-use App\Models\TemplateStep;
+use App\Models\Achievement;
+use App\Models\Level;
+use App\Models\Chapter;
+use App\Models\Milestone;
 
 beforeEach(fn () => seedCatalogue());
 
 it('seeds the whole catalogue', function () {
     expect(Category::count())->toBe(8)
-        ->and(TemplateMilestone::count())->toBe(8)
-        ->and(TemplateStep::count())->toBe(118)
-        ->and(TemplateLevel::count())->toBe(14)
+        ->and(Chapter::count())->toBe(8)
+        ->and(Milestone::count())->toBe(118)
+        ->and(Level::count())->toBe(14)
         ->and(AppSetting::count())->toBe(5);
 });
 
 it('is idempotent', function () {
     seedCatalogue();
 
-    expect(TemplateStep::count())->toBe(118)
-        ->and(TemplateStep::withTrashed()->count())->toBe(118);
+    expect(Milestone::count())->toBe(118)
+        ->and(Milestone::withTrashed()->count())->toBe(118);
 });
 
 it('names chapters like a parent would, not like a date range', function () {
-    expect(TemplateMilestone::pluck('name')->all())->toBe([
+    expect(Chapter::pluck('name')->all())->toBe([
         'The First Hello',
         'Waking to the World',
         'On the Move',
@@ -41,17 +41,17 @@ it('names chapters like a parent would, not like a date range', function () {
     ]);
 });
 
-it('gives every chapter enough steps to be completable', function () {
-    $minimum = AppSetting::number(AppSettingKey::MinStepsToCompleteMilestone);
+it('gives every chapter enough milestones to be completable', function () {
+    $minimum = AppSetting::number(AppSettingKey::MinMilestonesToCompleteChapter);
 
-    TemplateMilestone::withCount('steps')->get()->each(
-        fn ($chapter) => expect($chapter->steps_count)
-            ->toBeGreaterThanOrEqual($minimum, "{$chapter->name} has too few steps to ever be finished")
+    Chapter::withCount('milestones')->get()->each(
+        fn ($chapter) => expect($chapter->milestones_count)
+            ->toBeGreaterThanOrEqual($minimum, "{$chapter->name} has too few milestones to ever be finished")
     );
 });
 
-it('orders age-anchored steps by age, so Month 2 never follows Month 3', function () {
-    $months = TemplateStep::query()
+it('orders age-anchored milestones by age, so Month 2 never follows Month 3', function () {
+    $months = Milestone::query()
         ->whereIn('name', ['Month 1', 'Month 2', 'Month 3'])
         ->orderBy('sort_order')
         ->pluck('name')
@@ -60,35 +60,35 @@ it('orders age-anchored steps by age, so Month 2 never follows Month 3', functio
     expect($months)->toBe(['Month 1', 'Month 2', 'Month 3']);
 });
 
-it('keeps every step ordered by months_from within its chapter', function () {
-    TemplateMilestone::with(['steps' => fn ($q) => $q->orderBy('sort_order')])
+it('keeps every milestone ordered by months_from within its chapter', function () {
+    Chapter::with(['milestones' => fn ($q) => $q->orderBy('sort_order')])
         ->get()
         ->each(function ($chapter) {
-            $ages = $chapter->steps->pluck('months_from')->all();
+            $ages = $chapter->milestones->pluck('months_from')->all();
 
             expect($ages)->toBe(collect($ages)->sort()->values()->all(), "{$chapter->name} is out of order");
         });
 });
 
 it('maps measurements onto chartable keys and everything else onto custom', function () {
-    $birth = TemplateStep::where('name', 'Birth Day')->with('properties')->first();
+    $birth = Milestone::where('name', 'Birth Day')->with('properties')->first();
 
     expect($birth->properties->pluck('key')->all())->toBe([
         PropertyKey::Time, PropertyKey::Length, PropertyKey::Weight, PropertyKey::Custom,
     ])->and($birth->properties->last()->name)->toBe('Place');
 
-    $shoes = TemplateStep::where('name', 'First Pair of Shoes')->with('properties')->first();
+    $shoes = Milestone::where('name', 'First Pair of Shoes')->with('properties')->first();
 
     expect($shoes->properties->pluck('key')->unique()->all())->toBe([PropertyKey::Custom])
         ->and($shoes->properties->pluck('name')->all())->toBe(['Shoe Size', 'Brand or Style']);
 });
 
 it('paces the badge ladder so nothing is a raw entry count', function () {
-    $metrics = TemplateAchievement::pluck('metric')->map->value->unique();
+    $metrics = Achievement::pluck('metric')->map->value->unique();
 
     expect($metrics)->not->toContain('entries')
-        ->and(TemplateAchievement::count())->toBe(32)
-        ->and(TemplateAchievement::whereNotNull('reward')->count())->toBe(8);
+        ->and(Achievement::count())->toBe(32)
+        ->and(Achievement::whereNotNull('reward')->count())->toBe(8);
 });
 
 it('exposes the catalogue to the app', function () {
@@ -98,7 +98,7 @@ it('exposes the catalogue to the app', function () {
         ->assertOk()
         ->assertJsonPath('data.limits.daily_free_entries', 1)
         ->assertJsonPath('data.limits.free_entry_xp', 10)
-        ->assertJsonPath('data.limits.daily_step_entries', 5)
+        ->assertJsonPath('data.limits.daily_milestone_entries', 5)
         ->assertJsonCount(8, 'data.categories')
         ->assertJsonCount(14, 'data.levels');
 });

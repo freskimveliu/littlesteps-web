@@ -10,11 +10,12 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 #[Fillable([
-    'child_id', 'template_milestone_id', 'name', 'description', 'icon',
-    'months_from', 'xp', 'sort_order', 'is_editable', 'is_hidden',
-    'created_by_user_id', 'updated_by_user_id',
+    'child_id', 'child_chapter_id', 'milestone_id', 'category_id',
+    'name', 'icon', 'months_from', 'xp', 'sort_order',
+    'is_editable', 'is_hidden', 'created_by_user_id', 'updated_by_user_id',
 ])]
 class ChildMilestone extends Model
 {
@@ -24,7 +25,6 @@ class ChildMilestone extends Model
             'icon' => Icon::class,
             'is_editable' => 'boolean',
             'is_hidden' => 'boolean',
-            'completed_at' => 'datetime',
         ];
     }
 
@@ -34,20 +34,49 @@ class ChildMilestone extends Model
         return $this->belongsTo(Child::class);
     }
 
-    /** @return HasMany<ChildStep, $this> */
-    public function steps(): HasMany
+    /** @return BelongsTo<ChildChapter, $this> */
+    public function chapter(): BelongsTo
     {
-        return $this->hasMany(ChildStep::class);
+        return $this->belongsTo(ChildChapter::class, 'child_chapter_id');
     }
 
-    public function isCompleted(): bool
+    /** @return BelongsTo<Category, $this> */
+    public function category(): BelongsTo
     {
-        return $this->completed_at !== null;
+        return $this->belongsTo(Category::class);
     }
 
-    public function isUnlockedFor(Child $child): bool
+    /** @return HasOne<ChildEntry, $this> */
+    public function entry(): HasOne
     {
-        return $this->months_from === null || $child->ageInMonths() >= $this->months_from;
+        return $this->hasOne(ChildEntry::class);
+    }
+
+    /** @return HasMany<ChildMilestoneProperty, $this> */
+    public function properties(): HasMany
+    {
+        return $this->hasMany(ChildMilestoneProperty::class);
+    }
+
+    public function isRecorded(): bool
+    {
+        return $this->relationLoaded('entry')
+            ? $this->entry !== null
+            : $this->entry()->exists();
+    }
+
+    public function isLockedFor(Child $child): bool
+    {
+        return $this->months_from !== null && $child->ageInMonths() < $this->months_from;
+    }
+
+    /**
+     * A milestone is only deletable while it is still empty. Once an entry exists the
+     * XP has been taken, and deleting would hand back a free daily slot too.
+     */
+    public function isDeletable(): bool
+    {
+        return $this->is_editable && ! $this->isRecorded();
     }
 
     /** @param Builder<$this> $query */

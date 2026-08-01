@@ -14,7 +14,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Editing is the only correction path for a memory attached to a step, so it
+ * Editing is the only correction path for a memory attached to a milestone, so it
  * has to cover everything: the date, the words, the mood and the measurements.
  */
 class UpdateEntryController extends Controller
@@ -40,7 +40,7 @@ class UpdateEntryController extends Controller
         });
 
         return ApiResponse::success(
-            new ChildEntryResource($entry->fresh()->load(['step', 'properties', 'media'])),
+            new ChildEntryResource($entry->fresh()->load(['milestone', 'properties', 'media'])),
             'Saved.',
         );
     }

@@ -6,12 +6,12 @@ namespace Database\Seeders;
 
 use App\Models\AppSetting;
 use App\Models\Category;
-use App\Models\TemplateAchievement;
-use App\Models\TemplateLevel;
-use App\Models\TemplateMilestone;
-use App\Models\TemplatePrompt;
-use App\Models\TemplateStep;
-use App\Models\TemplateStepProperty;
+use App\Models\Achievement;
+use App\Models\Level;
+use App\Models\Chapter;
+use App\Models\Prompt;
+use App\Models\Milestone;
+use App\Models\MilestoneProperty;
 use Illuminate\Database\Seeder;
 use RuntimeException;
 
@@ -24,7 +24,7 @@ use RuntimeException;
  *
  * forceFill rather than updateOrCreate: id is not fillable, so fill() would
  * drop it and let auto-increment pick a different one, quietly breaking every
- * reference the JSON makes between a step, its chapter and its category.
+ * reference the JSON makes between a milestone, its chapter and its category.
  */
 class CatalogueSeeder extends Seeder
 {
@@ -78,56 +78,56 @@ class CatalogueSeeder extends Seeder
 
     private function milestonesAndSteps(): void
     {
-        foreach ($this->read('milestones') as $row) {
-            self::put(new TemplateMilestone, $row);
+        foreach ($this->read('chapters') as $row) {
+            self::put(new Chapter, $row);
         }
 
-        foreach ($this->read('steps') as $row) {
-            $step = self::put(new TemplateStep, collect($row)->except('properties')->all());
+        foreach ($this->read('milestones') as $row) {
+            $milestone = self::put(new Milestone, collect($row)->except('properties')->all());
 
             // Properties are positional, not keyed, so the set is replaced wholesale.
-            $step->properties()->delete();
+            $milestone->properties()->delete();
 
             foreach ($row['properties'] as $property) {
-                $step->properties()->create($property);
+                $milestone->properties()->create($property);
             }
         }
 
         $this->command?->info(
-            'Milestones: '.TemplateMilestone::count().
-            ' · Steps: '.TemplateStep::count().
-            ' · Properties: '.TemplateStepProperty::count()
+            'Chapters: '.Chapter::count().
+            ' · Milestones: '.Milestone::count().
+            ' · Properties: '.MilestoneProperty::count()
         );
     }
 
     private function levels(): void
     {
         foreach ($this->read('levels') as $row) {
-            self::put(new TemplateLevel, $row);
+            self::put(new Level, $row);
         }
 
-        $this->command?->info('Levels: '.TemplateLevel::count());
+        $this->command?->info('Levels: '.Level::count());
     }
 
     private function achievements(): void
     {
         foreach ($this->read('achievements') as $row) {
-            self::put(new TemplateAchievement, $row);
+            self::put(new Achievement, $row);
         }
 
         $this->command?->info(
-            'Badges: '.TemplateAchievement::count().
-            ' ('.TemplateAchievement::whereNotNull('reward')->count().' carry a gift)'
+            'Badges: '.Achievement::count().
+            ' ('.Achievement::whereNotNull('reward')->count().' carry a gift)'
         );
     }
 
     private function prompts(): void
     {
         foreach ($this->read('prompts') as $row) {
-            self::put(new TemplatePrompt, $row);
+            self::put(new Prompt, $row);
         }
 
-        $this->command?->info('Prompts: '.TemplatePrompt::count());
+        $this->command?->info('Prompts: '.Prompt::count());
     }
 
     private function appSettings(): void

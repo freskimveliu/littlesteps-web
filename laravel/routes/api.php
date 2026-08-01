@@ -26,17 +26,17 @@ use App\Http\Controllers\Api\V1\Media\DestroyEntryPhotoController;
 use App\Http\Controllers\Api\V1\Media\StoreChildPhotoController;
 use App\Http\Controllers\Api\V1\Media\StoreEntryPhotoController;
 use App\Http\Controllers\Api\V1\Media\StoreUserPhotoController;
-use App\Http\Controllers\Api\V1\Milestones\CompleteMilestoneController;
-use App\Http\Controllers\Api\V1\Milestones\HideMilestoneController;
-use App\Http\Controllers\Api\V1\Milestones\IndexMilestonesController;
+use App\Http\Controllers\Api\V1\Chapters\CompleteChapterController;
+use App\Http\Controllers\Api\V1\Chapters\HideChapterController;
+use App\Http\Controllers\Api\V1\Chapters\IndexChaptersController;
 use App\Http\Controllers\Api\V1\Progress\ClaimRewardController;
 use App\Http\Controllers\Api\V1\Progress\IndexRewardsController;
 use App\Http\Controllers\Api\V1\Progress\ShowGrowthController;
 use App\Http\Controllers\Api\V1\Progress\ShowProgressController;
-use App\Http\Controllers\Api\V1\Steps\DestroyStepController;
-use App\Http\Controllers\Api\V1\Steps\HideStepController;
-use App\Http\Controllers\Api\V1\Steps\StoreStepController;
-use App\Http\Controllers\Api\V1\Steps\UpdateStepController;
+use App\Http\Controllers\Api\V1\Milestones\DestroyMilestoneController;
+use App\Http\Controllers\Api\V1\Milestones\HideMilestoneController;
+use App\Http\Controllers\Api\V1\Milestones\StoreMilestoneController;
+use App\Http\Controllers\Api\V1\Milestones\UpdateMilestoneController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
@@ -60,14 +60,14 @@ Route::prefix('v1')->group(function () {
         Route::delete('children/{child}', DestroyChildController::class);
         Route::post('children/{child}/photo', StoreChildPhotoController::class);
 
-        Route::get('children/{child}/milestones', IndexMilestonesController::class);
-        Route::post('children/{child}/milestones/{milestone}/complete', CompleteMilestoneController::class);
-        Route::post('children/{child}/milestones/{milestone}/hide', HideMilestoneController::class);
+        Route::get('children/{child}/chapters', IndexChaptersController::class);
+        Route::post('children/{child}/chapters/{chapter}/complete', CompleteChapterController::class);
+        Route::post('children/{child}/chapters/{chapter}/hide', HideChapterController::class);
 
-        Route::post('children/{child}/steps', StoreStepController::class);
-        Route::patch('children/{child}/steps/{step}', UpdateStepController::class);
-        Route::delete('children/{child}/steps/{step}', DestroyStepController::class);
-        Route::post('children/{child}/steps/{step}/hide', HideStepController::class);
+        Route::post('children/{child}/milestones', StoreMilestoneController::class);
+        Route::patch('children/{child}/milestones/{milestone}', UpdateMilestoneController::class);
+        Route::delete('children/{child}/milestones/{milestone}', DestroyMilestoneController::class);
+        Route::post('children/{child}/milestones/{milestone}/hide', HideMilestoneController::class);
 
         Route::get('children/{child}/entries', IndexEntriesController::class);
         Route::post('children/{child}/entries', StoreEntryController::class);
