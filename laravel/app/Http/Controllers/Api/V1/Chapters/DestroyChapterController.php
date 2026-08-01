@@ -1,0 +1,55 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Http\Controllers\Api\V1\Chapters;
+
+use App\Http\Controllers\Controller;
+use App\Http\Responses\ApiResponse;
+use App\Models\Child;
+use App\Models\ChildChapter;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+
+/**
+ * Only a chapter the parent wrote can be deleted, and never one holding a
+ * memory — deleting cascades to its milestones and their entries, which is the
+ * one thing this app must never do quietly. Pass move_steps_to to keep them.
+ */
+class DestroyChapterController extends Controller
+{
+    public function __invoke(Request $request, Child $child, ChildChapter $chapter): JsonResponse
+    {
+        $this->authorize('contribute', $child);
+        abort_unless($chapter->child_id === $child->id, 404);
+        abort_unless($chapter->is_editable, 403, 'This chapter is part of the guided journey.');
+
+        $validated = $request->validate([
+            'move_steps_to' => ['nullable', 'integer'],
+        ]);
+
+        $target = isset($validated['move_steps_to'])
+            ? $child->chapters()->where('id', '!=', $chapter->id)->findOrFail($validated['move_steps_to'])
+            : null;
+
+        if (! $target && $chapter->milestones()->whereHas('entry')->exists()) {
+            abort(403, 'This chapter holds a memory. Move its milestones somewhere else first.');
+        }
+
+        DB::transaction(function () use ($chapter, $target) {
+            if ($target) {
+                $next = ($target->milestones()->max('sort_order') ?? 0) + 10;
+
+                foreach ($chapter->milestones()->orderBy('sort_order')->get() as $milestone) {
+                    $milestone->update(['child_chapter_id' => $target->id, 'sort_order' => $next]);
+                    $next += 10;
+                }
+            }
+
+            $chapter->delete();
+        });
+
+        return ApiResponse::noContent();
+    }
+}
