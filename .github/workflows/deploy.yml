@@ -1,0 +1,173 @@
+name: Build, Test & Deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+  APP_URL: https://littlesteps.freskimveliu.dev
+
+jobs:
+  # =============================================================================
+  # Job 1: Tests — PHPStan + PHPUnit on the runner, against a real MySQL
+  # (phpunit.xml pins DB_CONNECTION=mysql / DB_DATABASE=testing, so SQLite is
+  # not an option here.)
+  # =============================================================================
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: testing
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pdo_mysql, gd, bcmath, exif, zip, pcntl, intl, opcache, redis
+          coverage: none
+
+      - name: Cache Composer packages
+        uses: actions/cache@v4
+        with:
+          path: laravel/vendor
+          key: composer-${{ hashFiles('laravel/composer.lock') }}
+          restore-keys: composer-
+
+      - name: Install Composer dependencies
+        working-directory: laravel
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Prepare environment
+        working-directory: laravel
+        run: |
+          cp .env.example .env
+          sed -i 's/^DB_HOST=.*/DB_HOST=127.0.0.1/' .env
+          sed -i 's/^DB_USERNAME=.*/DB_USERNAME=root/' .env
+          sed -i 's/^DB_PASSWORD=.*/DB_PASSWORD=root/' .env
+          sed -i 's/^CACHE_STORE=.*/CACHE_STORE=array/' .env
+          sed -i 's/^SESSION_DRIVER=.*/SESSION_DRIVER=array/' .env
+          sed -i 's/^QUEUE_CONNECTION=.*/QUEUE_CONNECTION=sync/' .env
+          php artisan key:generate
+
+      - name: Run PHPStan
+        working-directory: laravel
+        run: composer phpstan
+
+      - name: Run tests
+        working-directory: laravel
+        run: php artisan test --stop-on-failure
+
+  # =============================================================================
+  # Job 2: Build the production image and push it to GHCR
+  # =============================================================================
+  build:
+    name: Build & Push Docker Image
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.event_name == 'push'
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to the GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract image metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=sha,prefix=
+            type=raw,value=${{ github.ref_name }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          target: production
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main
+          cache-to: type=inline
+
+  # =============================================================================
+  # Job 3: Tell the server to pull it
+  # =============================================================================
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    environment:
+      name: production
+      url: https://littlesteps.freskimveliu.dev
+
+    steps:
+      - name: Trigger the deployment webhook
+        run: |
+          SIGNATURE=$(echo -n '{}' | openssl dgst -sha256 -hmac "${{ secrets.DEPLOY_WEBHOOK_SECRET }}" | awk '{print $2}')
+          RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" \
+            -X POST \
+            -H "Content-Type: application/json" \
+            -H "X-Hub-Signature-256: sha256=$SIGNATURE" \
+            -d '{}' \
+            --max-time 600 \
+            "${APP_URL}/webhook/deploy")
+
+          if [ "$RESPONSE" = "200" ]; then
+            echo "Deployment triggered successfully."
+          else
+            echo "Deployment webhook returned $RESPONSE"
+            exit 1
+          fi
+
+      - name: Health check
+        run: |
+          for i in {1..15}; do
+            echo "=== Attempt $i/15 ==="
+            CODE=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 10 "${APP_URL}/up")
+            echo "Status: $CODE"
+            if [ "$CODE" = "200" ]; then
+              echo "Application is healthy."
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "Health check failed after 15 attempts."
+          exit 1

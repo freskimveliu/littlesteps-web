@@ -3,6 +3,7 @@ docker/
 data/
 docker-compose*.yml
 bin/
+deploy/
 
 # Git
 .git/

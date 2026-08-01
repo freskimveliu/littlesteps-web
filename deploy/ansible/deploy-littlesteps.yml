@@ -1,0 +1,569 @@
+---
+# =============================================================================
+# Little Steps — install / update on the shared vault server
+# =============================================================================
+# Idempotent: run it for the first install and again for every config change.
+# It does NOT create a server — the vault stack already provisioned this one.
+#
+#   ./apply.sh
+#
+# What it does:
+#   - creates /opt/littlesteps and the persistent storage directory
+#   - adds a swapfile (the box is a t3.small with 2 GB of RAM)
+#   - creates the `littlesteps` database and user inside the vault MariaDB
+#   - writes laravel/.env, docker-compose.yml, deploy.sh and the webhook server
+#   - installs a systemd unit for the webhook on WEBHOOK_PORT (9001)
+#   - opens that port to the Docker network only, and adds a Fail2ban jail
+#   - pulls the image, migrates, and starts the containers
+#
+# Caddy is NOT configured here — it belongs to the vault stack. The site block
+# for this app lives in the vault repo's ansible/docker/caddy/Caddyfile.j2 and
+# is applied with the vault repo's ./update.sh. See DEPLOYMENT.md.
+# =============================================================================
+
+- name: "Deploy Little Steps to the shared server"
+  hosts: all
+  become: true
+  gather_facts: true
+
+  vars:
+    app_dir: /opt/littlesteps
+    vault_dir: /opt/vault
+    domain: "{{ lookup('env', 'LITTLESTEPS_DOMAIN') | default('littlesteps.freskimveliu.dev', true) }}"
+    docker_image: "ghcr.io/freskimveliu/littlesteps-web"
+    image_tag: "{{ lookup('env', 'DOCKER_IMAGE_TAG') | default('main', true) }}"
+
+    app_key: "{{ lookup('env', 'APP_KEY') }}"
+
+    db_name: littlesteps
+    db_user: littlesteps
+    db_password: "{{ lookup('env', 'LITTLESTEPS_DB_PASSWORD') }}"
+    vault_db_root_password: "{{ lookup('env', 'VAULT_DB_ROOT_PASSWORD') }}"
+
+    redis_password: "{{ lookup('env', 'VAULT_REDIS_PASSWORD') }}"
+    # Vault uses Redis databases 0 (default) and 1 (cache). We take 2 and 3.
+    redis_db: "2"
+    redis_cache_db: "3"
+
+    github_token: "{{ lookup('env', 'GITHUB_TOKEN') }}"
+    github_username: "{{ lookup('env', 'GITHUB_USERNAME') | default('freskimveliu', true) }}"
+
+    deploy_webhook_secret: "{{ lookup('env', 'DEPLOY_WEBHOOK_SECRET') }}"
+    webhook_port: "{{ lookup('env', 'WEBHOOK_PORT') | default('9001', true) }}"
+
+    create_swapfile: "{{ (lookup('env', 'CREATE_SWAPFILE') | default('true', true)) | bool }}"
+
+  tasks:
+    # -------------------------------------------------------------------------
+    # Preflight
+    # -------------------------------------------------------------------------
+    - name: Fail early if a required value is missing
+      ansible.builtin.assert:
+        that:
+          - app_key | length > 0
+          - app_key is match('^base64:')
+          - db_password | length > 0
+          - vault_db_root_password | length > 0
+          - redis_password | length > 0
+          - github_token | length > 0
+          - deploy_webhook_secret | length > 0
+        fail_msg: >-
+          One or more values are missing from deploy/ansible/.env.
+          APP_KEY must be a fresh `base64:...` key (artisan key:generate --show),
+          and the vault DB/Redis passwords must match the vault repo's ansible/.env.
+        quiet: true
+
+    - name: Check that the vault stack is present
+      ansible.builtin.stat:
+        path: "{{ vault_dir }}/docker-compose.yml"
+      register: vault_stack
+
+    - name: Fail if the vault stack is missing
+      ansible.builtin.fail:
+        msg: >-
+          {{ vault_dir }}/docker-compose.yml not found. This playbook attaches to
+          the vault stack (its network, MariaDB, Redis and Caddy) and cannot run
+          without it.
+      when: not vault_stack.stat.exists
+
+    - name: Check that the vault database container is running
+      ansible.builtin.command: docker inspect -f '{{ "{{" }}.State.Running{{ "}}" }}' vault_database
+      register: vault_db_running
+      changed_when: false
+      failed_when: vault_db_running.rc != 0 or vault_db_running.stdout | trim != 'true'
+
+    # -------------------------------------------------------------------------
+    # Swap — a t3.small has 2 GB of RAM and now runs twelve containers
+    # -------------------------------------------------------------------------
+    - name: Check for an existing swapfile
+      ansible.builtin.stat:
+        path: /swapfile
+      register: swapfile
+      when: create_swapfile
+
+    - name: Create a 2 GB swapfile
+      when: create_swapfile and not (swapfile.stat.exists | default(false))
+      block:
+        - name: Allocate the swapfile
+          ansible.builtin.command: fallocate -l 2G /swapfile
+          args:
+            creates: /swapfile
+
+        - name: Restrict swapfile permissions
+          ansible.builtin.file:
+            path: /swapfile
+            mode: '0600'
+
+        - name: Format the swapfile
+          ansible.builtin.command: mkswap /swapfile
+          register: mkswap
+          changed_when: mkswap.rc == 0
+
+        - name: Enable the swapfile
+          ansible.builtin.command: swapon /swapfile
+          register: swapon
+          changed_when: swapon.rc == 0
+          failed_when: swapon.rc != 0 and 'already active' not in swapon.stderr
+
+        - name: Persist the swapfile in /etc/fstab
+          ansible.builtin.lineinfile:
+            path: /etc/fstab
+            line: "/swapfile none swap sw 0 0"
+            state: present
+
+        - name: Lower swappiness so swap is a safety net, not a first resort
+          ansible.posix.sysctl:
+            name: vm.swappiness
+            value: '10'
+            state: present
+            sysctl_file: /etc/sysctl.d/99-swappiness.conf
+            reload: true
+
+    # -------------------------------------------------------------------------
+    # Directories
+    # -------------------------------------------------------------------------
+    - name: Create the application directory structure
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        owner: ubuntu
+        group: ubuntu
+        mode: '0755'
+      loop:
+        - "{{ app_dir }}"
+        - "{{ app_dir }}/scripts"
+        - "{{ app_dir }}/laravel/storage/logs"
+        - "{{ app_dir }}/laravel/storage/framework/cache/data"
+        - "{{ app_dir }}/laravel/storage/framework/sessions"
+        - "{{ app_dir }}/laravel/storage/framework/views"
+        - "{{ app_dir }}/laravel/storage/app/public"
+
+    # -------------------------------------------------------------------------
+    # Database — our own database and user inside the vault MariaDB
+    # -------------------------------------------------------------------------
+    - name: Create the database and user in the vault MariaDB
+      ansible.builtin.command:
+        argv:
+          - docker
+          - exec
+          - vault_database
+          - mariadb
+          - -uroot
+          - "-p{{ vault_db_root_password }}"
+          - -e
+          - >-
+            CREATE DATABASE IF NOT EXISTS `{{ db_name }}`
+              CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+            CREATE USER IF NOT EXISTS '{{ db_user }}'@'%' IDENTIFIED BY '{{ db_password }}';
+            ALTER USER '{{ db_user }}'@'%' IDENTIFIED BY '{{ db_password }}';
+            GRANT ALL PRIVILEGES ON `{{ db_name }}`.* TO '{{ db_user }}'@'%';
+            FLUSH PRIVILEGES;
+      no_log: true
+      changed_when: true
+
+    # -------------------------------------------------------------------------
+    # Application configuration
+    # -------------------------------------------------------------------------
+    - name: Write laravel/.env
+      ansible.builtin.copy:
+        dest: "{{ app_dir }}/laravel/.env"
+        owner: ubuntu
+        group: ubuntu
+        mode: '0600'
+        content: |
+          APP_NAME="Little Steps"
+          APP_ENV=production
+          APP_KEY={{ app_key }}
+          APP_DEBUG=false
+          APP_URL=https://{{ domain }}
+          ASSET_URL=https://{{ domain }}
+
+          APP_LOCALE=en
+          APP_FALLBACK_LOCALE=en
+          APP_FAKER_LOCALE=en_US
+          APP_MAINTENANCE_DRIVER=file
+
+          BCRYPT_ROUNDS=12
+
+          # Caddy terminates TLS and forwards plain HTTP.
+          TRUSTED_PROXIES=*
+
+          LOG_CHANNEL=stack
+          LOG_STACK=single
+          LOG_DEPRECATIONS_CHANNEL=null
+          LOG_LEVEL=error
+
+          # The shared MariaDB from the vault stack.
+          DB_CONNECTION=mariadb
+          DB_HOST=vault_database
+          DB_PORT=3306
+          DB_DATABASE={{ db_name }}
+          DB_USERNAME={{ db_user }}
+          DB_PASSWORD={{ db_password }}
+
+          SESSION_DRIVER=redis
+          SESSION_LIFETIME=120
+          SESSION_ENCRYPT=false
+          SESSION_PATH=/
+          SESSION_DOMAIN=null
+
+          BROADCAST_CONNECTION=log
+          FILESYSTEM_DISK=local
+          QUEUE_CONNECTION=redis
+          CACHE_STORE=redis
+
+          # The shared Redis from the vault stack, on our own database indexes
+          # so nothing collides with vault's keys, cache or queues.
+          REDIS_CLIENT=phpredis
+          REDIS_HOST=vault_redis
+          REDIS_PORT=6379
+          REDIS_PASSWORD={{ redis_password }}
+          REDIS_DB={{ redis_db }}
+          REDIS_CACHE_DB={{ redis_cache_db }}
+          REDIS_PREFIX=littlesteps-database-
+
+          MAIL_MAILER=log
+          MAIL_FROM_ADDRESS="hello@{{ domain }}"
+          MAIL_FROM_NAME="${APP_NAME}"
+      no_log: true
+
+    # Compose reads its variables from the .env next to the compose file, not
+    # from laravel/.env. This is the one that decides which image tag runs —
+    # change it to a commit SHA to roll back.
+    - name: Write the compose environment file
+      ansible.builtin.copy:
+        dest: "{{ app_dir }}/.env"
+        owner: ubuntu
+        group: ubuntu
+        mode: '0644'
+        content: |
+          # Which image tag the stack runs. `main` is the newest build of the
+          # main branch; set a commit SHA here to pin or roll back, then run:
+          #   docker compose up -d --no-deps app
+          DOCKER_IMAGE_TAG={{ image_tag }}
+
+    - name: Write docker-compose.yml
+      ansible.builtin.copy:
+        src: ../docker-compose.server.yml
+        dest: "{{ app_dir }}/docker-compose.yml"
+        owner: ubuntu
+        group: ubuntu
+        mode: '0644'
+
+    # -------------------------------------------------------------------------
+    # Deploy script + webhook
+    # -------------------------------------------------------------------------
+    - name: Write deploy.sh
+      ansible.builtin.copy:
+        dest: "{{ app_dir }}/scripts/deploy.sh"
+        mode: '0755'
+        content: |
+          #!/bin/bash
+          # Pulls the newest image, migrates, and swaps the containers.
+          # Written by deploy/ansible/deploy-littlesteps.yml — do not edit here.
+          set -e
+
+          cd {{ app_dir }}
+
+          echo "$(date): Starting deployment..."
+
+          # Only restart the workers that were running — so `docker compose stop
+          # queue` survives a deploy on this memory-tight box.
+          WORKERS=$(docker compose ps --services --status running 2>/dev/null \
+              | grep -E '^(queue|scheduler)$' | tr '\n' ' ')
+
+          echo "Pulling latest image..."
+          docker compose pull app queue scheduler
+
+          echo "Running database migrations..."
+          docker compose run --rm app php artisan migrate --force
+
+          echo "Starting new app container..."
+          docker compose up -d --no-deps app
+
+          echo "Waiting for the app to become healthy..."
+          HEALTHY=0
+          for i in $(seq 1 45); do
+              STATUS=$(docker inspect littlesteps_app --format='{{ "{{" }}.State.Health.Status{{ "}}" }}' 2>/dev/null || echo 'starting')
+              echo "  Health status: $STATUS"
+              if [ "$STATUS" = "healthy" ]; then
+                  HEALTHY=1
+                  break
+              fi
+              sleep 2
+          done
+
+          if [ "$HEALTHY" != "1" ]; then
+              echo "App did not become healthy — the workers stay on the previous image."
+              docker compose logs app --tail=50
+              exit 1
+          fi
+
+          if [ -n "$WORKERS" ]; then
+              echo "Restarting workers:$WORKERS"
+              # shellcheck disable=SC2086
+              docker compose up -d --no-deps $WORKERS
+          else
+              echo "No worker containers were running — leaving them stopped."
+          fi
+
+          echo "Pruning old images..."
+          docker image prune -f
+
+          echo "$(date): Deployment completed successfully!"
+
+    - name: Write webhook-server.py
+      ansible.builtin.copy:
+        dest: "{{ app_dir }}/scripts/webhook-server.py"
+        mode: '0755'
+        content: |
+          #!/usr/bin/env python3
+          """
+          Deployment webhook for Little Steps.
+
+          Listens on WEBHOOK_PORT and runs deploy.sh for an HMAC-signed POST to
+          /deploy. Caddy is the only thing that can reach it (UFW restricts the
+          port to the Docker network).
+          """
+          import http.server
+          import hmac
+          import hashlib
+          import os
+          import subprocess
+          import logging
+
+          logging.basicConfig(
+              level=logging.INFO,
+              format='%(asctime)s - %(levelname)s - %(message)s',
+              handlers=[
+                  logging.FileHandler('/var/log/littlesteps-deploy-webhook.log'),
+                  logging.StreamHandler()
+              ]
+          )
+
+          WEBHOOK_SECRET = os.environ.get('DEPLOY_WEBHOOK_SECRET', '')
+          DEPLOY_SCRIPT = '{{ app_dir }}/scripts/deploy.sh'
+          PORT = {{ webhook_port }}
+
+
+          class WebhookHandler(http.server.BaseHTTPRequestHandler):
+              def do_POST(self):
+                  if self.path != '/deploy':
+                      self.send_response(404)
+                      self.end_headers()
+                      return
+
+                  content_length = int(self.headers.get('Content-Length', 0))
+                  body = self.rfile.read(content_length)
+
+                  signature = self.headers.get('X-Hub-Signature-256', '')
+                  if not self.verify_signature(body, signature):
+                      logging.warning('Invalid signature received')
+                      self.send_response(401)
+                      self.end_headers()
+                      self.wfile.write(b'Invalid signature')
+                      return
+
+                  logging.info('Valid webhook received, starting deployment...')
+                  try:
+                      result = subprocess.run(
+                          [DEPLOY_SCRIPT],
+                          capture_output=True,
+                          text=True,
+                          timeout=600
+                      )
+                      logging.info(f'Deploy stdout: {result.stdout}')
+                      if result.stderr:
+                          logging.error(f'Deploy stderr: {result.stderr}')
+
+                      if result.returncode != 0:
+                          self.send_response(500)
+                          self.end_headers()
+                          self.wfile.write(b'Deployment failed')
+                          return
+
+                      self.send_response(200)
+                      self.end_headers()
+                      self.wfile.write(b'Deployment triggered')
+                  except Exception as e:
+                      logging.error(f'Deployment failed: {e}')
+                      self.send_response(500)
+                      self.end_headers()
+                      self.wfile.write(str(e).encode())
+
+              def verify_signature(self, payload, signature):
+                  # Unlike the vault webhook, an unset secret rejects everything
+                  # rather than allowing everything.
+                  if not WEBHOOK_SECRET or not signature:
+                      return False
+                  expected = 'sha256=' + hmac.new(
+                      WEBHOOK_SECRET.encode(),
+                      payload,
+                      hashlib.sha256
+                  ).hexdigest()
+                  return hmac.compare_digest(expected, signature)
+
+              def log_message(self, format, *args):
+                  logging.info(f'{self.address_string()} - {format % args}')
+
+
+          if __name__ == '__main__':
+              server = http.server.HTTPServer(('0.0.0.0', PORT), WebhookHandler)
+              logging.info(f'Little Steps webhook server listening on port {PORT}')
+              server.serve_forever()
+
+    - name: Install the deploy-webhook systemd unit
+      ansible.builtin.copy:
+        dest: /etc/systemd/system/littlesteps-deploy-webhook.service
+        mode: '0644'
+        content: |
+          [Unit]
+          Description=Little Steps Deployment Webhook Server
+          After=network.target docker.service
+          Requires=docker.service
+
+          [Service]
+          Type=simple
+          Restart=always
+          RestartSec=5
+          User=root
+          WorkingDirectory={{ app_dir }}
+          Environment="DEPLOY_WEBHOOK_SECRET={{ deploy_webhook_secret }}"
+          ExecStart=/usr/bin/python3 {{ app_dir }}/scripts/webhook-server.py
+          StandardOutput=journal
+          StandardError=journal
+
+          [Install]
+          WantedBy=multi-user.target
+      no_log: true
+      register: webhook_service
+
+    - name: Enable and (re)start the webhook service
+      ansible.builtin.systemd:
+        name: littlesteps-deploy-webhook
+        state: "{{ 'restarted' if webhook_service.changed else 'started' }}"
+        daemon_reload: true
+        enabled: true
+
+    - name: UFW — allow the webhook port from the Docker network only
+      community.general.ufw:
+        rule: allow
+        port: "{{ webhook_port }}"
+        from_ip: "172.16.0.0/12"
+        comment: "Little Steps webhook, Docker network only"
+
+    # -------------------------------------------------------------------------
+    # Fail2ban — same filter the vault site uses, pointed at our access log
+    # -------------------------------------------------------------------------
+    - name: Configure a Fail2ban jail for the Little Steps access log
+      ansible.builtin.copy:
+        dest: /etc/fail2ban/jail.d/caddy-littlesteps.conf
+        mode: '0644'
+        content: |
+          [caddy-littlesteps]
+          enabled  = true
+          filter   = caddy-badrequest
+          logpath  = {{ vault_dir }}/logs/caddy/littlesteps.log
+          maxretry = 5
+          bantime  = 3600
+          findtime = 600
+      register: fail2ban_jail
+
+    - name: Ensure the access log exists so Fail2ban can start
+      ansible.builtin.file:
+        path: "{{ vault_dir }}/logs/caddy/littlesteps.log"
+        state: touch
+        mode: '0644'
+        access_time: preserve
+        modification_time: preserve
+
+    - name: Restart Fail2ban if the jail changed
+      ansible.builtin.service:
+        name: fail2ban
+        state: restarted
+      when: fail2ban_jail.changed
+
+    # -------------------------------------------------------------------------
+    # Bring it up
+    # -------------------------------------------------------------------------
+    - name: Log in to the GitHub Container Registry (ubuntu)
+      ansible.builtin.shell: |
+        echo "{{ github_token }}" | docker login ghcr.io -u "{{ github_username }}" --password-stdin
+      become_user: ubuntu
+      no_log: true
+      changed_when: true
+
+    - name: Log in to the GitHub Container Registry (root, used by the webhook)
+      ansible.builtin.shell: |
+        echo "{{ github_token }}" | docker login ghcr.io -u "{{ github_username }}" --password-stdin
+      no_log: true
+      changed_when: true
+
+    - name: Pull the application image
+      ansible.builtin.command: docker compose pull
+      args:
+        chdir: "{{ app_dir }}"
+      changed_when: true
+
+    - name: Run database migrations
+      ansible.builtin.command: docker compose run --rm app php artisan migrate --force
+      args:
+        chdir: "{{ app_dir }}"
+      register: migrate
+      changed_when: "'Nothing to migrate' not in migrate.stdout"
+
+    - name: Start the containers
+      ansible.builtin.command: docker compose up -d
+      args:
+        chdir: "{{ app_dir }}"
+      changed_when: true
+
+    - name: Wait for the app to report healthy
+      ansible.builtin.command: docker inspect -f '{{ "{{" }}.State.Health.Status{{ "}}" }}' littlesteps_app
+      register: health
+      until: health.stdout | trim == 'healthy'
+      retries: 30
+      delay: 5
+      changed_when: false
+
+    - name: Show container status
+      ansible.builtin.command: docker ps --filter "name=littlesteps" --format "table {{ '{{' }}.Names{{ '}}' }}\t{{ '{{' }}.Status{{ '}}' }}"
+      register: docker_status
+      changed_when: false
+
+    - name: Done
+      ansible.builtin.debug:
+        msg:
+          - "============================================"
+          - "Little Steps is deployed."
+          - "============================================"
+          - "{{ docker_status.stdout_lines }}"
+          - ""
+          - "URL       : https://{{ domain }}"
+          - "Admin     : https://{{ domain }}/admin"
+          - "Health    : https://{{ domain }}/up"
+          - "Directory : {{ app_dir }}"
+          - ""
+          - "If https://{{ domain }} does not answer, Caddy does not know about"
+          - "it yet — run ./update.sh in the vault repo's ansible directory."
+          - "============================================"

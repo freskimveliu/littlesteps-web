@@ -1,0 +1,72 @@
+# Little Steps — production stack for the shared server (the "vault" box).
+#
+# This is NOT ../docker-compose.production.yml. That file is the self-contained
+# stack: it brings its own MySQL, its own Redis and expects Traefik. This one
+# runs on the existing server at /opt/littlesteps and reuses what already runs
+# there — Caddy for TLS and routing, and the vault MariaDB and Redis for data.
+#
+# Only three containers are ours: the app, a queue worker and the scheduler.
+# They join `vault_network` (created by the vault stack) so Caddy can reach
+# `littlesteps_app` and the app can reach `vault_database` / `vault_redis`.
+#
+# Ansible copies this file to /opt/littlesteps/docker-compose.yml — see
+# deploy/ansible/apply.sh. Do not edit it on the server; it gets overwritten.
+services:
+  app:
+    image: "ghcr.io/freskimveliu/littlesteps-web:${DOCKER_IMAGE_TAG:-main}"
+    container_name: littlesteps_app
+    restart: unless-stopped
+    env_file: laravel/.env
+    volumes:
+      - ./laravel/storage:/var/www/storage
+    networks:
+      - vault_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/up"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  # Nothing is queued today (every media conversion is nonQueued() and no job
+  # implements ShouldQueue), so this worker idles at ~60 MB. It is here so the
+  # first queued job works without a deploy change. On a 2 GB box you can stop
+  # it — `docker compose stop queue` — and deploys will leave it stopped.
+  queue:
+    image: "ghcr.io/freskimveliu/littlesteps-web:${DOCKER_IMAGE_TAG:-main}"
+    container_name: littlesteps_queue
+    restart: unless-stopped
+    command: ["php", "artisan", "queue:work", "--tries=3", "--timeout=300", "--max-time=3600"]
+    env_file: laravel/.env
+    volumes:
+      - ./laravel/storage:/var/www/storage
+    networks:
+      - vault_network
+    depends_on:
+      - app
+    # The image healthcheck curls nginx, which does not run in this container.
+    # The restart policy covers the worker exiting, so no check is needed.
+    healthcheck:
+      disable: true
+
+  # Same story: routes/console.php schedules nothing yet. Stoppable too.
+  scheduler:
+    image: "ghcr.io/freskimveliu/littlesteps-web:${DOCKER_IMAGE_TAG:-main}"
+    container_name: littlesteps_scheduler
+    restart: unless-stopped
+    command: ["sh", "-c", "while true; do php artisan schedule:run --no-interaction; sleep 60; done"]
+    env_file: laravel/.env
+    volumes:
+      - ./laravel/storage:/var/www/storage
+    networks:
+      - vault_network
+    depends_on:
+      - app
+    healthcheck:
+      disable: true
+
+networks:
+  # Owned by the vault stack (/opt/vault/docker-compose.yml). We only attach.
+  vault_network:
+    name: vault_network
+    external: true
