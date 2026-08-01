@@ -22,6 +22,8 @@ import UiInput from '../../../components/ui/UiInput.vue';
 import UiSelect from '../../../components/ui/UiSelect.vue';
 import UiSwitch from '../../../components/ui/UiSwitch.vue';
 import UiConfirmationModal from '../../../components/ui/UiConfirmationModal.vue';
+import UiPagination from '../../../components/ui/UiPagination.vue';
+import UiFilterPopover from '../../../components/ui/UiFilterPopover.vue';
 import { useIndexFilters } from '../../../composables/useIndexFilters';
 
 interface Property {
@@ -47,7 +49,7 @@ interface Milestone {
 }
 
 const props = defineProps<{
-    milestones: { data: Milestone[]; current_page: number; last_page: number; total: number; links: unknown[] };
+    milestones: { data: Milestone[]; current_page: number; last_page: number; total: number; per_page: number; links: unknown[] };
     filters: { search: string | null; sort: string | null; order: string | null; chapter: number | null };
     chapters: { id: number; name: string }[];
     categories: { id: number; name: string; color: string }[];
@@ -55,7 +57,7 @@ const props = defineProps<{
     propertyKeys: string[];
 }>();
 
-const milestoneFilter = ref<string>(props.filters.chapter ? String(props.filters.chapter) : '');
+const chapterFilter = ref<string>(props.filters.chapter ? String(props.filters.chapter) : '');
 
 const { search, searching, sortKey, sortOrder, toggleSort, visit } = useIndexFilters({
     url: '/admin/milestones',
@@ -64,8 +66,13 @@ const { search, searching, sortKey, sortOrder, toggleSort, visit } = useIndexFil
     sortOrder: props.filters.order as 'asc' | 'desc' | null,
 });
 
-function applyMilestone() {
-    visit({ chapter: milestoneFilter.value || undefined });
+function applyChapter() {
+    visit({ chapter: chapterFilter.value || undefined });
+}
+
+function resetChapter() {
+    chapterFilter.value = '';
+    visit({ chapter: undefined });
 }
 
 const formOpen = ref(false);
@@ -88,7 +95,7 @@ const form = useForm({
 function startCreate() {
     editing.value = null;
     form.defaults({
-        chapter_id: Number(milestoneFilter.value) || props.chapters[0]?.id || 0,
+        chapter_id: Number(chapterFilter.value) || props.chapters[0]?.id || 0,
         category_id: props.categories[0]?.id ?? 0,
         name: '',
         description: '',
@@ -145,26 +152,27 @@ function performDelete() {
     <Head title="Milestones" />
 
     <AdminLayout>
-        <UiPageHeader
-            title="Milestones"
-            :subtitle="`${milestones.total} questions across the journey. Editing one never rewrites what a parent already saved.`"
-        />
+        <UiPageHeader title="Milestones" />
 
         <UiTable :empty="milestones.data.length === 0" empty-title="No milestones match">
             <template #toolbar>
                 <UiSpinner v-if="searching" size="xs" tone="primary" class="mr-2" />
-                <div class="w-52">
+                <UiSearchInput v-model="search" placeholder="Search milestones…" />
+                <UiFilterPopover
+                    :active-count="chapterFilter ? 1 : 0"
+                    title="Filters"
+                    @apply="applyChapter"
+                    @reset="resetChapter"
+                >
                     <UiSelect
-                        v-model="milestoneFilter"
-                        placeholder="All chapters"
+                        v-model="chapterFilter"
+                        label="Chapter"
                         :options="[
                             { value: '', label: 'All chapters' },
                             ...chapters.map((c) => ({ value: String(c.id), label: c.name })),
                         ]"
-                        @update:model-value="applyMilestone"
                     />
-                </div>
-                <UiSearchInput v-model="search" placeholder="Search milestones…" />
+                </UiFilterPopover>
                 <UiButton @click="startCreate">
                     <PlusIcon class="h-3.5 w-3.5" />
                     New milestone
@@ -234,28 +242,14 @@ function performDelete() {
             </template>
 
             <template #footer>
-                <div
+                <UiPagination
                     v-if="milestones.last_page > 1"
-                    class="flex items-center justify-between border-t border-[#f0f4f8] px-6 py-4 text-body text-slate-500"
-                >
-                    <span>Page {{ milestones.current_page }} of {{ milestones.last_page }}</span>
-                    <div class="flex gap-2">
-                        <UiButton
-                            variant="outline"
-                            :disabled="milestones.current_page === 1"
-                            @click="visit({ page: milestones.current_page - 1, chapter: milestoneFilter || undefined })"
-                        >
-                            Previous
-                        </UiButton>
-                        <UiButton
-                            variant="outline"
-                            :disabled="milestones.current_page === milestones.last_page"
-                            @click="visit({ page: milestones.current_page + 1, chapter: milestoneFilter || undefined })"
-                        >
-                            Next
-                        </UiButton>
-                    </div>
-                </div>
+                    :current-page="milestones.current_page"
+                    :last-page="milestones.last_page"
+                    :total="milestones.total"
+                    :per-page="milestones.per_page"
+                    @change="(p: number) => visit({ page: p, chapter: chapterFilter || undefined })"
+                />
             </template>
         </UiTable>
 

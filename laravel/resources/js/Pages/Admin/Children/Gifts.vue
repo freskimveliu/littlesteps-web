@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed, ref } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import AdminLayout from '../../../layouts/AdminLayout.vue';
 import UiPageHeader from '../../../components/ui/UiPageHeader.vue';
@@ -8,6 +9,9 @@ import UiTableCell from '../../../components/ui/UiTableCell.vue';
 import UiTableHeader from '../../../components/ui/UiTableHeader.vue';
 import UiButton from '../../../components/ui/UiButton.vue';
 import UiBadge from '../../../components/ui/UiBadge.vue';
+import UiPagination from '../../../components/ui/UiPagination.vue';
+import UiFilterPopover from '../../../components/ui/UiFilterPopover.vue';
+import UiSelect from '../../../components/ui/UiSelect.vue';
 
 const props = defineProps<{
     gifts: {
@@ -24,6 +28,7 @@ const props = defineProps<{
         current_page: number;
         last_page: number;
         total: number;
+        per_page: number;
     };
     filters: { status: string | null };
     counts: Record<string, number>;
@@ -36,16 +41,24 @@ const statusTone: Record<string, 'neutral' | 'primary' | 'success' | 'danger'> =
     failed: 'danger',
 };
 
-const tabs = [
-    { key: null, label: 'All' },
-    { key: 'unclaimed', label: 'Unclaimed' },
-    { key: 'generating', label: 'Generating' },
-    { key: 'ready', label: 'Ready' },
-    { key: 'failed', label: 'Failed' },
+const statusOptions = [
+    { value: '', label: 'Any status' },
+    { value: 'unclaimed', label: `Unclaimed (${props.counts.unclaimed ?? 0})` },
+    { value: 'generating', label: `Generating (${props.counts.generating ?? 0})` },
+    { value: 'ready', label: `Ready (${props.counts.ready ?? 0})` },
+    { value: 'failed', label: `Failed (${props.counts.failed ?? 0})` },
 ];
 
-function pick(status: string | null) {
-    router.get('/admin/gifts', { status: status ?? undefined }, { preserveState: false });
+const status = ref(props.filters.status ?? '');
+const activeCount = computed(() => (props.filters.status ? 1 : 0));
+
+function applyFilters() {
+    router.get('/admin/gifts', { status: status.value || undefined }, { preserveState: false });
+}
+
+function resetFilters() {
+    status.value = '';
+    router.get('/admin/gifts', {}, { preserveState: false });
 }
 
 function reset(id: number) {
@@ -61,29 +74,24 @@ function page(n: number) {
     <Head title="Gifts" />
 
     <AdminLayout>
-        <UiPageHeader
-            title="Gifts"
-            :subtitle="`${gifts.total} earned. Nothing generates until a parent claims it — a failure leaves a row here and nowhere else.`"
-        />
-
-        <div class="mb-4 flex flex-wrap gap-2">
-            <UiButton
-                v-for="tab in tabs"
-                :key="tab.label"
-                variant="outline"
-                :active="(filters.status ?? null) === tab.key"
-                @click="pick(tab.key)"
-            >
-                {{ tab.label }}
-                <UiBadge v-if="tab.key" tone="neutral">{{ counts[tab.key] ?? 0 }}</UiBadge>
-            </UiButton>
-        </div>
+        <UiPageHeader title="Gifts" />
 
         <UiTable
             :empty="gifts.data.length === 0"
             empty-title="No gifts here"
             empty-description="A gift is reserved the moment a badge that carries one is unlocked."
         >
+            <template #toolbar>
+                <UiFilterPopover
+                    :active-count="activeCount"
+                    title="Filters"
+                    @apply="applyFilters"
+                    @reset="resetFilters"
+                >
+                    <UiSelect v-model="status" label="Status" :options="statusOptions" />
+                </UiFilterPopover>
+            </template>
+
             <template #header>
                 <UiTableHeader>Child</UiTableHeader>
                 <UiTableHeader>Badge</UiTableHeader>
@@ -124,24 +132,14 @@ function page(n: number) {
             </template>
 
             <template #footer>
-                <div
+                <UiPagination
                     v-if="gifts.last_page > 1"
-                    class="flex items-center justify-between border-t border-[#f0f4f8] px-6 py-4 text-body text-slate-500"
-                >
-                    <span>Page {{ gifts.current_page }} of {{ gifts.last_page }}</span>
-                    <div class="flex gap-2">
-                        <UiButton variant="outline" :disabled="gifts.current_page === 1" @click="page(gifts.current_page - 1)">
-                            Previous
-                        </UiButton>
-                        <UiButton
-                            variant="outline"
-                            :disabled="gifts.current_page === gifts.last_page"
-                            @click="page(gifts.current_page + 1)"
-                        >
-                            Next
-                        </UiButton>
-                    </div>
-                </div>
+                    :current-page="gifts.current_page"
+                    :last-page="gifts.last_page"
+                    :total="gifts.total"
+                    :per-page="gifts.per_page"
+                    @change="(p: number) => page(p)"
+                />
             </template>
         </UiTable>
     </AdminLayout>

@@ -135,10 +135,7 @@ function performDelete() {
     <Head title="Badges" />
 
     <AdminLayout>
-        <UiPageHeader
-            title="Badges"
-            subtitle="Every metric is gated by the calendar. Retuning a threshold never takes a badge back."
-        />
+        <UiPageHeader title="Badges" />
 
         <UiTable :empty="badges.length === 0" empty-title="No badges yet">
             <template #toolbar>

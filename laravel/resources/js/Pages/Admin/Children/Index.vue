@@ -11,6 +11,7 @@ import UiSearchInput from '../../../components/ui/UiSearchInput.vue';
 import UiButton from '../../../components/ui/UiButton.vue';
 import UiSpinner from '../../../components/ui/UiSpinner.vue';
 import UiBadge from '../../../components/ui/UiBadge.vue';
+import UiPagination from '../../../components/ui/UiPagination.vue';
 import { useIndexFilters } from '../../../composables/useIndexFilters';
 
 interface ChildRow {
@@ -29,7 +30,7 @@ interface ChildRow {
 }
 
 const props = defineProps<{
-    children: { data: ChildRow[]; current_page: number; last_page: number; total: number };
+    children: { data: ChildRow[]; current_page: number; last_page: number; total: number; per_page: number };
     filters: { search: string | null; sort: string | null; order: string | null };
 }>();
 
@@ -50,7 +51,7 @@ function age(months: number): string {
     <Head title="Children" />
 
     <AdminLayout>
-        <UiPageHeader title="Children" :subtitle="`${children.total} journeys.`" />
+        <UiPageHeader title="Children" />
 
         <UiTable :empty="children.data.length === 0" empty-title="No children match">
             <template #toolbar>
@@ -135,28 +136,14 @@ function age(months: number): string {
             </template>
 
             <template #footer>
-                <div
+                <UiPagination
                     v-if="children.last_page > 1"
-                    class="flex items-center justify-between border-t border-[#f0f4f8] px-6 py-4 text-body text-slate-500"
-                >
-                    <span>Page {{ children.current_page }} of {{ children.last_page }}</span>
-                    <div class="flex gap-2">
-                        <UiButton
-                            variant="outline"
-                            :disabled="children.current_page === 1"
-                            @click="visit({ page: children.current_page - 1 })"
-                        >
-                            Previous
-                        </UiButton>
-                        <UiButton
-                            variant="outline"
-                            :disabled="children.current_page === children.last_page"
-                            @click="visit({ page: children.current_page + 1 })"
-                        >
-                            Next
-                        </UiButton>
-                    </div>
-                </div>
+                    :current-page="children.current_page"
+                    :last-page="children.last_page"
+                    :total="children.total"
+                    :per-page="children.per_page"
+                    @change="(p: number) => visit({ page: p })"
+                />
             </template>
         </UiTable>
     </AdminLayout>

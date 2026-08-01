@@ -116,10 +116,7 @@ function performDelete() {
     <Head title="Chapters" />
 
     <AdminLayout>
-        <UiPageHeader
-            title="Chapters"
-            subtitle="The eight parts of the journey. A chapter opens at its months_from and is finished by the parent."
-        />
+        <UiPageHeader title="Chapters" />
 
         <UiTable :empty="chapters.length === 0" empty-title="No chapters yet">
             <template #toolbar>

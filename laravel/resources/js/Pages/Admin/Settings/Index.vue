@@ -32,10 +32,7 @@ function submit() {
     <Head title="Settings" />
 
     <AdminLayout>
-        <UiPageHeader
-            title="Settings"
-            subtitle="The numbers that pace the app. Changing one takes effect immediately, with no release."
-        />
+        <UiPageHeader title="Settings" />
 
         <div class="max-w-2xl">
             <UiCard>

@@ -4,7 +4,6 @@ import ChevronLeftIcon from '@heroicons/vue/24/outline/esm/ChevronLeftIcon.js';
 
 defineProps<{
     title: string;
-    subtitle?: string;
     backTo?: string;
     backLabel?: string;
 }>();

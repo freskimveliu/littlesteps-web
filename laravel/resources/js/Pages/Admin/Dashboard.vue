@@ -31,7 +31,7 @@ const rewardTone = { story: 'primary', image: 'success', book: 'gold' } as const
     <Head title="Dashboard" />
 
     <AdminLayout>
-        <UiPageHeader title="Dashboard" subtitle="What the catalogue holds, and what families have done with it." />
+        <UiPageHeader title="Dashboard" />
 
         <UiSectionLabel>Families</UiSectionLabel>
         <div class="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import AdminLayout from '../../../layouts/AdminLayout.vue';
 import UiPageHeader from '../../../components/ui/UiPageHeader.vue';
@@ -12,6 +12,9 @@ import UiSearchInput from '../../../components/ui/UiSearchInput.vue';
 import UiButton from '../../../components/ui/UiButton.vue';
 import UiSpinner from '../../../components/ui/UiSpinner.vue';
 import UiBadge from '../../../components/ui/UiBadge.vue';
+import UiPagination from '../../../components/ui/UiPagination.vue';
+import UiFilterPopover from '../../../components/ui/UiFilterPopover.vue';
+import UiSelect from '../../../components/ui/UiSelect.vue';
 import { useIndexFilters } from '../../../composables/useIndexFilters';
 
 interface Parent {
@@ -29,7 +32,7 @@ interface Parent {
 }
 
 const props = defineProps<{
-    users: { data: Parent[]; current_page: number; last_page: number; total: number };
+    users: { data: Parent[]; current_page: number; last_page: number; total: number; per_page: number };
     filters: { search: string | null; sort: string | null; order: string | null; filter: string | null };
     counts: { all: number; admins: number; guests: number; deleted: number };
 }>();
@@ -42,17 +45,24 @@ const { search, searching, sortKey, sortOrder, toggleSort, visit } = useIndexFil
     extra: { filter: props.filters.filter ?? undefined },
 });
 
-const tabs = [
-    { key: null, label: 'Everyone', count: props.counts.all, hint: 'Every account, admins included' },
-    { key: 'admins', label: 'Admins', count: props.counts.admins, hint: 'Can reach this console' },
-    { key: 'guests', label: 'Not signed up', count: props.counts.guests, hint: 'Using the app with no email yet' },
-    { key: 'deleted', label: 'Deleting', count: props.counts.deleted, hint: 'Inside the 30-day grace period' },
+const groupOptions = [
+    { value: '', label: `Everyone (${props.counts.all})` },
+    { value: 'admins', label: `Admins (${props.counts.admins})` },
+    { value: 'guests', label: `Not signed up (${props.counts.guests})` },
+    { value: 'deleted', label: `Deleting (${props.counts.deleted})` },
 ];
 
-const active = computed(() => tabs.find((t) => t.key === (props.filters.filter ?? null)) ?? tabs[0]);
+const group = ref(props.filters.filter ?? '');
 
-function pick(key: string | null) {
-    router.get('/admin/users', { filter: key ?? undefined }, { preserveState: false });
+const activeCount = computed(() => (props.filters.filter ? 1 : 0));
+
+function applyFilters() {
+    router.get('/admin/users', { filter: group.value || undefined }, { preserveState: false });
+}
+
+function resetFilters() {
+    group.value = '';
+    router.get('/admin/users', {}, { preserveState: false });
 }
 </script>
 
@@ -60,40 +70,20 @@ function pick(key: string | null) {
     <Head title="Parents" />
 
     <AdminLayout>
-        <UiPageHeader
-            title="Parents"
-            :subtitle="`${counts.all} accounts. A user exists from first launch, before anyone types an email.`"
-        />
-
-        <div class="mb-1 inline-flex rounded-ui border border-slate-200 bg-white p-1">
-            <button
-                v-for="tab in tabs"
-                :key="tab.label"
-                type="button"
-                :disabled="tab.count === 0 && tab.key !== null"
-                class="inline-flex items-center gap-2 rounded-ui px-3 py-1.5 text-body font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-40"
-                :class="
-                    (filters.filter ?? null) === tab.key
-                        ? 'bg-primary text-primary-text'
-                        : 'text-slate-600 hover:bg-slate-50'
-                "
-                @click="pick(tab.key)"
-            >
-                {{ tab.label }}
-                <span
-                    class="rounded-full px-1.5 text-label"
-                    :class="(filters.filter ?? null) === tab.key ? 'bg-white/25' : 'bg-slate-100 text-slate-500'"
-                >
-                    {{ tab.count }}
-                </span>
-            </button>
-        </div>
-        <p class="mb-4 text-label text-slate-400">{{ active.hint }}</p>
+        <UiPageHeader title="Parents" />
 
         <UiTable :empty="users.data.length === 0" empty-title="No accounts match">
             <template #toolbar>
                 <UiSpinner v-if="searching" size="xs" tone="primary" class="mr-2" />
                 <UiSearchInput v-model="search" placeholder="Name or email…" />
+                <UiFilterPopover
+                    :active-count="activeCount"
+                    title="Filters"
+                    @apply="applyFilters"
+                    @reset="resetFilters"
+                >
+                    <UiSelect v-model="group" label="Show" :options="groupOptions" />
+                </UiFilterPopover>
             </template>
 
             <template #header>
@@ -157,24 +147,14 @@ function pick(key: string | null) {
             </template>
 
             <template #footer>
-                <div
+                <UiPagination
                     v-if="users.last_page > 1"
-                    class="flex items-center justify-between border-t border-[#f0f4f8] px-6 py-4 text-body text-slate-500"
-                >
-                    <span>Page {{ users.current_page }} of {{ users.last_page }}</span>
-                    <div class="flex gap-2">
-                        <UiButton variant="outline" :disabled="users.current_page === 1" @click="visit({ page: users.current_page - 1 })">
-                            Previous
-                        </UiButton>
-                        <UiButton
-                            variant="outline"
-                            :disabled="users.current_page === users.last_page"
-                            @click="visit({ page: users.current_page + 1 })"
-                        >
-                            Next
-                        </UiButton>
-                    </div>
-                </div>
+                    :current-page="users.current_page"
+                    :last-page="users.last_page"
+                    :total="users.total"
+                    :per-page="users.per_page"
+                    @change="(p: number) => visit({ page: p })"
+                />
             </template>
         </UiTable>
     </AdminLayout>

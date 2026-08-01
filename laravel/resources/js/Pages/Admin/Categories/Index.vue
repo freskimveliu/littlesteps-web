@@ -107,7 +107,7 @@ function performDelete() {
     <Head title="Categories" />
 
     <AdminLayout>
-        <UiPageHeader title="Categories" subtitle="Each milestone belongs to one. The category owns the colour." />
+        <UiPageHeader title="Categories" />
 
         <UiTable :empty="categories.length === 0" empty-title="No categories yet">
             <template #toolbar>

@@ -20,6 +20,7 @@ import UiInput from '../../../components/ui/UiInput.vue';
 import UiSelect from '../../../components/ui/UiSelect.vue';
 import UiSwitch from '../../../components/ui/UiSwitch.vue';
 import UiConfirmationModal from '../../../components/ui/UiConfirmationModal.vue';
+import UiPagination from '../../../components/ui/UiPagination.vue';
 import { useIndexFilters } from '../../../composables/useIndexFilters';
 
 interface Prompt {
@@ -35,7 +36,7 @@ interface Prompt {
 }
 
 const props = defineProps<{
-    prompts: { data: Prompt[]; current_page: number; last_page: number; total: number };
+    prompts: { data: Prompt[]; current_page: number; last_page: number; total: number; per_page: number };
     filters: { search: string | null; sort: string | null; order: string | null };
     categories: { id: number; name: string; color: string }[];
     icons: string[];
@@ -117,10 +118,7 @@ function range(prompt: Prompt): string {
     <Head title="Prompts" />
 
     <AdminLayout>
-        <UiPageHeader
-            title="Prompts"
-            :subtitle="`${prompts.total} daily nudges. One is picked at random for the child's age.`"
-        />
+        <UiPageHeader title="Prompts" />
 
         <UiTable :empty="prompts.data.length === 0" empty-title="No prompts match">
             <template #toolbar>
@@ -175,28 +173,14 @@ function range(prompt: Prompt): string {
             </template>
 
             <template #footer>
-                <div
+                <UiPagination
                     v-if="prompts.last_page > 1"
-                    class="flex items-center justify-between border-t border-[#f0f4f8] px-6 py-4 text-body text-slate-500"
-                >
-                    <span>Page {{ prompts.current_page }} of {{ prompts.last_page }}</span>
-                    <div class="flex gap-2">
-                        <UiButton
-                            variant="outline"
-                            :disabled="prompts.current_page === 1"
-                            @click="visit({ page: prompts.current_page - 1 })"
-                        >
-                            Previous
-                        </UiButton>
-                        <UiButton
-                            variant="outline"
-                            :disabled="prompts.current_page === prompts.last_page"
-                            @click="visit({ page: prompts.current_page + 1 })"
-                        >
-                            Next
-                        </UiButton>
-                    </div>
-                </div>
+                    :current-page="prompts.current_page"
+                    :last-page="prompts.last_page"
+                    :total="prompts.total"
+                    :per-page="prompts.per_page"
+                    @change="(p: number) => visit({ page: p })"
+                />
             </template>
         </UiTable>
 

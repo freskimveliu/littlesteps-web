@@ -81,10 +81,7 @@ function performDelete() {
     <Head title="Levels" />
 
     <AdminLayout>
-        <UiPageHeader
-            title="Levels"
-            subtitle="The ladder shown as the Level Journey. A level is its position in this list, ordered by XP."
-        />
+        <UiPageHeader title="Levels" />
 
         <UiTable :empty="levels.length === 0" empty-title="No levels yet">
             <template #toolbar>
