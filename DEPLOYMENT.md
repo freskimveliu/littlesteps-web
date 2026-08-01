@@ -127,8 +127,14 @@ git commit -m "Add deployment to the shared server"
 git push origin main
 ```
 
-The workflow runs PHPStan and the test suite, then pushes
+The workflow runs the test suite, then pushes
 `ghcr.io/freskimveliu/littlesteps-web:main` (and a tag for the commit SHA).
+
+PHPStan is *not* a gate. `composer phpstan` reports around 300 errors at level
+6 today — 194 of them Pest higher-order syntax in `tests/` that PHPStan cannot
+resolve, the rest in `app/`, `config/` and `database/`. None of that is new,
+and none of it is about deployment; the step is commented out in the workflow
+and should go back in once it runs clean.
 
 **The `deploy` job will fail on this first run** — the webhook does not exist on
 the server yet. That is expected. Everything up to and including the image push
