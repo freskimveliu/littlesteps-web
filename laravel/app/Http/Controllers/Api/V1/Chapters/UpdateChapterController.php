@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1\Chapters;
 
+use App\Enums\Icon;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ChildChapterResource;
 use App\Http\Responses\ApiResponse;
@@ -11,27 +12,24 @@ use App\Models\Child;
 use App\Models\ChildChapter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
-/**
- * Hiding is how a parent says "not for us" without losing anything: the rows
- * stay, the XP stops counting, and any memory already written keeps its place
- * in the timeline.
- */
-class HideChapterController extends Controller
+class UpdateChapterController extends Controller
 {
     public function __invoke(Request $request, Child $child, ChildChapter $chapter): JsonResponse
     {
         $this->authorize('contribute', $child);
         abort_unless($chapter->child_id === $child->id, 404);
+        abort_unless($chapter->is_editable, 403, 'This chapter is part of the guided journey.');
 
-        $hidden = $request->boolean('hidden', true);
-
-        $chapter->update([
-            'is_hidden' => $hidden,
-            'updated_by_user_id' => $request->user()->id,
+        $validated = $request->validate([
+            'name' => ['sometimes', 'string', 'max:80'],
+            'description' => ['nullable', 'string', 'max:160'],
+            'icon' => ['nullable', Rule::enum(Icon::class)],
+            'months_from' => ['nullable', 'integer', 'min:0', 'max:216'],
         ]);
 
-        $chapter->milestones()->update(['is_hidden' => $hidden]);
+        $chapter->update([...$validated, 'updated_by_user_id' => $request->user()->id]);
 
         return ApiResponse::success(
             new ChildChapterResource($chapter->fresh()->load([
@@ -39,7 +37,7 @@ class HideChapterController extends Controller
                 'milestones' => fn ($q) => $q->orderBy('sort_order')
                     ->with(['category', 'properties', 'entry.properties', 'entry.media', 'child']),
             ])),
-            $hidden ? 'Chapter hidden.' : 'Chapter restored.',
+            'Saved.',
         );
     }
 }

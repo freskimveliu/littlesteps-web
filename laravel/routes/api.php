@@ -12,8 +12,12 @@ use App\Http\Controllers\Api\V1\Auth\UpdateProfileController;
 use App\Http\Controllers\Api\V1\Catalogue\ShowCatalogueController;
 use App\Http\Controllers\Api\V1\Catalogue\ShowPromptController;
 use App\Http\Controllers\Api\V1\Chapters\CompleteChapterController;
-use App\Http\Controllers\Api\V1\Chapters\HideChapterController;
+use App\Http\Controllers\Api\V1\Chapters\DestroyChapterController;
 use App\Http\Controllers\Api\V1\Chapters\IndexChaptersController;
+use App\Http\Controllers\Api\V1\Chapters\ReorderChaptersController;
+use App\Http\Controllers\Api\V1\Chapters\ReorderMilestonesController;
+use App\Http\Controllers\Api\V1\Chapters\StoreChapterController;
+use App\Http\Controllers\Api\V1\Chapters\UpdateChapterController;
 use App\Http\Controllers\Api\V1\Children\DestroyChildController;
 use App\Http\Controllers\Api\V1\Children\IndexChildrenController;
 use App\Http\Controllers\Api\V1\Children\ShowChildController;
@@ -61,8 +65,12 @@ Route::prefix('v1')->group(function () {
         Route::post('children/{child}/photo', StoreChildPhotoController::class);
 
         Route::get('children/{child}/chapters', IndexChaptersController::class);
+        Route::post('children/{child}/chapters', StoreChapterController::class);
+        Route::post('children/{child}/chapters/reorder', ReorderChaptersController::class);
+        Route::patch('children/{child}/chapters/{chapter}', UpdateChapterController::class);
+        Route::delete('children/{child}/chapters/{chapter}', DestroyChapterController::class);
         Route::post('children/{child}/chapters/{chapter}/complete', CompleteChapterController::class);
-        Route::post('children/{child}/chapters/{chapter}/hide', HideChapterController::class);
+        Route::post('children/{child}/chapters/{chapter}/reorder', ReorderMilestonesController::class);
 
         Route::post('children/{child}/milestones', StoreMilestoneController::class);
         Route::patch('children/{child}/milestones/{milestone}', UpdateMilestoneController::class);

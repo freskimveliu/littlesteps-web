@@ -21,6 +21,12 @@ class StoreMilestoneController extends Controller
 
         $chapter = $child->chapters()->findOrFail($request->integer('child_chapter_id'));
 
+        if (! $chapter->isUnlockedFor($child)) {
+            throw ValidationException::withMessages([
+                'child_chapter_id' => 'That chapter has not opened yet.',
+            ]);
+        }
+
         if (! $limits->canAddCustomStep($chapter)) {
             throw ValidationException::withMessages([
                 'child_chapter_id' => 'This chapter already has as many of your own milestones as it can hold.',

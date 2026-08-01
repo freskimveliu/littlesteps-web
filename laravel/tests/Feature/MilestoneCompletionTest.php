@@ -102,15 +102,3 @@ it('refuses to complete the same chapter twice', function () {
         ->assertJsonValidationErrorFor('chapter');
 });
 
-it('hides a chapter together with its milestones', function () {
-    [, $child] = family();
-    $chapter = $child->chapters()->first();
-
-    $this->postJson("/api/v1/children/{$child->id}/chapters/{$chapter->id}/hide", ['hidden' => true])
-        ->assertOk();
-
-    expect($chapter->fresh()->is_hidden)->toBeTrue()
-        ->and($chapter->milestones()->where('is_hidden', false)->count())->toBe(0);
-
-    $this->getJson("/api/v1/children/{$child->id}/chapters")->assertJsonCount(7, 'data');
-});
