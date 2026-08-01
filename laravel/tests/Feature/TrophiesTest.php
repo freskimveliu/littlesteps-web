@@ -2,12 +2,11 @@
 
 declare(strict_types=1);
 
+use App\Actions\Progress\EvaluateTrophies;
 use App\Enums\RewardStatus;
 use App\Models\Child;
-use App\Models\Achievement;
+use App\Models\Trophy;
 use App\Support\Progress\Metrics;
-
-beforeEach(fn () => seedCatalogue());
 
 /** Write memories straight to the table, so the daily cap does not get in the way. */
 function memoriesOn(Child $child, array $dates): void
@@ -70,40 +69,40 @@ it('only counts a milestone as on time when it was caught at the right age', fun
     expect(app(Metrics::class)->onTimeSteps($child->fresh()))->toBe(1);
 });
 
-it('unlocks a badge and awards its xp once the rule passes', function () {
+it('unlocks a trophy and awards its xp once the rule passes', function () {
     [, $child] = family();
-    $badge = Achievement::where('name', 'First Week')->first();
+    $trophy = Trophy::where('name', 'First Week')->first();
 
     memoriesOn($child, collect(range(0, 6))->map(fn ($i) => now()->subDays($i)->toDateString())->all());
 
-    $unlocked = app(App\Actions\Progress\EvaluateAchievements::class)->handle($child);
+    $unlocked = app(EvaluateTrophies::class)->handle($child);
 
-    expect($unlocked->pluck('achievement_id'))->toContain($badge->id)
-        ->and($child->fresh()->xp)->toBeGreaterThanOrEqual($badge->xp);
+    expect($unlocked->pluck('trophy_id'))->toContain($trophy->id)
+        ->and($child->fresh()->xp)->toBeGreaterThanOrEqual($trophy->xp);
 });
 
-it('never awards the same badge twice', function () {
+it('never awards the same trophy twice', function () {
     [, $child] = family();
     memoriesOn($child, collect(range(0, 6))->map(fn ($i) => now()->subDays($i)->toDateString())->all());
 
-    app(App\Actions\Progress\EvaluateAchievements::class)->handle($child);
-    $second = app(App\Actions\Progress\EvaluateAchievements::class)->handle($child->fresh());
+    app(EvaluateTrophies::class)->handle($child);
+    $second = app(EvaluateTrophies::class)->handle($child->fresh());
 
     expect($second)->toBeEmpty()
-        ->and($child->achievements()->where('achievement_id', Achievement::where('name', 'First Week')->value('id'))->count())
+        ->and($child->trophies()->where('trophy_id', Trophy::where('name', 'First Week')->value('id'))->count())
         ->toBe(1);
 });
 
-it('keeps a badge even after the memories behind it are gone', function () {
+it('keeps a trophy even after the memories behind it are gone', function () {
     [, $child] = family();
     memoriesOn($child, collect(range(0, 6))->map(fn ($i) => now()->subDays($i)->toDateString())->all());
 
-    app(App\Actions\Progress\EvaluateAchievements::class)->handle($child);
-    $held = $child->achievements()->count();
+    app(EvaluateTrophies::class)->handle($child);
+    $held = $child->trophies()->count();
 
     $child->entries()->delete();
 
-    expect($child->fresh()->achievements()->count())->toBe($held);
+    expect($child->fresh()->trophies()->count())->toBe($held);
 });
 
 it('reserves a gift unclaimed rather than generating it', function () {
@@ -149,16 +148,51 @@ it('starts a generation only when the parent claims it', function () {
     $this->postJson("/api/v1/children/{$child->id}/rewards/{$reward->id}/claim")->assertStatus(409);
 });
 
-it('reports progress toward every badge', function () {
+it('reports progress toward every trophy', function () {
     [, $child] = family();
     memoriesOn($child, [now()->toDateString(), now()->subDay()->toDateString()]);
 
     $response = $this->getJson("/api/v1/children/{$child->id}/progress")->assertOk();
 
-    $firstWeek = collect($response->json('data.badges'))->firstWhere('name', 'First Week');
+    $firstWeek = collect($response->json('data.trophies'))->firstWhere('name', 'First Week');
 
     expect($firstWeek['progress'])->toBe(2)
         ->and($firstWeek['threshold'])->toBe(7)
         ->and($firstWeek['isUnlocked'])->toBeFalse()
-        ->and($response->json('data.badgesTotal'))->toBe(32);
+        ->and($response->json('data.trophiesTotal'))->toBe(32);
+});
+
+it('keeps the wording and the rule the child earned, whatever the catalogue says later', function () {
+    [, $child] = family();
+    memoriesOn($child, collect(range(0, 6))->map(fn ($i) => now()->subDays($i)->toDateString())->all());
+
+    app(App\Actions\Progress\EvaluateTrophies::class)->handle($child);
+
+    $trophy = Trophy::where('name', 'First Week')->first();
+    $earned = $child->trophies()->where('trophy_id', $trophy->id)->first();
+
+    $trophy->update(['name' => 'Seven Whole Days', 'threshold' => 99, 'xp' => 5, 'reward' => 'book']);
+
+    expect($earned->fresh())
+        ->name->toBe('First Week')
+        ->threshold->toBe(7)
+        ->xp->toBe(60)
+        ->reward->toBeNull();
+});
+
+it('holds on to a trophy whose catalogue row is deleted', function () {
+    [, $child] = family();
+    memoriesOn($child, collect(range(0, 6))->map(fn ($i) => now()->subDays($i)->toDateString())->all());
+
+    app(App\Actions\Progress\EvaluateTrophies::class)->handle($child);
+
+    $trophy = Trophy::where('name', 'First Week')->first();
+    $earned = $child->trophies()->where('trophy_id', $trophy->id)->first();
+
+    $trophy->forceDelete();
+
+    expect($earned->fresh())
+        ->not->toBeNull()
+        ->name->toBe('First Week')
+        ->trophy_id->toBeNull();
 });

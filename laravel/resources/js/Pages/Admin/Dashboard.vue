@@ -94,7 +94,7 @@ const rewardTone = { story: 'primary', image: 'success', book: 'gold' } as const
                 <UiBarChart :points="milestonesPerChapter" :height="100" />
             </UiCard>
 
-            <UiCard title="Badges that carry a gift">
+            <UiCard title="Trophies that carry a gift">
                 <p class="mb-4 text-body text-slate-500">
                     Each of these costs a generation when a parent claims it. Nothing is generated until they do.
                 </p>

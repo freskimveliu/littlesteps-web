@@ -7,7 +7,7 @@ use App\Models\User;
 it('creates a user from first launch, before anybody has typed an email', function () {
     $response = $this->postJson('/api/v1/auth/guest', [
         'name' => 'Freskim',
-        'language' => 'sq',
+        'language' => 'en',
         'timezone' => 'Europe/Tirane',
     ])->assertCreated();
 
@@ -17,7 +17,6 @@ it('creates a user from first launch, before anybody has typed an email', functi
 });
 
 it('upgrades the same user on register, so nothing recorded is lost', function () {
-    seedCatalogue();
     [$user, $child] = family();
 
     $this->postJson('/api/v1/auth/register', [
@@ -48,7 +47,6 @@ it('refuses a login for an account that never set a password', function () {
 });
 
 it('soft deletes an account and gives it 30 days to come back', function () {
-    seedCatalogue();
     [$user, $child] = family();
 
     $this->deleteJson('/api/v1/auth/me')->assertOk();

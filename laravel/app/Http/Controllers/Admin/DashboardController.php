@@ -7,14 +7,14 @@ namespace App\Http\Controllers\Admin;
 use App\Enums\RewardStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
+use App\Models\Chapter;
 use App\Models\Child;
 use App\Models\ChildEntry;
 use App\Models\ChildReward;
-use App\Models\Achievement;
 use App\Models\Level;
-use App\Models\Chapter;
-use App\Models\Prompt;
 use App\Models\Milestone;
+use App\Models\Prompt;
+use App\Models\Trophy;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
@@ -31,12 +31,12 @@ class DashboardController extends Controller
                 ['label' => 'Chapters', 'value' => Chapter::count(), 'href' => '/admin/chapters'],
                 ['label' => 'Milestones', 'value' => Milestone::count(), 'href' => '/admin/milestones'],
                 ['label' => 'Categories', 'value' => Category::count(), 'href' => '/admin/categories'],
-                ['label' => 'Badges', 'value' => Achievement::count(), 'href' => '/admin/badges'],
+                ['label' => 'Trophies', 'value' => Trophy::count(), 'href' => '/admin/trophies'],
                 ['label' => 'Levels', 'value' => Level::count(), 'href' => '/admin/levels'],
                 ['label' => 'Prompts', 'value' => Prompt::count(), 'href' => '/admin/prompts'],
             ],
             'usage' => [
-                ['label' => 'Parents', 'value' => User::count(), 'href' => '/admin/users'],
+                ['label' => 'Users', 'value' => User::count(), 'href' => '/admin/users'],
                 ['label' => 'Children', 'value' => Child::count(), 'href' => '/admin/children'],
                 ['label' => 'Memories', 'value' => ChildEntry::count(), 'href' => null],
                 ['label' => 'Gifts earned', 'value' => ChildReward::count(), 'href' => '/admin/gifts'],
@@ -53,7 +53,7 @@ class DashboardController extends Controller
                     'label' => $m->name,
                     'value' => $m->milestones_count,
                 ]),
-            'gifts' => Achievement::whereNotNull('reward')->orderBy('sort_order')->get([
+            'gifts' => Trophy::whereNotNull('reward')->orderBy('sort_order')->get([
                 'id', 'name', 'reward', 'metric', 'threshold',
             ]),
         ]);

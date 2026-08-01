@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 use App\Enums\PropertyKey;
 
-beforeEach(fn () => seedCatalogue());
-
 it('records measurements against a milestone and charts them by age', function () {
     [, $child] = family(ageMonths: 12);
 

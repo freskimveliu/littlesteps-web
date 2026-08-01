@@ -5,8 +5,6 @@ declare(strict_types=1);
 use App\Enums\AppSettingKey;
 use App\Models\AppSetting;
 
-beforeEach(fn () => seedCatalogue());
-
 function freeMemory(App\Models\Child $child, array $overrides = []): Illuminate\Testing\TestResponse
 {
     return test()->postJson("/api/v1/children/{$child->id}/entries", [

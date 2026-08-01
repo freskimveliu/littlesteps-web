@@ -2,8 +2,6 @@
 
 declare(strict_types=1);
 
-beforeEach(fn () => seedCatalogue());
-
 it('lets a parent delete their own milestone while it is still empty', function () {
     [, $child] = family();
     $chapter = $child->chapters()->first();

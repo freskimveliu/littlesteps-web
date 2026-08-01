@@ -26,9 +26,7 @@ class RewardResource extends JsonResource
                 'url' => $artwork->getUrl(),
                 'thumb' => $artwork->getUrl('thumb'),
             ] : null,
-            'badge' => new AchievementResource(
-                $this->whenLoaded('childAchievement', fn () => $this->childAchievement->achievement),
-            ),
+            'trophy' => new EarnedTrophyResource($this->whenLoaded('childTrophy')),
             'claimedAt' => $this->claimed_at?->toIso8601String(),
             'generatedAt' => $this->generated_at?->toIso8601String(),
         ];

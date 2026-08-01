@@ -76,7 +76,7 @@ const LEVELS: { name: string; xp: number; icon: IconName }[] = [
     { name: 'Living Legacy', xp: 32000, icon: 'star' },
 ];
 
-const BADGES: { name: string; description: string; icon: IconName }[] = [
+const TROPHIES: { name: string; description: string; icon: IconName }[] = [
     { name: 'First Week', description: 'A memory on seven different days', icon: 'flame' },
     { name: 'First Chapter', description: 'You finished a whole chapter', icon: 'ribbon' },
     { name: 'Shutterbug', description: 'Twenty-five photos kept', icon: 'camera' },
@@ -91,7 +91,7 @@ const FEATURES: { icon: IconName; title: string; body: string; tone?: 'wide' }[]
     {
         icon: 'people',
         title: 'One app, every child',
-        body: 'Each child gets their own map, their own XP, their own badges, and the app quietly re-themes itself around whoever you are looking at.',
+        body: 'Each child gets their own map, their own XP, their own trophies, and the app quietly re-themes itself around whoever you are looking at.',
     },
     {
         icon: 'trending-up',
@@ -126,7 +126,7 @@ const FEATURES: { icon: IconName; title: string; body: string; tone?: 'wide' }[]
         <title>LittleSteps: every little step, kept forever</title>
         <meta
             name="description"
-            content="LittleSteps turns your child's first six years into a guided adventure: gentle prompts for every age, one memory a day, badges, streaks and a map you'll still be scrolling in twenty years."
+            content="LittleSteps turns your child's first six years into a guided adventure: gentle prompts for every age, one memory a day, trophies, streaks and a map you'll still be scrolling in twenty years."
         />
         <meta name="theme-color" content="#7E5EBF" />
     </Head>
@@ -215,7 +215,7 @@ const FEATURES: { icon: IconName; title: string; body: string; tone?: 'wide' }[]
                                     <Ion name="ribbon" :size="19" class="text-white" />
                                 </span>
                                 <div>
-                                    <p class="text-[10px] font-extrabold tracking-widest text-primary/60">BADGE EARNED</p>
+                                    <p class="text-[10px] font-extrabold tracking-widest text-primary/60">TROPHY EARNED</p>
                                     <p class="font-display text-sm font-extrabold text-ink">First Chapter</p>
                                 </div>
                             </div>
@@ -414,7 +414,7 @@ const FEATURES: { icon: IconName; title: string; body: string; tone?: 'wide' }[]
 
             <div class="relative z-10 mx-auto max-w-7xl">
                 <div class="reveal mx-auto max-w-3xl text-center">
-                    <p class="text-xs font-extrabold tracking-[0.2em] text-primary/70 uppercase">XP · levels · badges · streaks</p>
+                    <p class="text-xs font-extrabold tracking-[0.2em] text-primary/70 uppercase">XP · levels · trophies · streaks</p>
                     <h2 class="mt-3 font-display text-4xl font-extrabold tracking-tight text-ink sm:text-5xl">
                         Because remembering deserves a reward
                     </h2>
@@ -453,11 +453,11 @@ const FEATURES: { icon: IconName; title: string; body: string; tone?: 'wide' }[]
                             <p class="mt-2 text-sm text-ink/45">1,240 XP earned · 160 XP to Rising Star</p>
                         </div>
 
-                        <!-- badges -->
+                        <!-- trophies -->
                         <div class="mt-6 grid gap-3 sm:grid-cols-2">
                             <div
-                                v-for="(badge, i) in BADGES"
-                                :key="badge.name"
+                                v-for="(trophy, i) in TROPHIES"
+                                :key="trophy.name"
                                 class="reveal flex items-center gap-3 rounded-3xl bg-white p-4 shadow-sm shadow-primary/5 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/10"
                                 :style="`--reveal-delay: ${i * 60}ms`"
                             >
@@ -465,11 +465,11 @@ const FEATURES: { icon: IconName; title: string; body: string; tone?: 'wide' }[]
                                     class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full"
                                     :class="i < 3 ? 'bg-primary text-white' : 'bg-primary/10 text-primary/50'"
                                 >
-                                    <Ion :name="badge.icon" :size="19" />
+                                    <Ion :name="trophy.icon" :size="19" />
                                 </span>
                                 <div class="min-w-0">
-                                    <p class="font-display text-base leading-tight font-bold text-ink">{{ badge.name }}</p>
-                                    <p class="truncate text-xs text-ink/45">{{ badge.description }}</p>
+                                    <p class="font-display text-base leading-tight font-bold text-ink">{{ trophy.name }}</p>
+                                    <p class="truncate text-xs text-ink/45">{{ trophy.description }}</p>
                                 </div>
                             </div>
                         </div>
@@ -674,7 +674,7 @@ const FEATURES: { icon: IconName; title: string; body: string; tone?: 'wide' }[]
                     </FaqItem>
                     <FaqItem question="Can I track more than one child?">
                         Yes, and they never share a page. Each child gets their own map, their own memories, their own XP
-                        and badges, and the app re-themes itself around whoever is active.
+                        and trophies, and the app re-themes itself around whoever is active.
                     </FaqItem>
                     <FaqItem question="Why only one free memory a day?">
                         Because a journal you can dump into is a journal you abandon. One a day keeps it precious and

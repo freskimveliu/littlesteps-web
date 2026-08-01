@@ -80,7 +80,7 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        Schema::create('achievements', function (Blueprint $table) {
+        Schema::create('trophies', function (Blueprint $table) {
             $table->id();
             $table->string('name');
             $table->string('description')->nullable();
@@ -123,7 +123,7 @@ return new class extends Migration
     {
         Schema::dropIfExists('app_settings');
         Schema::dropIfExists('prompts');
-        Schema::dropIfExists('achievements');
+        Schema::dropIfExists('trophies');
         Schema::dropIfExists('levels');
         Schema::dropIfExists('milestone_properties');
         Schema::dropIfExists('milestones');

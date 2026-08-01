@@ -19,7 +19,7 @@ class IndexGiftsController extends Controller
 {
     public function __invoke(Request $request): Response
     {
-        $query = ChildReward::query()->with(['child:id,name', 'childAchievement.achievement:id,name']);
+        $query = ChildReward::query()->with(['child:id,name', 'childTrophy:id,name']);
 
         if ($status = RewardStatus::tryFrom((string) $request->query('status'))) {
             $query->where('status', $status);
@@ -32,7 +32,7 @@ class IndexGiftsController extends Controller
             'type' => $gift->type,
             'status' => $gift->status,
             'child' => $gift->child?->only(['id', 'name']),
-            'badge' => $gift->childAchievement?->achievement?->name,
+            'trophy' => $gift->childTrophy?->name,
             'claimed_at' => $gift->claimed_at?->toIso8601String(),
             'generated_at' => $gift->generated_at?->toIso8601String(),
             'is_stuck' => $gift->status === RewardStatus::Generating

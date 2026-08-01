@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, Link, router, useForm } from '@inertiajs/vue3';
+import PlusIcon from '@heroicons/vue/24/outline/esm/PlusIcon.js';
 import AdminLayout from '../../../layouts/AdminLayout.vue';
 import UiPageHeader from '../../../components/ui/UiPageHeader.vue';
 import UiTable from '../../../components/ui/UiTable.vue';
@@ -15,9 +16,13 @@ import UiBadge from '../../../components/ui/UiBadge.vue';
 import UiPagination from '../../../components/ui/UiPagination.vue';
 import UiFilterPopover from '../../../components/ui/UiFilterPopover.vue';
 import UiSelect from '../../../components/ui/UiSelect.vue';
+import UiModal from '../../../components/ui/UiModal.vue';
+import UiInput from '../../../components/ui/UiInput.vue';
+import UiSwitch from '../../../components/ui/UiSwitch.vue';
 import { useIndexFilters } from '../../../composables/useIndexFilters';
+import { formatDate } from '../../../support/date';
 
-interface Parent {
+interface Row {
     id: number;
     name: string;
     email: string | null;
@@ -32,9 +37,10 @@ interface Parent {
 }
 
 const props = defineProps<{
-    users: { data: Parent[]; current_page: number; last_page: number; total: number; per_page: number };
+    users: { data: Row[]; current_page: number; last_page: number; total: number; per_page: number };
     filters: { search: string | null; sort: string | null; order: string | null; filter: string | null };
     counts: { all: number; admins: number; guests: number; deleted: number };
+    timezone: string;
 }>();
 
 const { search, searching, sortKey, sortOrder, toggleSort, visit } = useIndexFilters({
@@ -64,13 +70,33 @@ function resetFilters() {
     group.value = '';
     router.get('/admin/users', {}, { preserveState: false });
 }
+
+const formOpen = ref(false);
+
+const form = useForm({
+    name: '',
+    email: '',
+    password: '',
+    timezone: props.timezone,
+    is_admin: false,
+});
+
+function startCreate() {
+    form.reset();
+    form.clearErrors();
+    formOpen.value = true;
+}
+
+function submit() {
+    form.post('/admin/users', { onSuccess: () => (formOpen.value = false) });
+}
 </script>
 
 <template>
-    <Head title="Parents" />
+    <Head title="Users" />
 
     <AdminLayout>
-        <UiPageHeader title="Parents" />
+        <UiPageHeader title="Users" />
 
         <UiTable :empty="users.data.length === 0" empty-title="No accounts match">
             <template #toolbar>
@@ -84,6 +110,10 @@ function resetFilters() {
                 >
                     <UiSelect v-model="group" label="Show" :options="groupOptions" />
                 </UiFilterPopover>
+                <UiButton @click="startCreate">
+                    <PlusIcon class="h-3.5 w-3.5" />
+                    New user
+                </UiButton>
             </template>
 
             <template #header>
@@ -116,32 +146,32 @@ function resetFilters() {
             </template>
 
             <template #body>
-                <UiTableRow v-for="parent in users.data" :key="parent.id">
+                <UiTableRow v-for="user in users.data" :key="user.id">
                     <UiTableCell>
                         <div class="flex items-center gap-2">
-                            <Link :href="`/admin/users/${parent.id}`" class="font-medium text-slate-900 hover:underline">
-                                {{ parent.name }}
+                            <Link :href="`/admin/users/${user.id}`" class="font-medium text-slate-900 hover:underline">
+                                {{ user.name }}
                             </Link>
-                            <UiBadge v-if="parent.is_admin" tone="primary">admin</UiBadge>
-                            <UiBadge v-if="parent.deleted_at" tone="danger">deleting</UiBadge>
+                            <UiBadge v-if="user.is_admin" tone="primary">admin</UiBadge>
+                            <UiBadge v-if="user.deleted_at" tone="danger">deleting</UiBadge>
                         </div>
                     </UiTableCell>
                     <UiTableCell cell-class="text-slate-500">
-                        <span v-if="parent.email">{{ parent.email }}</span>
+                        <span v-if="user.email">{{ user.email }}</span>
                         <span v-else class="text-slate-300">not signed up</span>
                     </UiTableCell>
                     <UiTableCell align="right">
-                        {{ parent.children_count }}
-                        <span v-if="parent.owned_children_count !== parent.children_count" class="text-slate-400">
-                            ({{ parent.owned_children_count }} own)
+                        {{ user.children_count }}
+                        <span v-if="user.owned_children_count !== user.children_count" class="text-slate-400">
+                            ({{ user.owned_children_count }} own)
                         </span>
                     </UiTableCell>
-                    <UiTableCell align="right">{{ parent.current_streak }}</UiTableCell>
+                    <UiTableCell align="right">{{ user.current_streak }}</UiTableCell>
                     <UiTableCell align="right" cell-class="text-slate-500">
-                        {{ parent.last_entry_date ?? '—' }}
+                        {{ formatDate(user.last_entry_date) }}
                     </UiTableCell>
                     <UiTableCell align="right">
-                        <UiButton variant="outline" :to="`/admin/users/${parent.id}`">Open</UiButton>
+                        <UiButton variant="outline" :to="`/admin/users/${user.id}`">Open</UiButton>
                     </UiTableCell>
                 </UiTableRow>
             </template>
@@ -157,5 +187,35 @@ function resetFilters() {
                 />
             </template>
         </UiTable>
+
+        <UiModal v-model="formOpen" title="New user">
+            <form id="user-form" class="flex flex-col gap-4" @submit.prevent="submit">
+                <UiInput v-model="form.name" label="Name" required :error="form.errors.name" />
+                <UiInput v-model="form.email" type="email" label="Email" required :error="form.errors.email" />
+                <UiInput
+                    v-model="form.password"
+                    type="password"
+                    label="Password"
+                    required
+                    autocomplete="new-password"
+                    :error="form.errors.password"
+                />
+                <UiInput
+                    v-model="form.timezone"
+                    label="Timezone"
+                    required
+                    hint="Decides when their day rolls over"
+                    :error="form.errors.timezone"
+                />
+                <UiSwitch v-model="form.is_admin" label="Can reach this admin" />
+            </form>
+
+            <template #footer>
+                <div class="flex justify-end gap-2">
+                    <UiButton variant="outline" @click="formOpen = false">Cancel</UiButton>
+                    <UiButton type="submit" form="user-form" :loading="form.processing">Submit</UiButton>
+                </div>
+            </template>
+        </UiModal>
     </AdminLayout>
 </template>

@@ -24,7 +24,7 @@ class GuestController extends Controller
     {
         $validated = $request->validate([
             'name' => ['nullable', 'string', 'max:60'],
-            'language' => ['nullable', 'string', 'in:en,sq'],
+            'language' => ['nullable', 'string', 'in:en'],
             'timezone' => ['nullable', 'string', 'timezone'],
         ]);
 

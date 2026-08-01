@@ -6,12 +6,10 @@ use App\Enums\AppSettingKey;
 use App\Enums\PropertyKey;
 use App\Models\AppSetting;
 use App\Models\Category;
-use App\Models\Achievement;
-use App\Models\Level;
 use App\Models\Chapter;
+use App\Models\Level;
 use App\Models\Milestone;
-
-beforeEach(fn () => seedCatalogue());
+use App\Models\Trophy;
 
 it('seeds the whole catalogue', function () {
     expect(Category::count())->toBe(8)
@@ -22,7 +20,6 @@ it('seeds the whole catalogue', function () {
 });
 
 it('is idempotent', function () {
-    seedCatalogue();
 
     expect(Milestone::count())->toBe(118)
         ->and(Milestone::withTrashed()->count())->toBe(118);
@@ -83,12 +80,12 @@ it('maps measurements onto chartable keys and everything else onto custom', func
         ->and($shoes->properties->pluck('name')->all())->toBe(['Shoe Size', 'Brand or Style']);
 });
 
-it('paces the badge ladder so nothing is a raw entry count', function () {
-    $metrics = Achievement::pluck('metric')->map->value->unique();
+it('paces the trophy ladder so nothing is a raw entry count', function () {
+    $metrics = Trophy::pluck('metric')->map->value->unique();
 
     expect($metrics)->not->toContain('entries')
-        ->and(Achievement::count())->toBe(32)
-        ->and(Achievement::whereNotNull('reward')->count())->toBe(8);
+        ->and(Trophy::count())->toBe(32)
+        ->and(Trophy::whereNotNull('reward')->count())->toBe(8);
 });
 
 it('exposes the catalogue to the app', function () {

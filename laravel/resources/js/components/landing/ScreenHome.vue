@@ -6,7 +6,7 @@ import PhoneTabBar from './PhoneTabBar.vue';
 const STATS = [
     { value: '34/48', label: 'Milestones' },
     { value: '62', label: 'Memories' },
-    { value: '9', label: 'Badges' },
+    { value: '9', label: 'Trophies' },
 ];
 </script>
 

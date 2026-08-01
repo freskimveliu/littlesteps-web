@@ -7,6 +7,7 @@ import UiTable from '../../../components/ui/UiTable.vue';
 import UiTableRow from '../../../components/ui/UiTableRow.vue';
 import UiTableCell from '../../../components/ui/UiTableCell.vue';
 import UiTableHeader from '../../../components/ui/UiTableHeader.vue';
+import { formatDate } from '../../../support/date';
 import UiButton from '../../../components/ui/UiButton.vue';
 import UiBadge from '../../../components/ui/UiBadge.vue';
 import UiPagination from '../../../components/ui/UiPagination.vue';
@@ -20,7 +21,7 @@ const props = defineProps<{
             type: string;
             status: string;
             child: { id: number; name: string } | null;
-            badge: string | null;
+            trophy: string | null;
             claimed_at: string | null;
             generated_at: string | null;
             is_stuck: boolean;
@@ -79,7 +80,7 @@ function page(n: number) {
         <UiTable
             :empty="gifts.data.length === 0"
             empty-title="No gifts here"
-            empty-description="A gift is reserved the moment a badge that carries one is unlocked."
+            empty-description="A gift is reserved the moment a trophy that carries one is unlocked."
         >
             <template #toolbar>
                 <UiFilterPopover
@@ -94,7 +95,7 @@ function page(n: number) {
 
             <template #header>
                 <UiTableHeader>Child</UiTableHeader>
-                <UiTableHeader>Badge</UiTableHeader>
+                <UiTableHeader>Trophy</UiTableHeader>
                 <UiTableHeader>Type</UiTableHeader>
                 <UiTableHeader>Status</UiTableHeader>
                 <UiTableHeader align="right">Claimed</UiTableHeader>
@@ -112,7 +113,7 @@ function page(n: number) {
                             {{ gift.child.name }}
                         </Link>
                     </UiTableCell>
-                    <UiTableCell cell-class="text-slate-600">{{ gift.badge }}</UiTableCell>
+                    <UiTableCell cell-class="text-slate-600">{{ gift.trophy }}</UiTableCell>
                     <UiTableCell>{{ gift.type }}</UiTableCell>
                     <UiTableCell>
                         <div class="flex items-center gap-2">
@@ -121,7 +122,7 @@ function page(n: number) {
                         </div>
                     </UiTableCell>
                     <UiTableCell align="right" cell-class="text-slate-500">
-                        {{ gift.claimed_at?.slice(0, 10) ?? '—' }}
+                        {{ formatDate(gift.claimed_at) }}
                     </UiTableCell>
                     <UiTableCell align="right">
                         <UiButton v-if="gift.status !== 'unclaimed'" variant="outline" @click="reset(gift.id)">

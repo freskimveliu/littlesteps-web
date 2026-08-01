@@ -23,7 +23,7 @@ import UiSwitch from '../../../components/ui/UiSwitch.vue';
 import UiConfirmationModal from '../../../components/ui/UiConfirmationModal.vue';
 import { useIndexFilters } from '../../../composables/useIndexFilters';
 
-interface Badge {
+interface Trophy {
     id: number;
     name: string;
     description: string | null;
@@ -37,7 +37,7 @@ interface Badge {
 }
 
 const props = defineProps<{
-    badges: Badge[];
+    trophies: Trophy[];
     filters: { search: string | null; sort: string | null; order: string | null };
     metrics: string[];
     rewards: string[];
@@ -45,7 +45,7 @@ const props = defineProps<{
 }>();
 
 const { search, searching, sortKey, sortOrder, toggleSort } = useIndexFilters({
-    url: '/admin/badges',
+    url: '/admin/trophies',
     search: props.filters.search,
     sortKey: props.filters.sort,
     sortOrder: props.filters.order as 'asc' | 'desc' | null,
@@ -64,8 +64,8 @@ const metricHints: Record<string, string> = {
 const rewardTone = { story: 'primary', image: 'success', book: 'gold' } as const;
 
 const formOpen = ref(false);
-const editing = ref<Badge | null>(null);
-const toDelete = ref<Badge | null>(null);
+const editing = ref<Trophy | null>(null);
+const toDelete = ref<Trophy | null>(null);
 
 const form = useForm({
     name: '',
@@ -89,7 +89,7 @@ function startCreate() {
         threshold: 7,
         xp: 60,
         reward: '',
-        sort_order: (props.badges.at(-1)?.sort_order ?? 0) + 10,
+        sort_order: (props.trophies.at(-1)?.sort_order ?? 0) + 10,
         is_active: true,
     });
     form.reset();
@@ -97,18 +97,18 @@ function startCreate() {
     formOpen.value = true;
 }
 
-function startEdit(badge: Badge) {
-    editing.value = badge;
+function startEdit(trophy: Trophy) {
+    editing.value = trophy;
     form.defaults({
-        name: badge.name,
-        description: badge.description ?? '',
-        icon: badge.icon,
-        metric: badge.metric,
-        threshold: badge.threshold,
-        xp: badge.xp,
-        reward: badge.reward ?? '',
-        sort_order: badge.sort_order,
-        is_active: badge.is_active,
+        name: trophy.name,
+        description: trophy.description ?? '',
+        icon: trophy.icon,
+        metric: trophy.metric,
+        threshold: trophy.threshold,
+        xp: trophy.xp,
+        reward: trophy.reward ?? '',
+        sort_order: trophy.sort_order,
+        is_active: trophy.is_active,
     });
     form.reset();
     form.clearErrors();
@@ -119,12 +119,12 @@ function submit() {
     const done = { onSuccess: () => (formOpen.value = false) };
     const payload = { ...form.data(), reward: form.reward || null };
     form.transform(() => payload);
-    editing.value ? form.put(`/admin/badges/${editing.value.id}`, done) : form.post('/admin/badges', done);
+    editing.value ? form.put(`/admin/trophies/${editing.value.id}`, done) : form.post('/admin/trophies', done);
 }
 
 function performDelete() {
     if (!toDelete.value) return;
-    router.delete(`/admin/badges/${toDelete.value.id}`, {
+    router.delete(`/admin/trophies/${toDelete.value.id}`, {
         preserveScroll: true,
         onFinish: () => (toDelete.value = null),
     });
@@ -132,18 +132,18 @@ function performDelete() {
 </script>
 
 <template>
-    <Head title="Badges" />
+    <Head title="Trophies" />
 
     <AdminLayout>
-        <UiPageHeader title="Badges" />
+        <UiPageHeader title="Trophies" />
 
-        <UiTable :empty="badges.length === 0" empty-title="No badges yet">
+        <UiTable :empty="trophies.length === 0" empty-title="No trophies yet">
             <template #toolbar>
                 <UiSpinner v-if="searching" size="xs" tone="primary" class="mr-2" />
-                <UiSearchInput v-model="search" placeholder="Search badges…" />
+                <UiSearchInput v-model="search" placeholder="Search trophies…" />
                 <UiButton @click="startCreate">
                     <PlusIcon class="h-3.5 w-3.5" />
-                    New badge
+                    New trophy
                 </UiButton>
             </template>
 
@@ -173,31 +173,31 @@ function performDelete() {
             </template>
 
             <template #body>
-                <UiTableRow v-for="badge in badges" :key="badge.id">
+                <UiTableRow v-for="trophy in trophies" :key="trophy.id">
                     <UiTableCell>
                         <div class="flex items-center gap-2">
-                            <span class="font-medium text-slate-900">{{ badge.name }}</span>
-                            <UiBadge v-if="!badge.is_active" tone="danger">inactive</UiBadge>
+                            <span class="font-medium text-slate-900">{{ trophy.name }}</span>
+                            <UiBadge v-if="!trophy.is_active" tone="danger">inactive</UiBadge>
                         </div>
-                        <p v-if="badge.description" class="text-label text-slate-400">{{ badge.description }}</p>
+                        <p v-if="trophy.description" class="text-label text-slate-400">{{ trophy.description }}</p>
                     </UiTableCell>
                     <UiTableCell>
-                        <span class="font-medium text-slate-700">{{ badge.metric }} ≥ {{ badge.threshold }}</span>
-                        <p class="text-label text-slate-400">{{ metricHints[badge.metric] }}</p>
+                        <span class="font-medium text-slate-700">{{ trophy.metric }} ≥ {{ trophy.threshold }}</span>
+                        <p class="text-label text-slate-400">{{ metricHints[trophy.metric] }}</p>
                     </UiTableCell>
-                    <UiTableCell align="right">{{ badge.xp }}</UiTableCell>
+                    <UiTableCell align="right">{{ trophy.xp }}</UiTableCell>
                     <UiTableCell>
-                        <UiBadge v-if="badge.reward" :tone="rewardTone[badge.reward as keyof typeof rewardTone]">
-                            {{ badge.reward }}
+                        <UiBadge v-if="trophy.reward" :tone="rewardTone[trophy.reward as keyof typeof rewardTone]">
+                            {{ trophy.reward }}
                         </UiBadge>
                         <span v-else class="text-slate-300">—</span>
                     </UiTableCell>
                     <UiTableCell align="right">
                         <div class="flex items-center justify-end gap-2">
-                            <UiActionButton title="Edit" size="sm" @click="startEdit(badge)">
+                            <UiActionButton title="Edit" size="sm" @click="startEdit(trophy)">
                                 <PencilSquareIcon class="h-4 w-4" />
                             </UiActionButton>
-                            <UiActionButton title="Delete" size="sm" @click="toDelete = badge">
+                            <UiActionButton title="Delete" size="sm" @click="toDelete = trophy">
                                 <TrashIcon class="h-4 w-4" />
                             </UiActionButton>
                         </div>
@@ -206,8 +206,8 @@ function performDelete() {
             </template>
         </UiTable>
 
-        <UiModal v-model="formOpen" :title="editing ? 'Edit badge' : 'New badge'">
-            <form id="badge-form" class="flex flex-col gap-4" @submit.prevent="submit">
+        <UiModal v-model="formOpen" :title="editing ? 'Edit trophy' : 'New trophy'">
+            <form id="trophy-form" class="flex flex-col gap-4" @submit.prevent="submit">
                 <div class="grid grid-cols-2 gap-3">
                     <UiInput v-model="form.name" label="Name" required :error="form.errors.name" />
                 </div>
@@ -264,14 +264,14 @@ function performDelete() {
             <template #footer>
                 <div class="flex justify-end gap-2">
                     <UiButton variant="outline" @click="formOpen = false">Cancel</UiButton>
-                    <UiButton type="submit" form="badge-form" :loading="form.processing">Submit</UiButton>
+                    <UiButton type="submit" form="trophy-form" :loading="form.processing">Submit</UiButton>
                 </div>
             </template>
         </UiModal>
 
         <UiConfirmationModal
             :model-value="!!toDelete"
-            title="Remove badge?"
+            title="Remove trophy?"
             :message="toDelete ? `Children who already earned “${toDelete.name}” keep it.` : ''"
             confirm-text="Remove"
             confirm-variant="danger"

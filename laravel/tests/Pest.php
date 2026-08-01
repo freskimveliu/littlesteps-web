@@ -7,7 +7,6 @@ use App\Enums\MemberRole;
 use App\Enums\Relation;
 use App\Models\Child;
 use App\Models\User;
-use Database\Seeders\CatalogueSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 pest()->extend(Tests\TestCase::class)
@@ -37,11 +36,6 @@ function family(int $ageMonths = 6): array
     test()->actingAs($user, 'sanctum');
 
     return [$user, $child];
-}
-
-function seedCatalogue(): void
-{
-    test()->seed(CatalogueSeeder::class);
 }
 
 function viewer(Child $child): User

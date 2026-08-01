@@ -8,10 +8,34 @@ withDefaults(defineProps<{ activeCount?: number; title?: string }>(), { activeCo
 const emit = defineEmits<{ apply: []; reset: [] }>();
 
 const open = ref(false);
-const root = ref<HTMLElement | null>(null);
+const trigger = ref<HTMLElement | null>(null);
+const panel = ref<HTMLElement | null>(null);
+const position = ref({ top: 0, right: 0 });
+
+/**
+ * The panel is teleported out of the table card, which clips it with
+ * overflow-hidden — so it is placed against the trigger's viewport rect
+ * instead of being positioned by an ancestor.
+ */
+function place() {
+    if (!trigger.value) return;
+    const rect = trigger.value.getBoundingClientRect();
+    position.value = { top: rect.bottom + 8, right: window.innerWidth - rect.right };
+}
+
+function toggle() {
+    open.value = !open.value;
+    if (open.value) place();
+}
+
+function reposition() {
+    if (open.value) place();
+}
 
 function onClickOutside(event: MouseEvent) {
-    if (root.value && !root.value.contains(event.target as Node)) open.value = false;
+    const target = event.target as Node;
+    if (trigger.value?.contains(target) || panel.value?.contains(target)) return;
+    open.value = false;
 }
 
 function onKeydown(event: KeyboardEvent) {
@@ -21,11 +45,15 @@ function onKeydown(event: KeyboardEvent) {
 onMounted(() => {
     document.addEventListener('mousedown', onClickOutside);
     document.addEventListener('keydown', onKeydown);
+    window.addEventListener('resize', reposition);
+    window.addEventListener('scroll', reposition, true);
 });
 
 onBeforeUnmount(() => {
     document.removeEventListener('mousedown', onClickOutside);
     document.removeEventListener('keydown', onKeydown);
+    window.removeEventListener('resize', reposition);
+    window.removeEventListener('scroll', reposition, true);
 });
 
 function apply() {
@@ -40,49 +68,46 @@ function reset() {
 </script>
 
 <template>
-    <div ref="root" class="relative">
-        <button
-            type="button"
-            class="relative flex h-[34px] w-[34px] items-center justify-center rounded-ui border transition-colors"
-            :class="
-                open || activeCount > 0
-                    ? 'border-primary bg-primary/5 text-primary-accessible'
-                    : 'border-slate-200 bg-white text-[#555555] hover:border-primary hover:text-primary-accessible'
-            "
-            title="Filters"
-            @click="open = !open"
+    <button
+        ref="trigger"
+        type="button"
+        class="relative flex h-[34px] cursor-pointer items-center gap-2 rounded-ui border px-[15px] text-[13px] font-medium whitespace-nowrap transition-colors"
+        :class="
+            open || activeCount > 0
+                ? 'border-primary bg-primary/5 text-primary-accessible'
+                : 'border-slate-200 bg-white text-[#555555] hover:border-primary hover:text-primary-accessible'
+        "
+        @click="toggle"
+    >
+        <FunnelIcon class="h-3.5 w-3.5" />
+        Filters
+        <span
+            v-if="activeCount > 0"
+            class="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-text"
         >
-            <FunnelIcon class="h-4 w-4" />
-            <span
-                v-if="activeCount > 0"
-                class="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-text"
-            >
-                {{ activeCount }}
-            </span>
-        </button>
+            {{ activeCount }}
+        </span>
+    </button>
 
-        <Transition
-            enter-active-class="transition duration-100 ease-out"
-            enter-from-class="opacity-0 -translate-y-1"
-            leave-active-class="transition duration-75 ease-in"
-            leave-to-class="opacity-0 -translate-y-1"
+    <!-- No <Transition> inside the <Teleport> — see the note in UiModal. -->
+    <Teleport to="body">
+        <div
+            v-if="open"
+            ref="panel"
+            class="ui-modal fixed z-50 w-80 rounded-[14px] bg-white shadow-[0_8px_30px_rgba(15,23,42,0.12)]"
+            :style="{ top: `${position.top}px`, right: `${position.right}px` }"
         >
-            <div
-                v-if="open"
-                class="absolute top-full right-0 z-30 mt-2 w-80 rounded-[14px] bg-white shadow-[0_8px_30px_rgba(15,23,42,0.12)]"
-            >
-                <div class="flex flex-col gap-4 px-5 py-5">
-                    <p v-if="title" class="text-label font-semibold tracking-wide text-slate-400 uppercase">
-                        {{ title }}
-                    </p>
-                    <slot />
-                </div>
-
-                <div class="flex gap-3 border-t border-[#f0f4f8] px-5 py-4">
-                    <UiButton variant="outline" full-width @click="reset">Reset</UiButton>
-                    <UiButton full-width @click="apply">Apply</UiButton>
-                </div>
+            <div class="flex flex-col gap-4 px-5 py-5">
+                <p v-if="title" class="text-label font-semibold tracking-wide text-slate-400 uppercase">
+                    {{ title }}
+                </p>
+                <slot />
             </div>
-        </Transition>
-    </div>
+
+            <div class="flex gap-3 border-t border-[#f0f4f8] px-5 py-4">
+                <UiButton variant="outline" full-width @click="reset">Reset</UiButton>
+                <UiButton full-width @click="apply">Apply</UiButton>
+            </div>
+        </div>
+    </Teleport>
 </template>

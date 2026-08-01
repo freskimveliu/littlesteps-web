@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-use App\Enums\AchievementMetric;
 use App\Enums\Icon;
 use App\Enums\RewardType;
+use App\Enums\TrophyMetric;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -16,7 +16,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'name', 'description', 'icon', 'metric',
     'threshold', 'xp', 'reward', 'sort_order', 'is_active',
 ])]
-class Achievement extends Model
+class Trophy extends Model
 {
     use SoftDeletes;
 
@@ -24,7 +24,7 @@ class Achievement extends Model
     {
         return [
             'icon' => Icon::class,
-            'metric' => AchievementMetric::class,
+            'metric' => TrophyMetric::class,
             'reward' => RewardType::class,
             'is_active' => 'boolean',
         ];

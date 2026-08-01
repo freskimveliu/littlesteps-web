@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace App\Actions\Entries;
 
 use App\Actions\Progress\AwardXp;
-use App\Actions\Progress\EvaluateAchievements;
+use App\Actions\Progress\EvaluateTrophies;
 use App\Data\EntryData;
 use App\Models\Child;
-use App\Models\ChildAchievement;
 use App\Models\ChildEntry;
 use App\Models\ChildMilestone;
+use App\Models\ChildTrophy;
 use App\Models\User;
 use App\Support\Limits;
 use Illuminate\Support\Collection;
@@ -22,11 +22,11 @@ class RecordEntry
     public function __construct(
         private readonly Limits $limits,
         private readonly AwardXp $awardXp,
-        private readonly EvaluateAchievements $achievements,
+        private readonly EvaluateTrophies $trophies,
         private readonly UpdateStreak $streak,
     ) {}
 
-    /** @return array{entry: ChildEntry, xp: int, unlocked: Collection<int, ChildAchievement>} */
+    /** @return array{entry: ChildEntry, xp: int, unlocked: Collection<int, ChildTrophy>} */
     public function handle(Child $child, User $user, EntryData $data): array
     {
         $milestone = $data->isFree() ? null : $this->milestone($child, $data->childStepId);
@@ -53,7 +53,7 @@ class RecordEntry
         return [
             'entry' => $entry->load(['properties', 'milestone']),
             'xp' => $xp,
-            'unlocked' => $this->achievements->handle($child->refresh()),
+            'unlocked' => $this->trophies->handle($child->refresh()),
         ];
     }
 

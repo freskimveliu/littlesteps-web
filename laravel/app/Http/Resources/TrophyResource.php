@@ -4,17 +4,17 @@ declare(strict_types=1);
 
 namespace App\Http\Resources;
 
-use App\Models\Achievement;
+use App\Models\Trophy;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * A badge as the child sees it — the rule, plus how far along they are and
+ * A trophy as the child sees it — the rule, plus how far along they are and
  * whether it carries a gift.
  *
- * @mixin Achievement
+ * @mixin Trophy
  */
-class AchievementResource extends JsonResource
+class TrophyResource extends JsonResource
 {
     public function __construct($resource, private readonly int $progress = 0, private readonly bool $unlocked = false)
     {

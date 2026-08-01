@@ -19,10 +19,10 @@ class IndexChildrenController extends Controller
         $children = IndexQuery::apply(
             Child::query()
                 ->with('creator:id,name,email')
-                ->withCount(['entries', 'achievements', 'chapters as chapters_done_count' => fn ($q) => $q->whereNotNull('completed_at')]),
+                ->withCount(['entries', 'trophies', 'chapters as chapters_done_count' => fn ($q) => $q->whereNotNull('completed_at')]),
             $request,
             searchable: ['name'],
-            sortable: ['name', 'birthday', 'xp', 'entries_count', 'achievements_count', 'created_at'],
+            sortable: ['name', 'birthday', 'xp', 'entries_count', 'trophies_count', 'created_at'],
             defaultSort: 'created_at',
         )->paginate(40)->withQueryString();
 
@@ -36,7 +36,7 @@ class IndexChildrenController extends Controller
             'level' => LevelLadder::for($child->xp)['level'],
             'level_name' => LevelLadder::for($child->xp)['name'],
             'entries_count' => $child->entries_count,
-            'achievements_count' => $child->achievements_count,
+            'trophies_count' => $child->trophies_count,
             'chapters_done_count' => $child->chapters_done_count,
             'creator' => $child->creator?->only(['id', 'name', 'email']),
         ]);

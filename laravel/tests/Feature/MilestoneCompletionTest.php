@@ -6,8 +6,7 @@ use App\Enums\AppSettingKey;
 use App\Models\AppSetting;
 use App\Models\Child;
 use App\Models\ChildChapter;
-
-beforeEach(fn () => seedCatalogue());
+use App\Support\Limits;
 
 /** Fill every visible milestone in a chapter, bypassing the daily cap. */
 function fillChapter(Child $child, ChildChapter $chapter): void
@@ -25,11 +24,11 @@ it('offers completion only once every visible milestone has a memory', function 
     [, $child] = family(ageMonths: 6);
     $chapter = $child->chapters()->first();
 
-    expect(app(App\Support\Limits::class)->canCompleteMilestone($chapter))->toBeFalse();
+    expect(app(Limits::class)->canCompleteMilestone($chapter))->toBeFalse();
 
     fillChapter($child, $chapter);
 
-    expect(app(App\Support\Limits::class)->canCompleteMilestone($chapter->fresh()))->toBeTrue();
+    expect(app(Limits::class)->canCompleteMilestone($chapter->fresh()))->toBeTrue();
 });
 
 it('awards the chapter xp and stamps who finished it', function () {
@@ -47,7 +46,7 @@ it('awards the chapter xp and stamps who finished it', function () {
     $chapter->refresh();
 
     // More than the chapter's own XP: finishing the first chapter also earns
-    // the First Chapter badge, which pays its own 200.
+    // the First Chapter trophy, which pays its own 200.
     expect($chapter->completed_at)->not->toBeNull()
         ->and($chapter->completed_by_user_id)->toBe($user->id)
         ->and($child->fresh()->xp)->toBe($before + $chapter->xp + 200);

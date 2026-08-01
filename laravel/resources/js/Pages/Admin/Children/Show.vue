@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
+import ChevronRightIcon from '@heroicons/vue/24/outline/esm/ChevronRightIcon.js';
+import CheckCircleIcon from '@heroicons/vue/24/solid/esm/CheckCircleIcon.js';
+import LockClosedIcon from '@heroicons/vue/24/outline/esm/LockClosedIcon.js';
 import AdminLayout from '../../../layouts/AdminLayout.vue';
 import UiPageHeader from '../../../components/ui/UiPageHeader.vue';
 import UiCard from '../../../components/ui/UiCard.vue';
@@ -10,6 +13,7 @@ import UiTable from '../../../components/ui/UiTable.vue';
 import UiTableRow from '../../../components/ui/UiTableRow.vue';
 import UiTableCell from '../../../components/ui/UiTableCell.vue';
 import UiTableHeader from '../../../components/ui/UiTableHeader.vue';
+import { formatDate } from '../../../support/date';
 
 const props = defineProps<{
     child: {
@@ -42,8 +46,18 @@ const props = defineProps<{
         completed_at: string | null;
         milestones_total: number;
         milestones_recorded: number;
+        milestones: {
+            id: number;
+            name: string;
+            months_from: number | null;
+            xp: number;
+            is_hidden: boolean;
+            is_custom: boolean;
+            is_locked: boolean;
+            recorded_on: string | null;
+        }[];
     }[];
-    badges: {
+    trophies: {
         id: number;
         name: string;
         metric: string;
@@ -51,12 +65,13 @@ const props = defineProps<{
         reward: string | null;
         progress: number;
         unlocked_at: string | null;
+        is_retired: boolean;
     }[];
     rewards: {
         id: number;
         type: string;
         status: string;
-        badge: string | null;
+        trophy: string | null;
         claimed_at: string | null;
         generated_at: string | null;
         has_content: boolean;
@@ -75,12 +90,12 @@ const props = defineProps<{
     entriesTotal: number;
 }>();
 
-const tab = ref<'journey' | 'memories' | 'badges' | 'gifts' | 'family'>('journey');
+const tab = ref<'journey' | 'memories' | 'trophies' | 'gifts' | 'family'>('journey');
 
 const tabs = [
     { key: 'journey', label: 'Journey' },
     { key: 'memories', label: `Memories (${props.entriesTotal})` },
-    { key: 'badges', label: 'Badges' },
+    { key: 'trophies', label: 'Trophies' },
     { key: 'gifts', label: `Gifts (${props.rewards.length})` },
     { key: 'family', label: `Family (${props.members.length})` },
 ] as const;
@@ -99,6 +114,12 @@ function age(months: number): string {
 
 function resetGift(id: number) {
     router.post(`/admin/gifts/${id}/reset`, {}, { preserveScroll: true });
+}
+
+const expanded = ref<number | null>(null);
+
+function toggleChapter(id: number) {
+    expanded.value = expanded.value === id ? null : id;
 }
 </script>
 
@@ -135,7 +156,7 @@ function resetGift(id: number) {
             </UiCard>
             <UiCard body-class="px-5 py-4">
                 <p class="text-2xl font-bold text-slate-900">{{ age(child.age_months) }}</p>
-                <p class="text-body text-slate-500">Born {{ child.birthday }}</p>
+                <p class="text-body text-slate-500">Born {{ formatDate(child.birthday) }}</p>
             </UiCard>
         </div>
 
@@ -159,36 +180,81 @@ function resetGift(id: number) {
                 <UiTableHeader align="right">Finished</UiTableHeader>
             </template>
             <template #body>
-                <UiTableRow v-for="chapter in chapters" :key="chapter.id">
-                    <UiTableCell>
-                        <div class="flex items-center gap-2">
-                            <span class="font-medium text-slate-900">{{ chapter.name }}</span>
-                            <UiBadge v-if="chapter.is_hidden" tone="neutral">hidden</UiBadge>
-                        </div>
-                    </UiTableCell>
-                    <UiTableCell align="right" cell-class="text-slate-500">{{ chapter.months_from }} mo</UiTableCell>
-                    <UiTableCell>
-                        <div class="flex items-center gap-2">
-                            <div class="h-1.5 w-32 overflow-hidden rounded-full bg-slate-100">
-                                <div
-                                    class="h-full rounded-full bg-primary"
-                                    :style="{
-                                        width: `${chapter.milestones_total ? (chapter.milestones_recorded / chapter.milestones_total) * 100 : 0}%`,
-                                    }"
+                <template v-for="chapter in chapters" :key="chapter.id">
+                    <UiTableRow class="cursor-pointer" @click="toggleChapter(chapter.id)">
+                        <UiTableCell>
+                            <div class="flex items-center gap-2">
+                                <ChevronRightIcon
+                                    class="h-3.5 w-3.5 text-slate-400 transition-transform"
+                                    :class="expanded === chapter.id ? 'rotate-90' : ''"
                                 />
+                                <span class="font-medium text-slate-900">{{ chapter.name }}</span>
+                                <UiBadge v-if="chapter.is_hidden" tone="neutral">hidden</UiBadge>
                             </div>
-                            <span class="text-slate-500">
-                                {{ chapter.milestones_recorded }} / {{ chapter.milestones_total }}
-                            </span>
-                        </div>
-                    </UiTableCell>
-                    <UiTableCell align="right">
-                        <UiBadge v-if="chapter.completed_at" tone="success">
-                            {{ chapter.completed_at.slice(0, 10) }}
-                        </UiBadge>
-                        <span v-else class="text-slate-300">—</span>
-                    </UiTableCell>
-                </UiTableRow>
+                        </UiTableCell>
+                        <UiTableCell align="right" cell-class="text-slate-500">{{ chapter.months_from }} mo</UiTableCell>
+                        <UiTableCell>
+                            <div class="flex items-center gap-2">
+                                <div class="h-1.5 w-32 overflow-hidden rounded-full bg-slate-100">
+                                    <div
+                                        class="h-full rounded-full bg-primary"
+                                        :style="{
+                                            width: `${chapter.milestones_total ? (chapter.milestones_recorded / chapter.milestones_total) * 100 : 0}%`,
+                                        }"
+                                    />
+                                </div>
+                                <span class="text-slate-500">
+                                    {{ chapter.milestones_recorded }} / {{ chapter.milestones_total }}
+                                </span>
+                            </div>
+                        </UiTableCell>
+                        <UiTableCell align="right">
+                            <UiBadge v-if="chapter.completed_at" tone="success">
+                                {{ formatDate(chapter.completed_at) }}
+                            </UiBadge>
+                            <span v-else class="text-slate-300">—</span>
+                        </UiTableCell>
+                    </UiTableRow>
+
+                    <tr v-if="expanded === chapter.id" class="bg-slate-50/60">
+                        <td colspan="4" class="px-6 py-4">
+                            <p v-if="!chapter.milestones.length" class="text-body text-slate-400">
+                                No milestones in this chapter.
+                            </p>
+                            <div v-else class="flex flex-col gap-1.5">
+                                <div
+                                    v-for="milestone in chapter.milestones"
+                                    :key="milestone.id"
+                                    class="flex items-center gap-2 text-body"
+                                >
+                                    <CheckCircleIcon
+                                        v-if="milestone.recorded_on"
+                                        class="h-4 w-4 flex-shrink-0 text-emerald-500"
+                                    />
+                                    <LockClosedIcon
+                                        v-else-if="milestone.is_locked"
+                                        class="h-4 w-4 flex-shrink-0 text-slate-300"
+                                    />
+                                    <span v-else class="h-4 w-4 flex-shrink-0 rounded-full border border-slate-200" />
+
+                                    <span :class="milestone.recorded_on ? 'text-slate-800' : 'text-slate-500'">
+                                        {{ milestone.name }}
+                                    </span>
+                                    <UiBadge v-if="milestone.is_custom" tone="primary">own</UiBadge>
+                                    <UiBadge v-if="milestone.is_hidden" tone="neutral">hidden</UiBadge>
+
+                                    <span class="ml-auto text-slate-400">
+                                        {{
+                                            milestone.recorded_on
+                                                ? formatDate(milestone.recorded_on)
+                                                : `${milestone.months_from ?? 0} mo`
+                                        }}
+                                    </span>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                </template>
             </template>
         </UiTable>
 
@@ -207,7 +273,9 @@ function resetGift(id: number) {
             </template>
             <template #body>
                 <UiTableRow v-for="entry in entries" :key="entry.id">
-                    <UiTableCell cell-class="whitespace-nowrap text-slate-500">{{ entry.date }}</UiTableCell>
+                    <UiTableCell cell-class="whitespace-nowrap text-slate-500">
+                        {{ formatDate(entry.date) }}
+                    </UiTableCell>
                     <UiTableCell>
                         <span v-if="entry.milestone" class="text-slate-800">{{ entry.milestone }}</span>
                         <UiBadge v-else tone="neutral">free</UiBadge>
@@ -236,36 +304,45 @@ function resetGift(id: number) {
             </template>
         </UiTable>
 
-        <UiTable v-else-if="tab === 'badges'" :empty="badges.length === 0" empty-title="No badges configured">
+        <UiTable v-else-if="tab === 'trophies'" :empty="trophies.length === 0" empty-title="No trophies configured">
             <template #header>
-                <UiTableHeader>Badge</UiTableHeader>
+                <UiTableHeader>Trophy</UiTableHeader>
                 <UiTableHeader>Rule</UiTableHeader>
                 <UiTableHeader>Progress</UiTableHeader>
                 <UiTableHeader>Gift</UiTableHeader>
                 <UiTableHeader align="right">Earned</UiTableHeader>
             </template>
             <template #body>
-                <UiTableRow v-for="badge in badges" :key="badge.id">
-                    <UiTableCell cell-class="font-medium text-slate-900">{{ badge.name }}</UiTableCell>
-                    <UiTableCell cell-class="text-slate-500">{{ badge.metric }} ≥ {{ badge.threshold }}</UiTableCell>
+                <UiTableRow v-for="trophy in trophies" :key="trophy.id">
+                    <UiTableCell cell-class="font-medium text-slate-900">
+                        <div class="flex items-center gap-2">
+                            {{ trophy.name }}
+                            <UiBadge v-if="trophy.is_retired" tone="neutral" title="No longer in the catalogue">
+                                retired
+                            </UiBadge>
+                        </div>
+                    </UiTableCell>
+                    <UiTableCell cell-class="text-slate-500">{{ trophy.metric }} ≥ {{ trophy.threshold }}</UiTableCell>
                     <UiTableCell>
                         <div class="flex items-center gap-2">
                             <div class="h-1.5 w-24 overflow-hidden rounded-full bg-slate-100">
                                 <div
                                     class="h-full rounded-full"
-                                    :class="badge.unlocked_at ? 'bg-emerald-500' : 'bg-primary'"
-                                    :style="{ width: `${(badge.progress / badge.threshold) * 100}%` }"
+                                    :class="trophy.unlocked_at ? 'bg-emerald-500' : 'bg-primary'"
+                                    :style="{ width: `${(trophy.progress / trophy.threshold) * 100}%` }"
                                 />
                             </div>
-                            <span class="text-slate-500">{{ badge.progress }} / {{ badge.threshold }}</span>
+                            <span class="text-slate-500">{{ trophy.progress }} / {{ trophy.threshold }}</span>
                         </div>
                     </UiTableCell>
                     <UiTableCell>
-                        <UiBadge v-if="badge.reward" tone="gold">{{ badge.reward }}</UiBadge>
+                        <UiBadge v-if="trophy.reward" tone="gold">{{ trophy.reward }}</UiBadge>
                         <span v-else class="text-slate-300">—</span>
                     </UiTableCell>
                     <UiTableCell align="right">
-                        <UiBadge v-if="badge.unlocked_at" tone="success">{{ badge.unlocked_at.slice(0, 10) }}</UiBadge>
+                        <UiBadge v-if="trophy.unlocked_at" tone="success">
+                            {{ formatDate(trophy.unlocked_at) }}
+                        </UiBadge>
                         <span v-else class="text-slate-300">—</span>
                     </UiTableCell>
                 </UiTableRow>
@@ -276,10 +353,10 @@ function resetGift(id: number) {
             v-else-if="tab === 'gifts'"
             :empty="rewards.length === 0"
             empty-title="No gifts earned yet"
-            empty-description="A gift is reserved when a badge that carries one is unlocked."
+            empty-description="A gift is reserved when a trophy that carries one is unlocked."
         >
             <template #header>
-                <UiTableHeader>Badge</UiTableHeader>
+                <UiTableHeader>Trophy</UiTableHeader>
                 <UiTableHeader>Type</UiTableHeader>
                 <UiTableHeader>Status</UiTableHeader>
                 <UiTableHeader align="right">Claimed</UiTableHeader>
@@ -287,13 +364,13 @@ function resetGift(id: number) {
             </template>
             <template #body>
                 <UiTableRow v-for="reward in rewards" :key="reward.id">
-                    <UiTableCell cell-class="font-medium text-slate-900">{{ reward.badge }}</UiTableCell>
+                    <UiTableCell cell-class="font-medium text-slate-900">{{ reward.trophy }}</UiTableCell>
                     <UiTableCell>{{ reward.type }}</UiTableCell>
                     <UiTableCell>
                         <UiBadge :tone="statusTone[reward.status] ?? 'neutral'">{{ reward.status }}</UiBadge>
                     </UiTableCell>
                     <UiTableCell align="right" cell-class="text-slate-500">
-                        {{ reward.claimed_at?.slice(0, 10) ?? '—' }}
+                        {{ formatDate(reward.claimed_at) }}
                     </UiTableCell>
                     <UiTableCell align="right">
                         <UiButton

@@ -7,5 +7,4 @@ namespace App\Enums;
 enum Language: string
 {
     case English = 'en';
-    case Albanian = 'sq';
 }

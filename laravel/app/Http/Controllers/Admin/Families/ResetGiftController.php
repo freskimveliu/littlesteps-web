@@ -11,7 +11,7 @@ use Illuminate\Http\RedirectResponse;
 
 /**
  * Puts a stuck or failed gift back to unclaimed so the parent can ask for it
- * again. The badge itself is untouched — it was earned, and stays earned.
+ * again. The trophy itself is untouched — it was earned, and stays earned.
  */
 class ResetGiftController extends Controller
 {

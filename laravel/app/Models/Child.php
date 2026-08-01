@@ -103,10 +103,10 @@ class Child extends Model implements HasMedia
         return $this->hasMany(ChildEntry::class);
     }
 
-    /** @return HasMany<ChildAchievement, $this> */
-    public function achievements(): HasMany
+    /** @return HasMany<ChildTrophy, $this> */
+    public function trophies(): HasMany
     {
-        return $this->hasMany(ChildAchievement::class);
+        return $this->hasMany(ChildTrophy::class);
     }
 
     /** @return HasMany<ChildReward, $this> */

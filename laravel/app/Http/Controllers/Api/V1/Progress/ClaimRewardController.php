@@ -14,7 +14,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 /**
- * Claiming is what starts a generation, never earning the badge — so a lapsed
+ * Claiming is what starts a generation, never earning the trophy — so a lapsed
  * account never costs one, and a failure can be retried without a duplicate.
  *
  * TODO: dispatch the generation job once the story/image/book prompts exist.
@@ -35,7 +35,7 @@ class ClaimRewardController extends Controller
         ]);
 
         return ApiResponse::success(
-            new RewardResource($reward->fresh()->load('childAchievement.achievement')),
+            new RewardResource($reward->fresh()->load('childTrophy')),
             'We are making it now — we will let you know when it is ready.',
         );
     }

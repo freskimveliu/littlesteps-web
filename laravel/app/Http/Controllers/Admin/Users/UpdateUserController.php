@@ -19,7 +19,6 @@ class UpdateUserController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:60'],
             'email' => ['nullable', 'email', 'max:255', Rule::unique('users', 'email')->ignore($parent->id)],
-            'language' => ['required', 'string', 'in:en,sq'],
             'timezone' => ['required', 'string', 'timezone'],
             'is_admin' => ['boolean'],
         ]);

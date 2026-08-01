@@ -48,6 +48,7 @@ class IndexUsersController extends Controller
                 'guests' => User::whereNull('email')->count(),
                 'deleted' => User::onlyTrashed()->count(),
             ],
+            'timezone' => config('app.timezone'),
         ]);
     }
 }

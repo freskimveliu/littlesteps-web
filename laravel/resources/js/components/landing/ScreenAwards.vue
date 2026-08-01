@@ -4,7 +4,7 @@ import KidAvatar from './KidAvatar.vue';
 import PhoneTabBar from './PhoneTabBar.vue';
 import type { IconName } from './icons';
 
-interface Badge {
+interface Trophy {
     title: string;
     description: string;
     icon: IconName;
@@ -14,7 +14,7 @@ interface Badge {
     target?: number;
 }
 
-const BADGES: Badge[] = [
+const TROPHIES: Trophy[] = [
     { title: 'First Week', description: 'A memory on seven different days', icon: 'flame', xp: 60, unlocked: true },
     { title: 'First Chapter', description: 'You finished a whole chapter', icon: 'ribbon', xp: 200, unlocked: true },
     { title: 'Shutterbug', description: 'Twenty-five photos kept', icon: 'camera', xp: 100, unlocked: false, current: 18, target: 25 },
@@ -70,7 +70,7 @@ const RING = 2 * Math.PI * 34;
             </div>
 
             <div class="relative mt-4 flex gap-2">
-                <div v-for="stat in [{ v: '9/32', l: 'Badges' }, { v: '12', l: 'Streak' }, { v: '62', l: 'Memories' }]" :key="stat.l" class="flex-1 rounded-2xl bg-white/15 py-2 text-center">
+                <div v-for="stat in [{ v: '9/32', l: 'Trophies' }, { v: '12', l: 'Streak' }, { v: '62', l: 'Memories' }]" :key="stat.l" class="flex-1 rounded-2xl bg-white/15 py-2 text-center">
                     <p class="font-display text-sm leading-none font-extrabold text-white">{{ stat.v }}</p>
                     <p class="mt-1 text-[9px] text-white/60">{{ stat.l }}</p>
                 </div>
@@ -82,7 +82,7 @@ const RING = 2 * Math.PI * 34;
             <div class="flex gap-1 rounded-2xl bg-white p-1 shadow-lg shadow-primary/10">
                 <span class="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-primary py-2 text-[11px] font-extrabold text-white">
                     <Ion name="ribbon" :size="13" />
-                    Badges
+                    Trophies
                     <span class="text-white/70">9/32</span>
                 </span>
                 <span class="flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2 text-[11px] font-extrabold text-gray-400">
@@ -95,21 +95,21 @@ const RING = 2 * Math.PI * 34;
 
         <p class="mt-3 text-center text-[10px] text-gray-400">Keep capturing memories to unlock more</p>
 
-        <!-- badge grid -->
+        <!-- trophy grid -->
         <div class="mt-2 grid grid-cols-2 gap-2 px-4">
             <div
-                v-for="badge in BADGES"
-                :key="badge.title"
+                v-for="trophy in TROPHIES"
+                :key="trophy.title"
                 class="flex flex-col items-center rounded-3xl p-3"
-                :class="badge.unlocked ? 'bg-primary/10' : 'bg-white'"
+                :class="trophy.unlocked ? 'bg-primary/10' : 'bg-white'"
             >
                 <span
                     class="relative flex h-12 w-12 items-center justify-center rounded-full"
-                    :class="badge.unlocked ? 'bg-primary' : 'bg-gray-100'"
+                    :class="trophy.unlocked ? 'bg-primary' : 'bg-gray-100'"
                 >
-                    <Ion :name="badge.icon" :size="21" :class="badge.unlocked ? 'text-white' : 'text-gray-400'" />
+                    <Ion :name="trophy.icon" :size="21" :class="trophy.unlocked ? 'text-white' : 'text-gray-400'" />
                     <span
-                        v-if="!badge.unlocked"
+                        v-if="!trophy.unlocked"
                         class="absolute right-0 bottom-0 flex h-4 w-4 items-center justify-center rounded-full bg-white"
                     >
                         <Ion name="lock-closed" :size="8" class="text-gray-400" />
@@ -118,28 +118,28 @@ const RING = 2 * Math.PI * 34;
 
                 <p
                     class="mt-2 text-center font-display text-[12px] leading-tight font-extrabold"
-                    :class="badge.unlocked ? 'text-gray-900' : 'text-gray-400'"
+                    :class="trophy.unlocked ? 'text-gray-900' : 'text-gray-400'"
                 >
-                    {{ badge.title }}
+                    {{ trophy.title }}
                 </p>
-                <p class="mt-0.5 text-center text-[9px] leading-tight text-gray-400">{{ badge.description }}</p>
+                <p class="mt-0.5 text-center text-[9px] leading-tight text-gray-400">{{ trophy.description }}</p>
 
                 <span
-                    v-if="badge.unlocked"
+                    v-if="trophy.unlocked"
                     class="mt-2 flex items-center gap-0.5 rounded-full bg-butter/60 px-2 py-0.5 text-[10px] font-extrabold text-primary"
                 >
                     <Ion name="star" :size="9" />
-                    +{{ badge.xp }}
+                    +{{ trophy.xp }}
                 </span>
                 <div v-else class="mt-2 w-full">
                     <div class="h-1.5 overflow-hidden rounded-full bg-gray-100">
                         <div
                             class="h-full rounded-full bg-primary/50"
-                            :style="{ width: `${((badge.current ?? 0) / (badge.target ?? 1)) * 100}%` }"
+                            :style="{ width: `${((trophy.current ?? 0) / (trophy.target ?? 1)) * 100}%` }"
                         />
                     </div>
                     <p class="mt-1 text-center text-[10px] font-extrabold text-gray-400">
-                        {{ badge.current }}/{{ badge.target }}
+                        {{ trophy.current }}/{{ trophy.target }}
                     </p>
                 </div>
             </div>

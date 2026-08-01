@@ -6,7 +6,7 @@ namespace App\Http\Controllers\Admin\Families;
 
 use App\Http\Controllers\Controller;
 use App\Models\Child;
-use App\Models\Achievement;
+use App\Models\Trophy;
 use App\Support\Progress\LevelLadder;
 use App\Support\Progress\Metrics;
 use Inertia\Inertia;
@@ -28,8 +28,9 @@ class ShowChildController extends Controller
                     'milestones as milestones_total' => fn ($s) => $s->where('is_hidden', false),
                     'milestones as milestones_recorded' => fn ($s) => $s->where('is_hidden', false)->whereHas('entry'),
                 ]),
-            'achievements.achievement',
-            'rewards.childAchievement.achievement',
+            'chapters.milestones' => fn ($q) => $q->orderBy('sort_order')->with('entry:id,child_milestone_id,date'),
+            'trophies',
+            'rewards.childTrophy',
         ])->findOrFail($child);
 
         $counts = $metrics->for($record);
@@ -56,7 +57,7 @@ class ShowChildController extends Controller
                 'created_at' => $entry->created_at?->toIso8601String(),
             ]);
 
-        $held = $record->achievements->keyBy('achievement_id');
+        $held = $record->trophies->keyBy('trophy_id');
 
         return Inertia::render('Admin/Children/Show', [
             'child' => [
@@ -89,25 +90,23 @@ class ShowChildController extends Controller
                 'completed_at' => $chapter->completed_at?->toIso8601String(),
                 'milestones_total' => $chapter->milestones_total,
                 'milestones_recorded' => $chapter->milestones_recorded,
-            ]),
-            'badges' => Achievement::query()
-                ->active()
-                ->orderBy('sort_order')
-                ->get()
-                ->map(fn (Achievement $badge) => [
-                    'id' => $badge->id,
-                    'name' => $badge->name,
-                    'metric' => $badge->metric,
-                    'threshold' => $badge->threshold,
-                    'reward' => $badge->reward,
-                    'progress' => min($counts[$badge->metric->value] ?? 0, $badge->threshold),
-                    'unlocked_at' => $held->get($badge->id)?->unlocked_at?->toIso8601String(),
+                'milestones' => $chapter->milestones->map(fn ($milestone) => [
+                    'id' => $milestone->id,
+                    'name' => $milestone->name,
+                    'months_from' => $milestone->months_from,
+                    'xp' => $milestone->xp,
+                    'is_hidden' => $milestone->is_hidden,
+                    'is_custom' => $milestone->milestone_id === null,
+                    'is_locked' => $milestone->isLockedFor($record),
+                    'recorded_on' => $milestone->entry?->date?->toDateString(),
                 ]),
+            ]),
+            'trophies' => $this->trophies($counts, $held),
             'rewards' => $record->rewards->map(fn ($reward) => [
                 'id' => $reward->id,
                 'type' => $reward->type,
                 'status' => $reward->status,
-                'badge' => $reward->childAchievement?->achievement?->name,
+                'trophy' => $reward->childTrophy?->name,
                 'claimed_at' => $reward->claimed_at?->toIso8601String(),
                 'generated_at' => $reward->generated_at?->toIso8601String(),
                 'has_content' => $reward->content !== null,
@@ -115,5 +114,50 @@ class ShowChildController extends Controller
             'entries' => $entries,
             'entriesTotal' => $record->entries()->count(),
         ]);
+    }
+
+    /**
+     * The catalogue as it stands, plus anything this child holds that has since
+     * left it — those read from the copy taken when they were unlocked, which is
+     * the only record of what the trophy said at the time.
+     *
+     * @param  array<string, int>  $counts
+     * @param  \Illuminate\Support\Collection<int|null, \App\Models\ChildTrophy>  $held
+     * @return \Illuminate\Support\Collection<int, array<string, mixed>>
+     */
+    private function trophies(array $counts, $held)
+    {
+        $catalogue = Trophy::query()
+            ->active()
+            ->orderBy('sort_order')
+            ->get()
+            ->map(fn (Trophy $trophy) => [
+                'id' => $trophy->id,
+                'name' => $trophy->name,
+                'metric' => $trophy->metric,
+                'threshold' => $trophy->threshold,
+                'reward' => $trophy->reward,
+                'progress' => min($counts[$trophy->metric->value] ?? 0, $trophy->threshold),
+                'unlocked_at' => $held->get($trophy->id)?->unlocked_at?->toIso8601String(),
+                'is_retired' => false,
+            ]);
+
+        $listed = $catalogue->pluck('id');
+
+        $retired = $held
+            ->reject(fn ($earned) => $listed->contains($earned->trophy_id))
+            ->values()
+            ->map(fn ($earned) => [
+                'id' => $earned->trophy_id ?? -$earned->id,
+                'name' => $earned->name,
+                'metric' => $earned->metric,
+                'threshold' => $earned->threshold,
+                'reward' => $earned->reward,
+                'progress' => $earned->threshold,
+                'unlocked_at' => $earned->unlocked_at?->toIso8601String(),
+                'is_retired' => true,
+            ]);
+
+        return $catalogue->concat($retired)->values();
     }
 }

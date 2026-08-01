@@ -14,7 +14,7 @@ use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
-#[Fillable(['child_id', 'child_achievement_id', 'type', 'status', 'content', 'claimed_at', 'generated_at'])]
+#[Fillable(['child_id', 'child_trophy_id', 'type', 'status', 'content', 'claimed_at', 'generated_at'])]
 class ChildReward extends Model implements HasMedia
 {
     use InteractsWithMedia;
@@ -61,9 +61,9 @@ class ChildReward extends Model implements HasMedia
         return $this->belongsTo(Child::class);
     }
 
-    /** @return BelongsTo<ChildAchievement, $this> */
-    public function childAchievement(): BelongsTo
+    /** @return BelongsTo<ChildTrophy, $this> */
+    public function childTrophy(): BelongsTo
     {
-        return $this->belongsTo(ChildAchievement::class);
+        return $this->belongsTo(ChildTrophy::class);
     }
 }

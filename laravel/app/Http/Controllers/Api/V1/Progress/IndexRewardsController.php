@@ -18,7 +18,7 @@ class IndexRewardsController extends Controller
         $this->authorize('view', $child);
 
         $rewards = $child->rewards()
-            ->with(['childAchievement.achievement', 'media'])
+            ->with(['childTrophy', 'media'])
             ->orderByDesc('id')
             ->get();
 

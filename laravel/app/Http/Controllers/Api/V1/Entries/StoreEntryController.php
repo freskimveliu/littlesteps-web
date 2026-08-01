@@ -8,8 +8,8 @@ use App\Actions\Entries\RecordEntry;
 use App\Data\EntryData;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\StoreEntryRequest;
-use App\Http\Resources\AchievementResource;
 use App\Http\Resources\ChildEntryResource;
+use App\Http\Resources\EarnedTrophyResource;
 use App\Http\Responses\ApiResponse;
 use App\Models\Child;
 use App\Support\Limits;
@@ -36,7 +36,7 @@ class StoreEntryController extends Controller
             'xp' => $child->xp,
             'level' => LevelLadder::for($child->xp),
             'unlocked' => $result['unlocked']->map(
-                fn ($held) => new AchievementResource($held->achievement, $held->achievement->threshold, true)
+                fn ($held) => new EarnedTrophyResource($held)
             ),
             'limits' => [
                 'freeEntriesLeft' => $limits->freeEntriesLeft($child, $user),

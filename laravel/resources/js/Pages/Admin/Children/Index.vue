@@ -13,6 +13,7 @@ import UiSpinner from '../../../components/ui/UiSpinner.vue';
 import UiBadge from '../../../components/ui/UiBadge.vue';
 import UiPagination from '../../../components/ui/UiPagination.vue';
 import { useIndexFilters } from '../../../composables/useIndexFilters';
+import { formatDate } from '../../../support/date';
 
 interface ChildRow {
     id: number;
@@ -24,7 +25,7 @@ interface ChildRow {
     level: number;
     level_name: string;
     entries_count: number;
-    achievements_count: number;
+    trophies_count: number;
     chapters_done_count: number;
     creator: { id: number; name: string; email: string | null } | null;
 }
@@ -92,13 +93,13 @@ function age(months: number): string {
                     Memories
                 </UiSortableTableHeader>
                 <UiSortableTableHeader
-                    sort-key="achievements_count"
+                    sort-key="trophies_count"
                     align="right"
                     :active-key="sortKey"
                     :active-order="sortOrder"
                     @sort="toggleSort"
                 >
-                    Badges
+                    Trophies
                 </UiSortableTableHeader>
                 <UiTableHeader align="right">Chapters</UiTableHeader>
                 <UiTableHeader align="right" />
@@ -110,7 +111,7 @@ function age(months: number): string {
                         <Link :href="`/admin/children/${child.id}`" class="font-medium text-slate-900 hover:underline">
                             {{ child.name }}
                         </Link>
-                        <p class="text-label text-slate-400">{{ child.gender }} · born {{ child.birthday }}</p>
+                        <p class="text-label text-slate-400">{{ child.gender }} · born {{ formatDate(child.birthday) }}</p>
                     </UiTableCell>
                     <UiTableCell>
                         <Link
@@ -127,7 +128,7 @@ function age(months: number): string {
                         <span class="ml-1 text-slate-400">{{ child.xp }} XP</span>
                     </UiTableCell>
                     <UiTableCell align="right">{{ child.entries_count }}</UiTableCell>
-                    <UiTableCell align="right">{{ child.achievements_count }}</UiTableCell>
+                    <UiTableCell align="right">{{ child.trophies_count }}</UiTableCell>
                     <UiTableCell align="right">{{ child.chapters_done_count }} / 8</UiTableCell>
                     <UiTableCell align="right">
                         <UiButton variant="outline" :to="`/admin/children/${child.id}`">Open</UiButton>

@@ -35,7 +35,7 @@ const groups: { title: string | null; items: NavItem[] }[] = [
     {
         title: 'Families',
         items: [
-            { label: 'Parents', href: '/admin/users', icon: UsersIcon },
+            { label: 'Users', href: '/admin/users', icon: UsersIcon },
             { label: 'Children', href: '/admin/children', icon: FaceSmileIcon },
             { label: 'Gifts', href: '/admin/gifts', icon: GiftIcon },
         ],
@@ -46,7 +46,7 @@ const groups: { title: string | null; items: NavItem[] }[] = [
             { label: 'Chapters', href: '/admin/chapters', icon: BookOpenIcon },
             { label: 'Milestones', href: '/admin/milestones', icon: FlagIcon },
             { label: 'Categories', href: '/admin/categories', icon: TagIcon },
-            { label: 'Badges', href: '/admin/badges', icon: TrophyIcon },
+            { label: 'Trophies', href: '/admin/trophies', icon: TrophyIcon },
             { label: 'Levels', href: '/admin/levels', icon: ChartBarIcon },
             { label: 'Prompts', href: '/admin/prompts', icon: SparklesIcon },
         ],

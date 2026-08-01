@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api\V1\Progress;
 
 use App\Http\Controllers\Controller;
-use App\Http\Resources\AchievementResource;
+use App\Http\Resources\TrophyResource;
 use App\Http\Responses\ApiResponse;
 use App\Models\Child;
-use App\Models\Achievement;
+use App\Models\Trophy;
 use App\Support\Limits;
 use App\Support\Progress\LevelLadder;
 use App\Support\Progress\Metrics;
@@ -16,7 +16,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 /**
- * Everything the Awards screen needs: level, badges with their progress, and
+ * Everything the Awards screen needs: level, trophies with their progress, and
  * what is still allowed today. All of it computed here — the app displays.
  */
 class ShowProgressController extends Controller
@@ -26,16 +26,16 @@ class ShowProgressController extends Controller
         $this->authorize('view', $child);
 
         $counts = $metrics->for($child);
-        $held = $child->achievements()->pluck('unlocked_at', 'achievement_id');
+        $held = $child->trophies()->pluck('unlocked_at', 'trophy_id');
 
-        $badges = Achievement::query()
+        $trophies = Trophy::query()
             ->active()
             ->orderBy('sort_order')
             ->get()
-            ->map(fn (Achievement $badge) => new AchievementResource(
-                $badge,
-                $counts[$badge->metric->value] ?? 0,
-                $held->has($badge->id),
+            ->map(fn (Trophy $trophy) => new TrophyResource(
+                $trophy,
+                $counts[$trophy->metric->value] ?? 0,
+                $held->has($trophy->id),
             ));
 
         $user = $request->user();
@@ -45,9 +45,9 @@ class ShowProgressController extends Controller
             'level' => LevelLadder::for($child->xp),
             'levelCount' => LevelLadder::total(),
             'metrics' => $counts,
-            'badges' => $badges,
-            'badgesUnlocked' => $held->count(),
-            'badgesTotal' => $badges->count(),
+            'trophies' => $trophies,
+            'trophiesUnlocked' => $held->count(),
+            'trophiesTotal' => $trophies->count(),
             'limits' => [
                 'freeEntriesLeft' => $limits->freeEntriesLeft($child, $user),
                 'milestoneEntriesLeft' => $limits->milestoneEntriesLeft($child, $user),

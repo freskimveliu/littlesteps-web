@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace App\Support\Progress;
 
-use App\Enums\AchievementMetric;
+use App\Enums\TrophyMetric;
 use App\Models\Child;
 use App\Models\ChildEntry;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 
 /**
- * The numbers every badge rule reads.
+ * The numbers every trophy rule reads.
  *
  * Each one is gated by the calendar rather than by typing speed: the catalogue
  * holds a finite number of milestones, so a raw entry count would let a determined
@@ -22,13 +23,13 @@ class Metrics
     public function for(Child $child): array
     {
         return [
-            AchievementMetric::Days->value => $this->days($child),
-            AchievementMetric::Months->value => $this->months($child),
-            AchievementMetric::Streak->value => $this->streak($child),
-            AchievementMetric::OnTimeMilestones->value => $this->onTimeSteps($child),
-            AchievementMetric::Chapters->value => $this->chapters($child),
-            AchievementMetric::Photos->value => $this->photos($child),
-            AchievementMetric::Categories->value => $this->categories($child),
+            TrophyMetric::Days->value => $this->days($child),
+            TrophyMetric::Months->value => $this->months($child),
+            TrophyMetric::Streak->value => $this->streak($child),
+            TrophyMetric::OnTimeMilestones->value => $this->onTimeSteps($child),
+            TrophyMetric::Chapters->value => $this->chapters($child),
+            TrophyMetric::Photos->value => $this->photos($child),
+            TrophyMetric::Categories->value => $this->categories($child),
         ];
     }
 
@@ -60,10 +61,10 @@ class Metrics
         }
 
         $streak = 1;
-        $cursor = \Carbon\CarbonImmutable::parse($dates[0]);
+        $cursor = CarbonImmutable::parse($dates[0]);
 
         for ($i = 1; $i < $dates->count(); $i++) {
-            $next = \Carbon\CarbonImmutable::parse($dates[$i]);
+            $next = CarbonImmutable::parse($dates[$i]);
 
             if ($cursor->subDay()->isSameDay($next)) {
                 $streak++;
@@ -81,7 +82,7 @@ class Metrics
     /**
      * A milestone caught while the child was actually that age — recorded inside the
      * quarter that opens at the milestone's months_from. Backfilling the first smile
-     * at age four is still a memory, just not this badge.
+     * at age four is still a memory, just not this trophy.
      */
     public function onTimeSteps(Child $child): int
     {

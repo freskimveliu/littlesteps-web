@@ -6,8 +6,6 @@ use App\Models\ChildChapter;
 use App\Models\ChildMilestone;
 use App\Models\ChildMilestoneProperty;
 
-beforeEach(fn () => seedCatalogue());
-
 it('copies the whole catalogue onto a new child', function () {
     [, $child] = family();
 
@@ -75,4 +73,19 @@ it('refuses to show a child to someone outside the family', function () {
     $this->actingAs(App\Models\User::factory()->create(), 'sanctum')
         ->getJson("/api/v1/children/{$child->id}")
         ->assertForbidden();
+});
+
+it('returns the created child with a level, not a null xp', function () {
+    $user = App\Models\User::factory()->create();
+
+    $this->actingAs($user, 'sanctum')
+        ->postJson('/api/v1/children', [
+            'name' => 'Liza',
+            'birthday' => now()->subMonths(6)->toDateString(),
+            'gender' => 'girl',
+            'relation' => 'mother',
+        ])
+        ->assertCreated()
+        ->assertJsonPath('data.xp', 0)
+        ->assertJsonPath('data.level.level', 1);
 });

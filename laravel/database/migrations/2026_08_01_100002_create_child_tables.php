@@ -98,20 +98,31 @@ return new class extends Migration
             $table->index(['key', 'child_entry_id']);
         });
 
-        Schema::create('child_achievements', function (Blueprint $table) {
+        // The trophy is copied, not joined: retuning a threshold or renaming a
+        // trophy must not rewrite one a child has already been shown. trophy_id
+        // stays only to stop the same trophy being awarded twice.
+        Schema::create('child_trophies', function (Blueprint $table) {
             $table->id();
             $table->foreignId('child_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('achievement_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('trophy_id')->nullable()->constrained()->nullOnDelete();
+            $table->string('name');
+            $table->string('description')->nullable();
+            $table->string('icon');
+            $table->string('metric');
+            $table->unsignedInteger('threshold');
+            $table->unsignedSmallInteger('xp')->default(0);
+            $table->string('reward')->nullable();
+            $table->unsignedSmallInteger('sort_order')->default(0);
             $table->timestamp('unlocked_at');
             $table->timestamps();
 
-            $table->unique(['child_id', 'achievement_id']);
+            $table->unique(['child_id', 'trophy_id']);
         });
 
         Schema::create('child_rewards', function (Blueprint $table) {
             $table->id();
             $table->foreignId('child_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('child_achievement_id')->unique()->constrained()->cascadeOnDelete();
+            $table->foreignId('child_trophy_id')->unique()->constrained()->cascadeOnDelete();
             $table->string('type');
             $table->string('status')->default('unclaimed');
             $table->longText('content')->nullable();
@@ -124,7 +135,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('child_rewards');
-        Schema::dropIfExists('child_achievements');
+        Schema::dropIfExists('child_trophies');
         Schema::dropIfExists('child_entry_properties');
         Schema::dropIfExists('child_milestone_properties');
         Schema::dropIfExists('child_entries');

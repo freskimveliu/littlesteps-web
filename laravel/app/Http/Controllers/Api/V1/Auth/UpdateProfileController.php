@@ -21,7 +21,7 @@ class UpdateProfileController extends Controller
         $validated = $request->validate([
             'name' => ['sometimes', 'string', 'max:60'],
             'email' => ['sometimes', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
-            'language' => ['sometimes', 'string', 'in:en,sq'],
+            'language' => ['sometimes', 'string', 'in:en'],
             'timezone' => ['sometimes', 'string', 'timezone'],
             'settings' => ['sometimes', 'array'],
             'settings.*' => ['boolean'],

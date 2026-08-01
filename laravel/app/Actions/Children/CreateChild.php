@@ -30,7 +30,9 @@ class CreateChild
 
             $this->provision->handle($child);
 
-            return $child;
+            // xp is not fillable and defaults in the database, so the model in
+            // memory carries null until the row is read back.
+            return $child->refresh();
         });
     }
 }

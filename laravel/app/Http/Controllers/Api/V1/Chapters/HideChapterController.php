@@ -34,7 +34,11 @@ class HideChapterController extends Controller
         $chapter->milestones()->update(['is_hidden' => $hidden]);
 
         return ApiResponse::success(
-            new ChildChapterResource($chapter->fresh()->load(['child', 'milestones'])),
+            new ChildChapterResource($chapter->fresh()->load([
+                'child',
+                'milestones' => fn ($q) => $q->orderBy('sort_order')
+                    ->with(['category', 'properties', 'entry.properties', 'entry.media', 'child']),
+            ])),
             $hidden ? 'Chapter hidden.' : 'Chapter restored.',
         );
     }
