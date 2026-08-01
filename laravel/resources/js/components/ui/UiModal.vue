@@ -44,14 +44,14 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
+    <!--
+        No <Transition> here. Inside a <Teleport> its enter-from class could be
+        left applied, which pinned the overlay at opacity 0 — an invisible
+        full-screen layer that still swallowed every click. The fade is a plain
+        CSS animation instead, so the element is either mounted or it is not.
+    -->
     <Teleport to="body">
-        <Transition
-            enter-active-class="transition duration-150 ease-out"
-            enter-from-class="opacity-0"
-            leave-active-class="transition duration-100 ease-in"
-            leave-to-class="opacity-0"
-        >
-            <div v-if="open" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div v-if="open" class="ui-modal fixed inset-0 z-50 flex items-center justify-center p-4">
                 <div class="absolute inset-0 bg-slate-900/40" @click="closeOnBackdrop && close()" />
 
                 <div
@@ -82,7 +82,6 @@ onBeforeUnmount(() => {
                         <slot name="footer" />
                     </div>
                 </div>
-            </div>
-        </Transition>
+        </div>
     </Teleport>
 </template>

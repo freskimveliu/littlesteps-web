@@ -25,6 +25,12 @@ class IndexStepsController extends Controller
             $query->where('template_milestone_id', $chapter);
         }
 
+        // sort_order restarts at 10 inside every chapter, so on its own it
+        // interleaves the chapters into nonsense. Group by chapter first.
+        if (! $request->filled('sort')) {
+            $query->orderBy('template_milestone_id');
+        }
+
         $steps = IndexQuery::apply(
             $query,
             $request,

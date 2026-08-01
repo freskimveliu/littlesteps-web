@@ -71,4 +71,22 @@ body {
     .ui-field-error {
         @apply mt-1 text-body text-red-600;
     }
+    .ui-modal {
+        animation: ui-modal-in 140ms ease-out;
+    }
+}
+
+@keyframes ui-modal-in {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ui-modal {
+        animation: none;
+    }
 }
