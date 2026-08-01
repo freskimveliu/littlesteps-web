@@ -6,7 +6,6 @@ namespace App\Models;
 
 use App\Enums\Icon;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -48,11 +47,5 @@ class ChildChapter extends Model
     public function isUnlockedFor(Child $child): bool
     {
         return $this->months_from === null || $child->ageInMonths() >= $this->months_from;
-    }
-
-    /** @param Builder<$this> $query */
-    public function scopeVisible(Builder $query): void
-    {
-        $query->where('is_hidden', false);
     }
 }

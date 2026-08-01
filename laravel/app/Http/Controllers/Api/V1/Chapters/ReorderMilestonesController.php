@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Http\Controllers\Api\V1\Milestones;
+namespace App\Http\Controllers\Api\V1\Chapters;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ChildChapterResource;

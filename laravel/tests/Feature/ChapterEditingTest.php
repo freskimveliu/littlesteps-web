@@ -65,6 +65,59 @@ it('refuses an ordering that is not the chapter it belongs to', function () {
     ])->assertStatus(422);
 });
 
+it('reorders the chapters themselves', function () {
+    [, $child] = family(ageMonths: 6);
+    $ids = $child->chapters()->orderBy('sort_order')->pluck('id')->all();
+
+    $reversed = array_reverse($ids);
+
+    $this->postJson("/api/v1/children/{$child->id}/chapters/reorder", ['chapters' => $reversed])
+        ->assertOk()
+        ->assertJsonPath('data.0.id', $reversed[0]);
+
+    expect($child->chapters()->orderBy('sort_order')->pluck('id')->all())->toBe($reversed);
+});
+
+it('refuses a chapter ordering that is not this child', function () {
+    [, $other] = family(ageMonths: 6);
+    $strangers = $other->chapters()->pluck('id')->all();
+
+    // Signs in as the second parent, so the request below is theirs.
+    [, $child] = family(ageMonths: 6);
+
+    $this->postJson("/api/v1/children/{$child->id}/chapters/reorder", ['chapters' => $strangers])
+        ->assertStatus(422);
+});
+
+it('refuses to move a milestone into a chapter the child has not reached', function () {
+    [$user, $child] = family(ageMonths: 6);
+
+    $locked = $child->chapters()->where('months_from', '>', $child->ageInMonths())->first();
+    $milestone = $child->milestones()->create([
+        'child_chapter_id' => $child->chapters()->first()->id,
+        'name' => 'Ours',
+        'sort_order' => 10,
+        'is_editable' => true,
+        'created_by_user_id' => $user->id,
+    ]);
+
+    $this->patchJson("/api/v1/children/{$child->id}/milestones/{$milestone->id}", [
+        'child_chapter_id' => $locked->id,
+    ])->assertJsonValidationErrorFor('child_chapter_id');
+
+    expect($milestone->fresh()->child_chapter_id)->not->toBe($locked->id);
+});
+
+it('refuses to add a milestone to a chapter the child has not reached', function () {
+    [, $child] = family(ageMonths: 6);
+    $locked = $child->chapters()->where('months_from', '>', $child->ageInMonths())->first();
+
+    $this->postJson("/api/v1/children/{$child->id}/milestones", [
+        'child_chapter_id' => $locked->id,
+        'name' => 'Too soon',
+    ])->assertJsonValidationErrorFor('child_chapter_id');
+});
+
 it('adds a chapter of the parents own, worth no xp', function () {
     [, $child] = family(ageMonths: 6);
 

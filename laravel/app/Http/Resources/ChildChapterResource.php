@@ -30,7 +30,6 @@ class ChildChapterResource extends JsonResource
             'xp' => $this->xp,
             'sortOrder' => $this->sort_order,
             'isEditable' => $this->is_editable,
-            'isHidden' => $this->is_hidden,
             'isUnlocked' => $child ? $this->isUnlockedFor($child) : true,
             'isCompleted' => $this->isCompleted(),
             'completedAt' => $this->completed_at?->toIso8601String(),

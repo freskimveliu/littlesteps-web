@@ -15,6 +15,10 @@ use Illuminate\Http\Request;
  * The whole adventure map in one call — every chapter, its milestones, their
  * properties and any memory already written, plus the flags the app must not
  * work out for itself.
+ *
+ * Skipped milestones come back too, carrying isHidden. A parent who skipped
+ * something has to be able to see it to change their mind, and the counts in
+ * the resource already leave them out.
  */
 class IndexChaptersController extends Controller
 {
@@ -23,10 +27,9 @@ class IndexChaptersController extends Controller
         $this->authorize('view', $child);
 
         $chapters = $child->chapters()
-            ->visible()
             ->with([
                 'child',
-                'milestones' => fn ($q) => $q->visible()->orderBy('sort_order')
+                'milestones' => fn ($q) => $q->orderBy('sort_order')
                     ->with(['category', 'properties', 'entry.properties', 'entry.media', 'child']),
             ])
             ->orderBy('sort_order')

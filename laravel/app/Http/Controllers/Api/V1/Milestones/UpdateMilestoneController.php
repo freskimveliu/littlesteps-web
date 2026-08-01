@@ -13,6 +13,7 @@ use App\Models\ChildMilestone;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class UpdateMilestoneController extends Controller
 {
@@ -31,7 +32,15 @@ class UpdateMilestoneController extends Controller
         ]);
 
         if (isset($validated['child_chapter_id'])) {
-            $child->chapters()->findOrFail($validated['child_chapter_id']);
+            $chapter = $child->chapters()->findOrFail($validated['child_chapter_id']);
+
+            // A chapter the child has not grown into yet is a preview, not a
+            // shelf — dropping a milestone in there would hide it from them.
+            if (! $chapter->isUnlockedFor($child)) {
+                throw ValidationException::withMessages([
+                    'child_chapter_id' => 'That chapter has not opened yet.',
+                ]);
+            }
         }
 
         $milestone->update([...$validated, 'updated_by_user_id' => $request->user()->id]);
