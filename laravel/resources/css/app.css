@@ -5,7 +5,318 @@
 @source '../**/*.blade.php';
 @source '../**/*.{js,ts,vue}';
 
+/*
+ * Design tokens ported from cocon-frontend, with LittleSteps' own two brand
+ * colours: violet primary and butter secondary. All variation comes from
+ * opacity rather than a shade ramp, same as the app.
+ */
+@font-face {
+    font-family: 'Baloo 2';
+    src: url('/fonts/baloo2-700.woff2') format('woff2');
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Baloo 2';
+    src: url('/fonts/baloo2-800.woff2') format('woff2');
+    font-weight: 800;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Subset of the same icon font the app draws with, so the mock-ups match it. */
+@font-face {
+    font-family: 'Ionicons';
+    src: url('/fonts/ionicons-subset.woff2') format('woff2');
+    font-weight: 400;
+    font-style: normal;
+    font-display: block;
+}
+
+:root {
+    --color-primary-rgb: 126, 94, 191;
+    --color-secondary-rgb: 27, 23, 37;
+    --color-primary-text-rgb: 255, 255, 255;
+    --color-secondary-text-rgb: 255, 255, 255;
+    --color-primary-accessible-rgb: 106, 74, 171;
+}
+
 @theme {
-    --font-sans: ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    --font-display: 'Baloo 2', ui-rounded, 'Segoe UI', system-ui, sans-serif;
+
+    --color-primary: rgb(var(--color-primary-rgb));
+    --color-secondary: rgb(var(--color-secondary-rgb));
+    --color-primary-text: rgb(var(--color-primary-text-rgb));
+    --color-secondary-text: rgb(var(--color-secondary-text-rgb));
+    --color-primary-accessible: rgb(var(--color-primary-accessible-rgb));
+
+    --color-butter: #ffe5a0;
+    --color-violet-soft: #9878d6;
+    --color-violet-deep: #5b3f94;
+    --color-ink: #1b1725;
+    --color-canvas: #fbf9ff;
+
+    --radius-ui: 7px;
+
+    --text-label: 11px;
+    --text-label--line-height: 1.3;
+    --text-body: 12px;
+    --text-body--line-height: 1.45;
+    --text-card-title: 1rem;
+    --text-card-title--line-height: 1.3;
+}
+
+html,
+body {
+    background-color: #eef2f8;
+}
+
+@layer components {
+    .ui-input {
+        @apply box-border min-h-9 w-full rounded-ui border border-[#e2e8f0] bg-white px-3.5 py-2 text-body text-slate-700 transition-[border-color,box-shadow,background-color] duration-150;
+    }
+    .ui-input::placeholder {
+        @apply text-slate-400;
+    }
+    .ui-input:focus {
+        @apply border-primary bg-white outline-none;
+        box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.12);
+    }
+    .ui-input:disabled,
+    .ui-input[disabled] {
+        @apply cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400 opacity-100;
+    }
+    .ui-input:disabled::placeholder,
+    .ui-input[disabled]::placeholder {
+        @apply text-slate-300;
+    }
+    .ui-input--error {
+        @apply border-red-300;
+    }
+    .ui-input--error:focus {
+        @apply border-red-600;
+        box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.12);
+    }
+    .ui-field-error {
+        @apply mt-1 text-body text-red-600;
+    }
+    .ui-modal {
+        animation: ui-modal-in 140ms ease-out;
+    }
+}
+
+@keyframes ui-modal-in {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ui-modal {
+        animation: none;
+    }
+}
+
+/* ---------------------------------------------------------------- landing */
+
+body:has(.landing-root) {
+    background-color: var(--color-canvas);
+}
+
+html:has(.landing-root) {
+    scroll-behavior: smooth;
+}
+
+.landing-root {
+    font-feature-settings: 'ss01';
+    -webkit-font-smoothing: antialiased;
+}
+
+.landing-root section[id] {
+    scroll-margin-top: 88px;
+}
+
+.ion {
+    font-family: 'Ionicons';
+    font-weight: 400;
+    font-style: normal;
+    line-height: 1;
+    display: inline-block;
+    speak: none;
+    text-rendering: auto;
+}
+
+.reveal {
+    opacity: 0;
+    transform: translateY(28px);
+    transition:
+        opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+        transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+    transition-delay: var(--reveal-delay, 0ms);
+}
+
+.reveal.is-in {
+    opacity: 1;
+    transform: none;
+}
+
+.float-slow {
+    animation: float-y 6s ease-in-out infinite;
+    animation-delay: var(--float-delay, 0s);
+}
+
+.float-fast {
+    animation: float-y 4.2s ease-in-out infinite;
+    animation-delay: var(--float-delay, 0s);
+}
+
+.drift {
+    animation: drift 18s ease-in-out infinite alternate;
+    animation-delay: var(--float-delay, 0s);
+}
+
+.pulse-ring::after {
+    content: '';
+    position: absolute;
+    inset: -6px;
+    border-radius: 9999px;
+    border: 2px solid rgba(var(--color-primary-rgb), 0.35);
+    animation: pulse-ring 2.2s ease-out infinite;
+}
+
+.flicker {
+    animation: flicker 1s ease-in-out infinite;
+    transform-origin: center bottom;
+}
+
+.marquee-track {
+    display: flex;
+    width: max-content;
+    animation: marquee-left 45s linear infinite;
+}
+
+.marquee-track--reverse {
+    animation-name: marquee-right;
+    animation-duration: 52s;
+}
+
+.marquee:hover .marquee-track {
+    animation-play-state: paused;
+}
+
+.sheen {
+    position: relative;
+    overflow: hidden;
+}
+
+.sheen::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 40%;
+    left: -60%;
+    background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.45), transparent);
+    animation: sheen 4.5s ease-in-out infinite;
+}
+
+@keyframes float-y {
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-12px);
+    }
+}
+
+@keyframes drift {
+    0% {
+        transform: translate3d(0, 0, 0) scale(1);
+    }
+    50% {
+        transform: translate3d(3%, -4%, 0) scale(1.08);
+    }
+    100% {
+        transform: translate3d(-3%, 3%, 0) scale(0.96);
+    }
+}
+
+@keyframes pulse-ring {
+    0% {
+        transform: scale(0.9);
+        opacity: 0.9;
+    }
+    70% {
+        transform: scale(1.35);
+        opacity: 0;
+    }
+    100% {
+        opacity: 0;
+    }
+}
+
+@keyframes flicker {
+    0%,
+    100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.18);
+    }
+}
+
+/* The track holds the list twice, so a 50% shift loops seamlessly. */
+@keyframes marquee-left {
+    from {
+        transform: translate3d(0, 0, 0);
+    }
+    to {
+        transform: translate3d(calc(-50% - 0.375rem), 0, 0);
+    }
+}
+
+@keyframes marquee-right {
+    from {
+        transform: translate3d(calc(-50% - 0.375rem), 0, 0);
+    }
+    to {
+        transform: translate3d(0, 0, 0);
+    }
+}
+
+@keyframes sheen {
+    0%,
+    55% {
+        left: -60%;
+    }
+    100% {
+        left: 130%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html:has(.landing-root) {
+        scroll-behavior: auto;
+    }
+    .reveal {
+        opacity: 1;
+        transform: none;
+        transition: none;
+    }
+    .float-slow,
+    .float-fast,
+    .drift,
+    .flicker,
+    .pulse-ring::after,
+    .sheen::after,
+    .marquee-track {
+        animation: none;
+    }
 }

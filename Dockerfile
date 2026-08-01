@@ -36,7 +36,14 @@ RUN apk add --no-cache \
     libpng \
     libwebp \
     libzip \
-    mysql-client
+    mysql-client \
+    # Image optimizers used by spatie/laravel-medialibrary; without these the
+    # optimize() step on a conversion silently does nothing.
+    jpegoptim \
+    optipng \
+    pngquant \
+    gifsicle \
+    libwebp-tools
 
 # PHP extensions
 RUN docker-php-ext-configure gd --with-jpeg --with-webp --with-freetype && \

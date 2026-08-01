@@ -1,0 +1,66 @@
+[
+  {
+    "id": 1,
+    "name": "Firsts",
+    "description": "First smile, first milestones, first word",
+    "icon": "sparkles",
+    "color": "#C08400",
+    "sort_order": 10
+  },
+  {
+    "id": 2,
+    "name": "Growth",
+    "description": "Weight, height, teeth, shoe size",
+    "icon": "trending-up",
+    "color": "#2E9E5B",
+    "sort_order": 20
+  },
+  {
+    "id": 3,
+    "name": "Family",
+    "description": "Family tree, visitors, letters to baby",
+    "icon": "heart",
+    "color": "#E23C68",
+    "sort_order": 30
+  },
+  {
+    "id": 4,
+    "name": "Events",
+    "description": "Birthdays, holidays, trips, ceremonies",
+    "icon": "gift",
+    "color": "#CF5B12",
+    "sort_order": 40
+  },
+  {
+    "id": 5,
+    "name": "Daily Life",
+    "description": "Favorite foods, routines, funny habits",
+    "icon": "sunny",
+    "color": "#9C8A00",
+    "sort_order": 50
+  },
+  {
+    "id": 6,
+    "name": "Emotional",
+    "description": "What makes them laugh, fears, comfort objects",
+    "icon": "cloud",
+    "color": "#2F91C4",
+    "sort_order": 60
+  },
+  {
+    "id": 7,
+    "name": "Creative",
+    "description": "First drawing, favorite songs, pretend play",
+    "icon": "color-palette",
+    "color": "#8A5CD1",
+    "sort_order": 70
+  },
+  {
+    "id": 8,
+    "name": "Medical",
+    "description": "Vaccinations, doctor visits, allergies",
+    "icon": "medkit",
+    "color": "#DC3A3A",
+    "sort_order": 80
+  }
+]

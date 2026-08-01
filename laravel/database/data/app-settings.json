@@ -1,0 +1,22 @@
+[
+  {
+    "key": "daily_free_entries",
+    "value": "1"
+  },
+  {
+    "key": "free_entry_xp",
+    "value": "10"
+  },
+  {
+    "key": "daily_milestone_entries",
+    "value": "5"
+  },
+  {
+    "key": "max_custom_milestones_per_chapter",
+    "value": "10"
+  },
+  {
+    "key": "min_milestones_to_complete_chapter",
+    "value": "10"
+  }
+]
