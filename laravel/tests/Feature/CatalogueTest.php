@@ -52,12 +52,12 @@ it('gives every chapter enough steps to be completable', function () {
 
 it('orders age-anchored steps by age, so Month 2 never follows Month 3', function () {
     $months = TemplateStep::query()
-        ->whereIn('slug', ['growth-1mo', 'growth-2mo', 'growth-3mo'])
+        ->whereIn('name', ['Month 1', 'Month 2', 'Month 3'])
         ->orderBy('sort_order')
-        ->pluck('slug')
+        ->pluck('name')
         ->all();
 
-    expect($months)->toBe(['growth-1mo', 'growth-2mo', 'growth-3mo']);
+    expect($months)->toBe(['Month 1', 'Month 2', 'Month 3']);
 });
 
 it('keeps every step ordered by months_from within its chapter', function () {
@@ -71,13 +71,13 @@ it('keeps every step ordered by months_from within its chapter', function () {
 });
 
 it('maps measurements onto chartable keys and everything else onto custom', function () {
-    $birth = TemplateStep::where('slug', 'birth-day')->with('properties')->first();
+    $birth = TemplateStep::where('name', 'Birth Day')->with('properties')->first();
 
     expect($birth->properties->pluck('key')->all())->toBe([
         PropertyKey::Time, PropertyKey::Length, PropertyKey::Weight, PropertyKey::Custom,
     ])->and($birth->properties->last()->name)->toBe('Place');
 
-    $shoes = TemplateStep::where('slug', 'first-shoes')->with('properties')->first();
+    $shoes = TemplateStep::where('name', 'First Pair of Shoes')->with('properties')->first();
 
     expect($shoes->properties->pluck('key')->unique()->all())->toBe([PropertyKey::Custom])
         ->and($shoes->properties->pluck('name')->all())->toBe(['Shoe Size', 'Brand or Style']);

@@ -18,7 +18,6 @@ return new class extends Migration
     {
         Schema::create('categories', function (Blueprint $table) {
             $table->id();
-            $table->string('slug')->unique();
             $table->string('name');
             $table->string('description')->nullable();
             $table->string('icon');
@@ -30,7 +29,6 @@ return new class extends Migration
 
         Schema::create('template_milestones', function (Blueprint $table) {
             $table->id();
-            $table->string('slug')->unique();
             $table->string('name');
             $table->string('description')->nullable();
             $table->string('icon');
@@ -47,7 +45,6 @@ return new class extends Migration
 
         Schema::create('template_steps', function (Blueprint $table) {
             $table->id();
-            $table->string('slug')->unique();
             $table->foreignId('template_milestone_id')->constrained()->cascadeOnDelete();
             $table->foreignId('category_id')->constrained();
             $table->string('name');
@@ -85,7 +82,6 @@ return new class extends Migration
 
         Schema::create('template_achievements', function (Blueprint $table) {
             $table->id();
-            $table->string('slug')->unique();
             $table->string('name');
             $table->string('description')->nullable();
             $table->string('icon');

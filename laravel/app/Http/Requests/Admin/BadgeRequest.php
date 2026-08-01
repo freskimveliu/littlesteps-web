@@ -15,10 +15,8 @@ class BadgeRequest extends FormRequest
     /** @return array<string, mixed> */
     public function rules(): array
     {
-        $id = $this->route('badge')?->id;
 
         return [
-            'slug' => ['required', 'string', 'max:60', Rule::unique('template_achievements', 'slug')->ignore($id)],
             'name' => ['required', 'string', 'max:60'],
             'description' => ['nullable', 'string', 'max:255'],
             'icon' => ['required', Rule::enum(Icon::class)],

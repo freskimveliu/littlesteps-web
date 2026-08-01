@@ -13,10 +13,8 @@ class CategoryRequest extends FormRequest
     /** @return array<string, mixed> */
     public function rules(): array
     {
-        $id = $this->route('category')?->id;
 
         return [
-            'slug' => ['required', 'string', 'max:60', Rule::unique('categories', 'slug')->ignore($id)],
             'name' => ['required', 'string', 'max:60'],
             'description' => ['nullable', 'string', 'max:255'],
             'icon' => ['required', Rule::enum(Icon::class)],

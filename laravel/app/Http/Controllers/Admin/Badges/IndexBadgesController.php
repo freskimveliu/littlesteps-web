@@ -21,7 +21,7 @@ class IndexBadgesController extends Controller
         $badges = IndexQuery::apply(
             TemplateAchievement::query(),
             $request,
-            searchable: ['name', 'slug', 'description'],
+            searchable: ['name', 'description'],
             sortable: ['name', 'metric', 'threshold', 'xp', 'sort_order'],
         )->get();
 

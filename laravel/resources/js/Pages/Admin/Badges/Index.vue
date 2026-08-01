@@ -25,7 +25,6 @@ import { useIndexFilters } from '../../../composables/useIndexFilters';
 
 interface Badge {
     id: number;
-    slug: string;
     name: string;
     description: string | null;
     icon: string;
@@ -69,7 +68,6 @@ const editing = ref<Badge | null>(null);
 const toDelete = ref<Badge | null>(null);
 
 const form = useForm({
-    slug: '',
     name: '',
     description: '',
     icon: 'star',
@@ -84,7 +82,6 @@ const form = useForm({
 function startCreate() {
     editing.value = null;
     form.defaults({
-        slug: '',
         name: '',
         description: '',
         icon: 'star',
@@ -103,7 +100,6 @@ function startCreate() {
 function startEdit(badge: Badge) {
     editing.value = badge;
     form.defaults({
-        slug: badge.slug,
         name: badge.name,
         description: badge.description ?? '',
         icon: badge.icon,
@@ -217,7 +213,6 @@ function performDelete() {
             <form id="badge-form" class="flex flex-col gap-4" @submit.prevent="submit">
                 <div class="grid grid-cols-2 gap-3">
                     <UiInput v-model="form.name" label="Name" required :error="form.errors.name" />
-                    <UiInput v-model="form.slug" label="Slug" required :error="form.errors.slug" />
                 </div>
 
                 <UiInput v-model="form.description" label="Description" :error="form.errors.description" />

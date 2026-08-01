@@ -1,6 +1,6 @@
 [
   {
-    "slug": "0-3mo",
+    "id": 1,
     "name": "The First Hello",
     "description": "Those first blurry, sleepless, wonderful weeks",
     "icon": "happy",
@@ -9,7 +9,7 @@
     "sort_order": 10
   },
   {
-    "slug": "3-6mo",
+    "id": 2,
     "name": "Waking to the World",
     "description": "Laughs, rolls, and the first real look around",
     "icon": "search",
@@ -18,7 +18,7 @@
     "sort_order": 20
   },
   {
-    "slug": "6-12mo",
+    "id": 3,
     "name": "On the Move",
     "description": "Sitting, crawling, and suddenly nowhere is safe",
     "icon": "sunny",
@@ -27,7 +27,7 @@
     "sort_order": 30
   },
   {
-    "slug": "1-2y",
+    "id": 4,
     "name": "Little Explorer",
     "description": "Walking, talking, and testing every limit",
     "icon": "walk",
@@ -36,7 +36,7 @@
     "sort_order": 40
   },
   {
-    "slug": "2-3y",
+    "id": 5,
     "name": "Words and Wonder",
     "description": "Questions, opinions, and very big feelings",
     "icon": "chatbubbles",
@@ -45,7 +45,7 @@
     "sort_order": 50
   },
   {
-    "slug": "3-4y",
+    "id": 6,
     "name": "A Mind of Their Own",
     "description": "Why? Why? Why? — and stories all their own",
     "icon": "cloud",
@@ -54,7 +54,7 @@
     "sort_order": 60
   },
   {
-    "slug": "4-5y",
+    "id": 7,
     "name": "Making and Believing",
     "description": "Drawing, building, pretending, befriending",
     "icon": "color-palette",
@@ -63,7 +63,7 @@
     "sort_order": 70
   },
   {
-    "slug": "5-6y",
+    "id": 8,
     "name": "Ready for the World",
     "description": "School, a lost tooth, and one very big kid",
     "icon": "star",

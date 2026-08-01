@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['slug', 'name', 'description', 'icon', 'color', 'sort_order', 'is_active'])]
+#[Fillable(['name', 'description', 'icon', 'color', 'sort_order', 'is_active'])]
 class Category extends Model
 {
     protected function casts(): array

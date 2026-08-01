@@ -18,8 +18,13 @@ use RuntimeException;
 /**
  * Loads database/data/*.json into the catalogue.
  *
- * Matched on slug so re-running updates in place: an admin's later edits to a
- * row survive, and only the columns the JSON actually names get rewritten.
+ * Matched on the id carried in the JSON, so re-running updates each row in
+ * place rather than inserting a second copy — and a child's template_*_id
+ * keeps pointing at the same catalogue row it was provisioned from.
+ *
+ * forceFill rather than updateOrCreate: id is not fillable, so fill() would
+ * drop it and let auto-increment pick a different one, quietly breaking every
+ * reference the JSON makes between a step, its chapter and its category.
  */
 class CatalogueSeeder extends Seeder
 {
@@ -31,6 +36,23 @@ class CatalogueSeeder extends Seeder
         $this->achievements();
         $this->prompts();
         $this->appSettings();
+    }
+
+    /**
+     * @template T of \Illuminate\Database\Eloquent\Model
+     *
+     * @param  T  $model
+     * @param  array<string, mixed>  $row
+     * @return T
+     */
+    private static function put($model, array $row)
+    {
+        $existing = $model::query()->find($row['id']);
+        $record = $existing ?? $model->newInstance();
+
+        $record->forceFill($row)->save();
+
+        return $record;
     }
 
     /** @return array<int, array<string, mixed>> */
@@ -48,7 +70,7 @@ class CatalogueSeeder extends Seeder
     private function categories(): void
     {
         foreach ($this->read('categories') as $row) {
-            Category::updateOrCreate(['slug' => $row['slug']], $row);
+            self::put(new Category, $row);
         }
 
         $this->command?->info('Categories: '.Category::count());
@@ -57,23 +79,11 @@ class CatalogueSeeder extends Seeder
     private function milestonesAndSteps(): void
     {
         foreach ($this->read('milestones') as $row) {
-            TemplateMilestone::updateOrCreate(['slug' => $row['slug']], $row);
+            self::put(new TemplateMilestone, $row);
         }
 
-        $milestones = TemplateMilestone::pluck('id', 'slug');
-        $categories = Category::pluck('id', 'slug');
-
         foreach ($this->read('steps') as $row) {
-            $step = TemplateStep::updateOrCreate(['slug' => $row['slug']], [
-                'template_milestone_id' => $milestones[$row['milestone']],
-                'category_id' => $categories[$row['category']],
-                'name' => $row['name'],
-                'description' => $row['description'],
-                'icon' => $row['icon'],
-                'months_from' => $row['months_from'],
-                'xp' => $row['xp'],
-                'sort_order' => $row['sort_order'],
-            ]);
+            $step = self::put(new TemplateStep, collect($row)->except('properties')->all());
 
             // Properties are positional, not keyed, so the set is replaced wholesale.
             $step->properties()->delete();
@@ -93,7 +103,7 @@ class CatalogueSeeder extends Seeder
     private function levels(): void
     {
         foreach ($this->read('levels') as $row) {
-            TemplateLevel::updateOrCreate(['min_xp' => $row['min_xp']], $row);
+            self::put(new TemplateLevel, $row);
         }
 
         $this->command?->info('Levels: '.TemplateLevel::count());
@@ -102,7 +112,7 @@ class CatalogueSeeder extends Seeder
     private function achievements(): void
     {
         foreach ($this->read('achievements') as $row) {
-            TemplateAchievement::updateOrCreate(['slug' => $row['slug']], $row);
+            self::put(new TemplateAchievement, $row);
         }
 
         $this->command?->info(
@@ -113,19 +123,8 @@ class CatalogueSeeder extends Seeder
 
     private function prompts(): void
     {
-        $categories = Category::pluck('id', 'slug');
-
-        TemplatePrompt::query()->delete();
-
         foreach ($this->read('prompts') as $row) {
-            TemplatePrompt::create([
-                'category_id' => $categories[$row['category']] ?? null,
-                'name' => $row['name'],
-                'icon' => $row['icon'],
-                'months_from' => $row['months_from'],
-                'months_to' => $row['months_to'],
-                'sort_order' => $row['sort_order'],
-            ]);
+            self::put(new TemplatePrompt, $row);
         }
 
         $this->command?->info('Prompts: '.TemplatePrompt::count());

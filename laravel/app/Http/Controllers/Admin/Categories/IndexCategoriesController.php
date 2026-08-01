@@ -19,8 +19,8 @@ class IndexCategoriesController extends Controller
         $categories = IndexQuery::apply(
             Category::query()->withCount('templateSteps'),
             $request,
-            searchable: ['name', 'slug', 'description'],
-            sortable: ['name', 'slug', 'sort_order', 'template_steps_count'],
+            searchable: ['name', 'description'],
+            sortable: ['name', 'sort_order', 'template_steps_count'],
         )->get();
 
         return Inertia::render('Admin/Categories/Index', [

@@ -19,8 +19,8 @@ class IndexChaptersController extends Controller
         $chapters = IndexQuery::apply(
             TemplateMilestone::query()->withCount('steps'),
             $request,
-            searchable: ['name', 'slug', 'description'],
-            sortable: ['name', 'slug', 'months_from', 'xp', 'sort_order', 'steps_count'],
+            searchable: ['name', 'description'],
+            sortable: ['name', 'months_from', 'xp', 'sort_order', 'steps_count'],
         )->get();
 
         return Inertia::render('Admin/Chapters/Index', [

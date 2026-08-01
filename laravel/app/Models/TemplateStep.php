@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[Fillable([
-    'slug', 'template_milestone_id', 'category_id', 'name', 'description',
+    'template_milestone_id', 'category_id', 'name', 'description',
     'icon', 'months_from', 'xp', 'sort_order', 'is_editable', 'is_active',
 ])]
 class TemplateStep extends Model

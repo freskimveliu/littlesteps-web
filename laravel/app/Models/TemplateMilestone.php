@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-#[Fillable(['slug', 'name', 'description', 'icon', 'months_from', 'xp', 'sort_order', 'is_editable', 'is_active'])]
+#[Fillable(['name', 'description', 'icon', 'months_from', 'xp', 'sort_order', 'is_editable', 'is_active'])]
 class TemplateMilestone extends Model
 {
     use SoftDeletes;

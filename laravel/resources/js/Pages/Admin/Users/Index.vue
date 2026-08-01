@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import AdminLayout from '../../../layouts/AdminLayout.vue';
 import UiPageHeader from '../../../components/ui/UiPageHeader.vue';
@@ -42,11 +43,13 @@ const { search, searching, sortKey, sortOrder, toggleSort, visit } = useIndexFil
 });
 
 const tabs = [
-    { key: null, label: 'All', count: props.counts.all },
-    { key: 'admins', label: 'Admins', count: props.counts.admins },
-    { key: 'guests', label: 'Not signed up', count: props.counts.guests },
-    { key: 'deleted', label: 'Deleting', count: props.counts.deleted },
+    { key: null, label: 'Everyone', count: props.counts.all, hint: 'Every account, admins included' },
+    { key: 'admins', label: 'Admins', count: props.counts.admins, hint: 'Can reach this console' },
+    { key: 'guests', label: 'Not signed up', count: props.counts.guests, hint: 'Using the app with no email yet' },
+    { key: 'deleted', label: 'Deleting', count: props.counts.deleted, hint: 'Inside the 30-day grace period' },
 ];
+
+const active = computed(() => tabs.find((t) => t.key === (props.filters.filter ?? null)) ?? tabs[0]);
 
 function pick(key: string | null) {
     router.get('/admin/users', { filter: key ?? undefined }, { preserveState: false });
@@ -59,21 +62,33 @@ function pick(key: string | null) {
     <AdminLayout>
         <UiPageHeader
             title="Parents"
-            :subtitle="`${users.total} accounts. A user exists from first launch, before anyone types an email.`"
+            :subtitle="`${counts.all} accounts. A user exists from first launch, before anyone types an email.`"
         />
 
-        <div class="mb-4 flex gap-2">
-            <UiButton
+        <div class="mb-1 inline-flex rounded-ui border border-slate-200 bg-white p-1">
+            <button
                 v-for="tab in tabs"
                 :key="tab.label"
-                variant="outline"
-                :active="(filters.filter ?? null) === tab.key"
+                type="button"
+                :disabled="tab.count === 0 && tab.key !== null"
+                class="inline-flex items-center gap-2 rounded-ui px-3 py-1.5 text-body font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-40"
+                :class="
+                    (filters.filter ?? null) === tab.key
+                        ? 'bg-primary text-primary-text'
+                        : 'text-slate-600 hover:bg-slate-50'
+                "
                 @click="pick(tab.key)"
             >
                 {{ tab.label }}
-                <UiBadge tone="neutral">{{ tab.count }}</UiBadge>
-            </UiButton>
+                <span
+                    class="rounded-full px-1.5 text-label"
+                    :class="(filters.filter ?? null) === tab.key ? 'bg-white/25' : 'bg-slate-100 text-slate-500'"
+                >
+                    {{ tab.count }}
+                </span>
+            </button>
         </div>
+        <p class="mb-4 text-label text-slate-400">{{ active.hint }}</p>
 
         <UiTable :empty="users.data.length === 0" empty-title="No accounts match">
             <template #toolbar>

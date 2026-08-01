@@ -72,7 +72,7 @@ it('only counts a step as on time when it was caught at the right age', function
 
 it('unlocks a badge and awards its xp once the rule passes', function () {
     [, $child] = family();
-    $badge = TemplateAchievement::where('slug', 'first-week')->first();
+    $badge = TemplateAchievement::where('name', 'First Week')->first();
 
     memoriesOn($child, collect(range(0, 6))->map(fn ($i) => now()->subDays($i)->toDateString())->all());
 
@@ -90,7 +90,7 @@ it('never awards the same badge twice', function () {
     $second = app(App\Actions\Progress\EvaluateAchievements::class)->handle($child->fresh());
 
     expect($second)->toBeEmpty()
-        ->and($child->achievements()->where('template_achievement_id', TemplateAchievement::where('slug', 'first-week')->value('id'))->count())
+        ->and($child->achievements()->where('template_achievement_id', TemplateAchievement::where('name', 'First Week')->value('id'))->count())
         ->toBe(1);
 });
 
@@ -155,7 +155,7 @@ it('reports progress toward every badge', function () {
 
     $response = $this->getJson("/api/v1/children/{$child->id}/progress")->assertOk();
 
-    $firstWeek = collect($response->json('data.badges'))->firstWhere('slug', 'first-week');
+    $firstWeek = collect($response->json('data.badges'))->firstWhere('name', 'First Week');
 
     expect($firstWeek['progress'])->toBe(2)
         ->and($firstWeek['threshold'])->toBe(7)

@@ -13,10 +13,8 @@ class ChapterRequest extends FormRequest
     /** @return array<string, mixed> */
     public function rules(): array
     {
-        $id = $this->route('chapter')?->id;
 
         return [
-            'slug' => ['required', 'string', 'max:60', Rule::unique('template_milestones', 'slug')->ignore($id)],
             'name' => ['required', 'string', 'max:80'],
             'description' => ['nullable', 'string', 'max:255'],
             'icon' => ['required', Rule::enum(Icon::class)],

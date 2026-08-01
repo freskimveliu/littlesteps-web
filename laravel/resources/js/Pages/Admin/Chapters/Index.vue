@@ -25,7 +25,6 @@ import { useIndexFilters } from '../../../composables/useIndexFilters';
 
 interface Chapter {
     id: number;
-    slug: string;
     name: string;
     description: string | null;
     icon: string;
@@ -55,7 +54,6 @@ const editing = ref<Chapter | null>(null);
 const toDelete = ref<Chapter | null>(null);
 
 const form = useForm({
-    slug: '',
     name: '',
     description: '',
     icon: 'star',
@@ -69,7 +67,6 @@ const form = useForm({
 function startCreate() {
     editing.value = null;
     form.defaults({
-        slug: '',
         name: '',
         description: '',
         icon: 'star',
@@ -87,7 +84,6 @@ function startCreate() {
 function startEdit(chapter: Chapter) {
     editing.value = chapter;
     form.defaults({
-        slug: chapter.slug,
         name: chapter.name,
         description: chapter.description ?? '',
         icon: chapter.icon,
@@ -139,7 +135,6 @@ function performDelete() {
                 <UiSortableTableHeader sort-key="name" :active-key="sortKey" :active-order="sortOrder" @sort="toggleSort">
                     Name
                 </UiSortableTableHeader>
-                <UiTableHeader>Slug</UiTableHeader>
                 <UiSortableTableHeader
                     sort-key="months_from"
                     align="right"
@@ -179,7 +174,6 @@ function performDelete() {
                         </div>
                         <p v-if="chapter.description" class="text-label text-slate-400">{{ chapter.description }}</p>
                     </UiTableCell>
-                    <UiTableCell cell-class="text-slate-500">{{ chapter.slug }}</UiTableCell>
                     <UiTableCell align="right">{{ chapter.months_from }} mo</UiTableCell>
                     <UiTableCell align="right">
                         <Link
@@ -207,7 +201,6 @@ function performDelete() {
         <UiModal v-model="formOpen" :title="editing ? 'Edit chapter' : 'New chapter'">
             <form id="chapter-form" class="flex flex-col gap-4" @submit.prevent="submit">
                 <UiInput v-model="form.name" label="Name" required :error="form.errors.name" />
-                <UiInput v-model="form.slug" label="Slug" required :error="form.errors.slug" />
                 <UiInput v-model="form.description" label="Description" :error="form.errors.description" />
                 <UiSelect
                     v-model="form.icon"

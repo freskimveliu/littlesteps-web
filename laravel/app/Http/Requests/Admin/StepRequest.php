@@ -14,10 +14,8 @@ class StepRequest extends FormRequest
     /** @return array<string, mixed> */
     public function rules(): array
     {
-        $id = $this->route('step')?->id;
 
         return [
-            'slug' => ['required', 'string', 'max:60', Rule::unique('template_steps', 'slug')->ignore($id)],
             'template_milestone_id' => ['required', 'integer', 'exists:template_milestones,id'],
             'category_id' => ['required', 'integer', 'exists:categories,id'],
             'name' => ['required', 'string', 'max:80'],

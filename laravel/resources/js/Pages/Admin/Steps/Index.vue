@@ -32,7 +32,6 @@ interface Property {
 
 interface Step {
     id: number;
-    slug: string;
     name: string;
     description: string | null;
     icon: string | null;
@@ -74,7 +73,6 @@ const editing = ref<Step | null>(null);
 const toDelete = ref<Step | null>(null);
 
 const form = useForm({
-    slug: '',
     template_milestone_id: props.chapters[0]?.id ?? 0,
     category_id: props.categories[0]?.id ?? 0,
     name: '',
@@ -90,7 +88,6 @@ const form = useForm({
 function startCreate() {
     editing.value = null;
     form.defaults({
-        slug: '',
         template_milestone_id: Number(chapterFilter.value) || props.chapters[0]?.id || 0,
         category_id: props.categories[0]?.id ?? 0,
         name: '',
@@ -110,7 +107,6 @@ function startCreate() {
 function startEdit(step: Step) {
     editing.value = step;
     form.defaults({
-        slug: step.slug,
         template_milestone_id: step.template_milestone_id,
         category_id: step.category_id,
         name: step.name,
@@ -207,7 +203,6 @@ function performDelete() {
                 <UiTableRow v-for="step in steps.data" :key="step.id">
                     <UiTableCell>
                         <span class="font-medium text-slate-900">{{ step.name }}</span>
-                        <p class="text-label text-slate-400">{{ step.slug }}</p>
                     </UiTableCell>
                     <UiTableCell cell-class="text-slate-500">{{ step.milestone?.name }}</UiTableCell>
                     <UiTableCell>
@@ -268,7 +263,6 @@ function performDelete() {
             <form id="step-form" class="flex flex-col gap-4" @submit.prevent="submit">
                 <div class="grid grid-cols-2 gap-3">
                     <UiInput v-model="form.name" label="Name" required :error="form.errors.name" />
-                    <UiInput v-model="form.slug" label="Slug" required :error="form.errors.slug" />
                 </div>
 
                 <UiInput v-model="form.description" label="Description" :error="form.errors.description" />

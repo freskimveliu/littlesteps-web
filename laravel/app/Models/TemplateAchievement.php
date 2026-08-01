@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[Fillable([
-    'slug', 'name', 'description', 'icon', 'metric',
+    'name', 'description', 'icon', 'metric',
     'threshold', 'xp', 'reward', 'sort_order', 'is_active',
 ])]
 class TemplateAchievement extends Model

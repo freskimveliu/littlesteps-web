@@ -1,8 +1,5 @@
 [
   {
-    "slug": "birth-day",
-    "milestone": "0-3mo",
-    "category": "growth",
     "name": "Birth Day",
     "description": "The day that changed everything.",
     "icon": "star-outline",
@@ -30,144 +27,144 @@
         "sort_order": 40
       }
     ],
-    "sort_order": 10
+    "sort_order": 10,
+    "id": 1,
+    "template_milestone_id": 1,
+    "category_id": 2
   },
   {
-    "slug": "coming-home",
-    "milestone": "0-3mo",
-    "category": "family",
     "name": "Coming Home",
     "description": "The day you brought them home.",
     "icon": "home-outline",
     "months_from": 0,
     "xp": 25,
     "properties": [],
-    "sort_order": 20
+    "sort_order": 20,
+    "id": 2,
+    "template_milestone_id": 1,
+    "category_id": 3
   },
   {
-    "slug": "family-photo",
-    "milestone": "0-3mo",
-    "category": "family",
     "name": "First Family Photo",
     "description": "The whole family together.",
     "icon": "camera-outline",
     "months_from": 0,
     "xp": 20,
     "properties": [],
-    "sort_order": 30
+    "sort_order": 30,
+    "id": 3,
+    "template_milestone_id": 1,
+    "category_id": 3
   },
   {
-    "slug": "meeting-grandparents",
-    "milestone": "0-3mo",
-    "category": "family",
     "name": "Meeting Grandparents",
     "description": "The first time they met grandma and grandpa.",
     "icon": "heart-outline",
     "months_from": 0,
     "xp": 20,
     "properties": [],
-    "sort_order": 40
+    "sort_order": 40,
+    "id": 4,
+    "template_milestone_id": 1,
+    "category_id": 3
   },
   {
-    "slug": "meeting-siblings",
-    "milestone": "0-3mo",
-    "category": "family",
     "name": "Meeting Siblings",
     "description": "Big brother or sister, meet the baby!",
     "icon": "people-outline",
     "months_from": 0,
     "xp": 20,
     "properties": [],
-    "sort_order": 50
+    "sort_order": 50,
+    "id": 5,
+    "template_milestone_id": 1,
+    "category_id": 3
   },
   {
-    "slug": "first-checkup",
-    "milestone": "0-3mo",
-    "category": "medical",
     "name": "First Doctor Visit",
     "description": "Meeting the pediatrician.",
     "icon": "medkit-outline",
     "months_from": 0,
     "xp": 25,
     "properties": [],
-    "sort_order": 60
+    "sort_order": 60,
+    "id": 6,
+    "template_milestone_id": 1,
+    "category_id": 8
   },
   {
-    "slug": "first-vaccination",
-    "milestone": "0-3mo",
-    "category": "medical",
     "name": "First Vaccination",
     "description": "A little pinch for a big protection.",
     "icon": "shield-checkmark-outline",
     "months_from": 0,
     "xp": 25,
     "properties": [],
-    "sort_order": 70
+    "sort_order": 70,
+    "id": 7,
+    "template_milestone_id": 1,
+    "category_id": 8
   },
   {
-    "slug": "first-smile",
-    "milestone": "0-3mo",
-    "category": "firsts",
     "name": "First Smile",
     "description": "That heart-melting first real smile.",
     "icon": "happy-outline",
     "months_from": 0,
     "xp": 35,
     "properties": [],
-    "sort_order": 80
+    "sort_order": 80,
+    "id": 8,
+    "template_milestone_id": 1,
+    "category_id": 1
   },
   {
-    "slug": "first-grasp",
-    "milestone": "0-3mo",
-    "category": "firsts",
     "name": "First Grasp",
     "description": "Tiny fingers wrapping around yours.",
     "icon": "hand-left-outline",
     "months_from": 0,
     "xp": 35,
     "properties": [],
-    "sort_order": 90
+    "sort_order": 90,
+    "id": 9,
+    "template_milestone_id": 1,
+    "category_id": 1
   },
   {
-    "slug": "first-coo",
-    "milestone": "0-3mo",
-    "category": "firsts",
     "name": "First Coo",
     "description": "Those adorable first sounds.",
     "icon": "chatbubble-outline",
     "months_from": 0,
     "xp": 35,
     "properties": [],
-    "sort_order": 100
+    "sort_order": 100,
+    "id": 10,
+    "template_milestone_id": 1,
+    "category_id": 1
   },
   {
-    "slug": "sleeping-routine",
-    "milestone": "0-3mo",
-    "category": "daily-life",
     "name": "Sleeping Routine",
     "description": "How do they like to sleep?",
     "icon": "moon-outline",
     "months_from": 0,
     "xp": 20,
     "properties": [],
-    "sort_order": 110
+    "sort_order": 110,
+    "id": 11,
+    "template_milestone_id": 1,
+    "category_id": 5
   },
   {
-    "slug": "bath-time",
-    "milestone": "0-3mo",
-    "category": "daily-life",
     "name": "First Bath",
     "description": "Splash splash!",
     "icon": "water-outline",
     "months_from": 0,
     "xp": 20,
     "properties": [],
-    "sort_order": 120
+    "sort_order": 120,
+    "id": 12,
+    "template_milestone_id": 1,
+    "category_id": 5
   },
   {
-    "slug": "growth-1mo",
-    "milestone": "0-3mo",
-    "category": "growth",
     "name": "Month 1",
     "description": "One month of growing!",
     "icon": "trending-up-outline",
@@ -185,12 +182,12 @@
         "sort_order": 20
       }
     ],
-    "sort_order": 130
+    "sort_order": 130,
+    "id": 13,
+    "template_milestone_id": 1,
+    "category_id": 2
   },
   {
-    "slug": "growth-2mo",
-    "milestone": "0-3mo",
-    "category": "growth",
     "name": "Month 2",
     "description": "Two months already!",
     "icon": "trending-up-outline",
@@ -208,12 +205,12 @@
         "sort_order": 20
       }
     ],
-    "sort_order": 140
+    "sort_order": 140,
+    "id": 14,
+    "template_milestone_id": 1,
+    "category_id": 2
   },
   {
-    "slug": "growth-3mo",
-    "milestone": "0-3mo",
-    "category": "growth",
     "name": "Month 3",
     "description": "A quarter year of growing!",
     "icon": "trending-up-outline",
@@ -231,132 +228,132 @@
         "sort_order": 20
       }
     ],
-    "sort_order": 150
+    "sort_order": 150,
+    "id": 15,
+    "template_milestone_id": 1,
+    "category_id": 2
   },
   {
-    "slug": "first-laugh",
-    "milestone": "3-6mo",
-    "category": "firsts",
     "name": "First Laugh",
     "description": "The sound you will never forget.",
     "icon": "happy-outline",
     "months_from": 3,
     "xp": 35,
     "properties": [],
-    "sort_order": 10
+    "sort_order": 10,
+    "id": 16,
+    "template_milestone_id": 2,
+    "category_id": 1
   },
   {
-    "slug": "first-rollover",
-    "milestone": "3-6mo",
-    "category": "firsts",
     "name": "First Rollover",
     "description": "Rolling over all by themselves!",
     "icon": "refresh-outline",
     "months_from": 3,
     "xp": 35,
     "properties": [],
-    "sort_order": 20
+    "sort_order": 20,
+    "id": 17,
+    "template_milestone_id": 2,
+    "category_id": 1
   },
   {
-    "slug": "first-tooth",
-    "milestone": "3-6mo",
-    "category": "firsts",
     "name": "First Tooth",
     "description": "That tiny little tooth poking through.",
     "icon": "sparkles-outline",
     "months_from": 3,
     "xp": 35,
     "properties": [],
-    "sort_order": 30
+    "sort_order": 30,
+    "id": 18,
+    "template_milestone_id": 2,
+    "category_id": 1
   },
   {
-    "slug": "belly-laughs",
-    "milestone": "3-6mo",
-    "category": "emotional",
     "name": "Belly Laughs",
     "description": "What cracks them up?",
     "icon": "happy-outline",
     "months_from": 3,
     "xp": 20,
     "properties": [],
-    "sort_order": 40
+    "sort_order": 40,
+    "id": 19,
+    "template_milestone_id": 2,
+    "category_id": 6
   },
   {
-    "slug": "first-toy-play",
-    "milestone": "3-6mo",
-    "category": "creative",
     "name": "First Toy Play",
     "description": "Discovering how things work.",
     "icon": "cube-outline",
     "months_from": 3,
     "xp": 20,
     "properties": [],
-    "sort_order": 50
+    "sort_order": 50,
+    "id": 20,
+    "template_milestone_id": 2,
+    "category_id": 7
   },
   {
-    "slug": "favorite-lullaby",
-    "milestone": "3-6mo",
-    "category": "daily-life",
     "name": "Favorite Lullaby",
     "description": "The song that calms them down.",
     "icon": "musical-notes-outline",
     "months_from": 3,
     "xp": 20,
     "properties": [],
-    "sort_order": 60
+    "sort_order": 60,
+    "id": 21,
+    "template_milestone_id": 2,
+    "category_id": 5
   },
   {
-    "slug": "first-solid-food",
-    "milestone": "3-6mo",
-    "category": "daily-life",
     "name": "First Solid Food",
     "description": "Beyond milk!",
     "icon": "restaurant-outline",
     "months_from": 3,
     "xp": 20,
     "properties": [],
-    "sort_order": 70
+    "sort_order": 70,
+    "id": 22,
+    "template_milestone_id": 2,
+    "category_id": 5
   },
   {
-    "slug": "first-outing-family",
-    "milestone": "3-6mo",
-    "category": "family",
     "name": "First Family Outing",
     "description": "The first adventure as a family.",
     "icon": "car-outline",
     "months_from": 3,
     "xp": 20,
     "properties": [],
-    "sort_order": 80
+    "sort_order": 80,
+    "id": 23,
+    "template_milestone_id": 2,
+    "category_id": 3
   },
   {
-    "slug": "first-holiday",
-    "milestone": "3-6mo",
-    "category": "events",
     "name": "First Holiday Season",
     "description": "Their first experience of holiday magic.",
     "icon": "gift-outline",
     "months_from": 3,
     "xp": 20,
     "properties": [],
-    "sort_order": 90
+    "sort_order": 90,
+    "id": 24,
+    "template_milestone_id": 2,
+    "category_id": 4
   },
   {
-    "slug": "allergies-discovered",
-    "milestone": "3-6mo",
-    "category": "medical",
     "name": "Allergy Discovery",
     "description": "Knowing what to watch for.",
     "icon": "alert-circle-outline",
     "months_from": 3,
     "xp": 20,
     "properties": [],
-    "sort_order": 100
+    "sort_order": 100,
+    "id": 25,
+    "template_milestone_id": 2,
+    "category_id": 8
   },
   {
-    "slug": "growth-4mo",
-    "milestone": "3-6mo",
-    "category": "growth",
     "name": "Month 4",
     "description": "Four months strong!",
     "icon": "trending-up-outline",
@@ -374,12 +371,12 @@
         "sort_order": 20
       }
     ],
-    "sort_order": 110
+    "sort_order": 110,
+    "id": 26,
+    "template_milestone_id": 2,
+    "category_id": 2
   },
   {
-    "slug": "growth-5mo",
-    "milestone": "3-6mo",
-    "category": "growth",
     "name": "Month 5",
     "description": "Five months of wonder!",
     "icon": "trending-up-outline",
@@ -397,24 +394,24 @@
         "sort_order": 20
       }
     ],
-    "sort_order": 120
+    "sort_order": 120,
+    "id": 27,
+    "template_milestone_id": 2,
+    "category_id": 2
   },
   {
-    "slug": "checkup-6mo",
-    "milestone": "3-6mo",
-    "category": "medical",
     "name": "6 Month Checkup",
     "description": "Halfway through the first year!",
     "icon": "medkit-outline",
     "months_from": 6,
     "xp": 25,
     "properties": [],
-    "sort_order": 130
+    "sort_order": 130,
+    "id": 28,
+    "template_milestone_id": 2,
+    "category_id": 8
   },
   {
-    "slug": "growth-6mo",
-    "milestone": "3-6mo",
-    "category": "growth",
     "name": "Month 6",
     "description": "Half a year of growth!",
     "icon": "trending-up-outline",
@@ -432,72 +429,72 @@
         "sort_order": 20
       }
     ],
-    "sort_order": 140
+    "sort_order": 140,
+    "id": 29,
+    "template_milestone_id": 2,
+    "category_id": 2
   },
   {
-    "slug": "peek-a-boo",
-    "milestone": "6-12mo",
-    "category": "creative",
     "name": "Peek-a-Boo!",
     "description": "The world's best game.",
     "icon": "eye-outline",
     "months_from": 6,
     "xp": 20,
     "properties": [],
-    "sort_order": 10
+    "sort_order": 10,
+    "id": 30,
+    "template_milestone_id": 3,
+    "category_id": 7
   },
   {
-    "slug": "first-dance",
-    "milestone": "6-12mo",
-    "category": "creative",
     "name": "First Dance Moves",
     "description": "Grooving to the beat!",
     "icon": "musical-note-outline",
     "months_from": 6,
     "xp": 20,
     "properties": [],
-    "sort_order": 20
+    "sort_order": 20,
+    "id": 31,
+    "template_milestone_id": 3,
+    "category_id": 7
   },
   {
-    "slug": "stranger-anxiety",
-    "milestone": "6-12mo",
-    "category": "emotional",
     "name": "Stranger Awareness",
     "description": "Suddenly, not everyone is okay.",
     "icon": "eye-outline",
     "months_from": 6,
     "xp": 20,
     "properties": [],
-    "sort_order": 30
+    "sort_order": 30,
+    "id": 32,
+    "template_milestone_id": 3,
+    "category_id": 6
   },
   {
-    "slug": "comfort-object",
-    "milestone": "6-12mo",
-    "category": "emotional",
     "name": "Comfort Object",
     "description": "That special blanket or toy.",
     "icon": "shield-outline",
     "months_from": 6,
     "xp": 20,
     "properties": [],
-    "sort_order": 40
+    "sort_order": 40,
+    "id": 33,
+    "template_milestone_id": 3,
+    "category_id": 6
   },
   {
-    "slug": "favorite-food",
-    "milestone": "6-12mo",
-    "category": "daily-life",
     "name": "Favorite Food",
     "description": "The one thing they always want.",
     "icon": "pizza-outline",
     "months_from": 6,
     "xp": 20,
     "properties": [],
-    "sort_order": 50
+    "sort_order": 50,
+    "id": 34,
+    "template_milestone_id": 3,
+    "category_id": 5
   },
   {
-    "slug": "first-shoes",
-    "milestone": "6-12mo",
-    "category": "growth",
     "name": "First Pair of Shoes",
     "description": "Tiny shoes for tiny feet!",
     "icon": "footsteps-outline",
@@ -515,96 +512,96 @@
         "sort_order": 20
       }
     ],
-    "sort_order": 60
+    "sort_order": 60,
+    "id": 35,
+    "template_milestone_id": 3,
+    "category_id": 2
   },
   {
-    "slug": "first-trip",
-    "milestone": "6-12mo",
-    "category": "events",
     "name": "First Trip",
     "description": "Baby's first big adventure.",
     "icon": "airplane-outline",
     "months_from": 6,
     "xp": 20,
     "properties": [],
-    "sort_order": 70
+    "sort_order": 70,
+    "id": 36,
+    "template_milestone_id": 3,
+    "category_id": 4
   },
   {
-    "slug": "funny-habit",
-    "milestone": "6-12mo",
-    "category": "daily-life",
     "name": "Funny Habit",
     "description": "That quirky little thing they do.",
     "icon": "happy-outline",
     "months_from": 6,
     "xp": 20,
     "properties": [],
-    "sort_order": 80
+    "sort_order": 80,
+    "id": 37,
+    "template_milestone_id": 3,
+    "category_id": 5
   },
   {
-    "slug": "letter-to-baby",
-    "milestone": "6-12mo",
-    "category": "family",
     "name": "Letter to Baby",
     "description": "Words from the heart.",
     "icon": "mail-outline",
     "months_from": 6,
     "xp": 40,
     "properties": [],
-    "sort_order": 90
+    "sort_order": 90,
+    "id": 38,
+    "template_milestone_id": 3,
+    "category_id": 3
   },
   {
-    "slug": "first-illness",
-    "milestone": "6-12mo",
-    "category": "medical",
     "name": "First Illness",
     "description": "It's tough when they're sick.",
     "icon": "thermometer-outline",
     "months_from": 6,
     "xp": 20,
     "properties": [],
-    "sort_order": 100
+    "sort_order": 100,
+    "id": 39,
+    "template_milestone_id": 3,
+    "category_id": 8
   },
   {
-    "slug": "first-sitting",
-    "milestone": "6-12mo",
-    "category": "firsts",
     "name": "Sitting Up Alone",
     "description": "Sitting up without any help!",
     "icon": "person-outline",
     "months_from": 6,
     "xp": 35,
     "properties": [],
-    "sort_order": 110
+    "sort_order": 110,
+    "id": 40,
+    "template_milestone_id": 3,
+    "category_id": 1
   },
   {
-    "slug": "first-crawl",
-    "milestone": "6-12mo",
-    "category": "firsts",
     "name": "First Crawl",
     "description": "On the move at last!",
     "icon": "walk-outline",
     "months_from": 6,
     "xp": 35,
     "properties": [],
-    "sort_order": 120
+    "sort_order": 120,
+    "id": 41,
+    "template_milestone_id": 3,
+    "category_id": 1
   },
   {
-    "slug": "first-steps",
-    "milestone": "6-12mo",
-    "category": "firsts",
     "name": "First Steps",
     "description": "Those wobbly, magical first steps.",
     "icon": "footsteps-outline",
     "months_from": 6,
     "xp": 35,
     "properties": [],
-    "sort_order": 130
+    "sort_order": 130,
+    "id": 42,
+    "template_milestone_id": 3,
+    "category_id": 1
   },
   {
-    "slug": "first-word",
-    "milestone": "6-12mo",
-    "category": "firsts",
     "name": "First Word",
     "description": "The moment language begins.",
     "icon": "chatbubbles-outline",
@@ -622,24 +619,24 @@
         "sort_order": 20
       }
     ],
-    "sort_order": 140
+    "sort_order": 140,
+    "id": 43,
+    "template_milestone_id": 3,
+    "category_id": 1
   },
   {
-    "slug": "first-wave",
-    "milestone": "6-12mo",
-    "category": "firsts",
     "name": "First Wave",
     "description": "Bye-bye! Hello!",
     "icon": "hand-right-outline",
     "months_from": 6,
     "xp": 35,
     "properties": [],
-    "sort_order": 150
+    "sort_order": 150,
+    "id": 44,
+    "template_milestone_id": 3,
+    "category_id": 1
   },
   {
-    "slug": "growth-7mo",
-    "milestone": "6-12mo",
-    "category": "growth",
     "name": "Month 7",
     "description": "Seven months!",
     "icon": "trending-up-outline",
@@ -657,12 +654,12 @@
         "sort_order": 20
       }
     ],
-    "sort_order": 160
+    "sort_order": 160,
+    "id": 45,
+    "template_milestone_id": 3,
+    "category_id": 2
   },
   {
-    "slug": "growth-8mo",
-    "milestone": "6-12mo",
-    "category": "growth",
     "name": "Month 8",
     "description": "Eight months of adventure!",
     "icon": "trending-up-outline",
@@ -680,12 +677,12 @@
         "sort_order": 20
       }
     ],
-    "sort_order": 170
+    "sort_order": 170,
+    "id": 46,
+    "template_milestone_id": 3,
+    "category_id": 2
   },
   {
-    "slug": "growth-9mo",
-    "milestone": "6-12mo",
-    "category": "growth",
     "name": "Month 9",
     "description": "Nine months of growing!",
     "icon": "trending-up-outline",
@@ -703,12 +700,12 @@
         "sort_order": 20
       }
     ],
-    "sort_order": 180
+    "sort_order": 180,
+    "id": 47,
+    "template_milestone_id": 3,
+    "category_id": 2
   },
   {
-    "slug": "growth-10mo",
-    "milestone": "6-12mo",
-    "category": "growth",
     "name": "Month 10",
     "description": "Ten months strong!",
     "icon": "trending-up-outline",
@@ -726,12 +723,12 @@
         "sort_order": 20
       }
     ],
-    "sort_order": 190
+    "sort_order": 190,
+    "id": 48,
+    "template_milestone_id": 3,
+    "category_id": 2
   },
   {
-    "slug": "growth-11mo",
-    "milestone": "6-12mo",
-    "category": "growth",
     "name": "Month 11",
     "description": "Almost one year!",
     "icon": "trending-up-outline",
@@ -749,36 +746,36 @@
         "sort_order": 20
       }
     ],
-    "sort_order": 200
+    "sort_order": 200,
+    "id": 49,
+    "template_milestone_id": 3,
+    "category_id": 2
   },
   {
-    "slug": "first-birthday",
-    "milestone": "6-12mo",
-    "category": "events",
     "name": "First Birthday!",
     "description": "One year of pure joy!",
     "icon": "balloon-outline",
     "months_from": 12,
     "xp": 50,
     "properties": [],
-    "sort_order": 210
+    "sort_order": 210,
+    "id": 50,
+    "template_milestone_id": 3,
+    "category_id": 4
   },
   {
-    "slug": "checkup-1y",
-    "milestone": "6-12mo",
-    "category": "medical",
     "name": "1 Year Checkup",
     "description": "One year healthy!",
     "icon": "medkit-outline",
     "months_from": 12,
     "xp": 25,
     "properties": [],
-    "sort_order": 220
+    "sort_order": 220,
+    "id": 51,
+    "template_milestone_id": 3,
+    "category_id": 8
   },
   {
-    "slug": "growth-12mo",
-    "milestone": "6-12mo",
-    "category": "growth",
     "name": "Month 12 — Happy Birthday!",
     "description": "One whole year of growing!",
     "icon": "trending-up-outline",
@@ -806,48 +803,48 @@
         "sort_order": 40
       }
     ],
-    "sort_order": 230
+    "sort_order": 230,
+    "id": 52,
+    "template_milestone_id": 3,
+    "category_id": 2
   },
   {
-    "slug": "first-scribble",
-    "milestone": "1-2y",
-    "category": "creative",
     "name": "First Scribble",
     "description": "The beginning of art!",
     "icon": "brush-outline",
     "months_from": 12,
     "xp": 20,
     "properties": [],
-    "sort_order": 10
+    "sort_order": 10,
+    "id": 53,
+    "template_milestone_id": 4,
+    "category_id": 7
   },
   {
-    "slug": "saying-love",
-    "milestone": "1-2y",
-    "category": "emotional",
     "name": "First 'I Love You'",
     "description": "Three words that melt your heart.",
     "icon": "heart-outline",
     "months_from": 12,
     "xp": 20,
     "properties": [],
-    "sort_order": 20
+    "sort_order": 20,
+    "id": 54,
+    "template_milestone_id": 4,
+    "category_id": 6
   },
   {
-    "slug": "family-tradition",
-    "milestone": "1-2y",
-    "category": "family",
     "name": "Family Tradition",
     "description": "Starting a new tradition.",
     "icon": "star-outline",
     "months_from": 12,
     "xp": 20,
     "properties": [],
-    "sort_order": 30
+    "sort_order": 30,
+    "id": 55,
+    "template_milestone_id": 4,
+    "category_id": 3
   },
   {
-    "slug": "first-haircut",
-    "milestone": "1-2y",
-    "category": "growth",
     "name": "First Haircut",
     "description": "Snip snip! A new look.",
     "icon": "cut-outline",
@@ -865,84 +862,84 @@
         "sort_order": 20
       }
     ],
-    "sort_order": 40
+    "sort_order": 40,
+    "id": 56,
+    "template_milestone_id": 4,
+    "category_id": 2
   },
   {
-    "slug": "first-halloween",
-    "milestone": "1-2y",
-    "category": "events",
     "name": "First Costume",
     "description": "Dressed up and adorable!",
     "icon": "shirt-outline",
     "months_from": 12,
     "xp": 20,
     "properties": [],
-    "sort_order": 50
+    "sort_order": 50,
+    "id": 57,
+    "template_milestone_id": 4,
+    "category_id": 4
   },
   {
-    "slug": "morning-routine",
-    "milestone": "1-2y",
-    "category": "daily-life",
     "name": "Morning Routine",
     "description": "How do mornings go?",
     "icon": "sunny-outline",
     "months_from": 12,
     "xp": 20,
     "properties": [],
-    "sort_order": 60
+    "sort_order": 60,
+    "id": 58,
+    "template_milestone_id": 4,
+    "category_id": 5
   },
   {
-    "slug": "favorite-toy",
-    "milestone": "1-2y",
-    "category": "daily-life",
     "name": "Favorite Toy",
     "description": "The one toy they can't live without.",
     "icon": "cube-outline",
     "months_from": 12,
     "xp": 20,
     "properties": [],
-    "sort_order": 70
+    "sort_order": 70,
+    "id": 59,
+    "template_milestone_id": 4,
+    "category_id": 5
   },
   {
-    "slug": "first-run",
-    "milestone": "1-2y",
-    "category": "firsts",
     "name": "First Run",
     "description": "From walking to running!",
     "icon": "speedometer-outline",
     "months_from": 12,
     "xp": 35,
     "properties": [],
-    "sort_order": 80
+    "sort_order": 80,
+    "id": 60,
+    "template_milestone_id": 4,
+    "category_id": 1
   },
   {
-    "slug": "first-jump",
-    "milestone": "1-2y",
-    "category": "firsts",
     "name": "First Jump",
     "description": "Both feet off the ground!",
     "icon": "arrow-up-outline",
     "months_from": 12,
     "xp": 35,
     "properties": [],
-    "sort_order": 90
+    "sort_order": 90,
+    "id": 61,
+    "template_milestone_id": 4,
+    "category_id": 1
   },
   {
-    "slug": "first-sentence",
-    "milestone": "1-2y",
-    "category": "firsts",
     "name": "First Sentence",
     "description": "Putting words together!",
     "icon": "text-outline",
     "months_from": 12,
     "xp": 35,
     "properties": [],
-    "sort_order": 100
+    "sort_order": 100,
+    "id": 62,
+    "template_milestone_id": 4,
+    "category_id": 1
   },
   {
-    "slug": "growth-18mo",
-    "milestone": "1-2y",
-    "category": "growth",
     "name": "18 Month Checkup",
     "description": "A year and a half!",
     "icon": "trending-up-outline",
@@ -965,36 +962,36 @@
         "sort_order": 30
       }
     ],
-    "sort_order": 110
+    "sort_order": 110,
+    "id": 63,
+    "template_milestone_id": 4,
+    "category_id": 2
   },
   {
-    "slug": "second-birthday",
-    "milestone": "1-2y",
-    "category": "events",
     "name": "Second Birthday",
     "description": "They're TWO!",
     "icon": "balloon-outline",
     "months_from": 24,
     "xp": 50,
     "properties": [],
-    "sort_order": 120
+    "sort_order": 120,
+    "id": 64,
+    "template_milestone_id": 4,
+    "category_id": 4
   },
   {
-    "slug": "checkup-2y",
-    "milestone": "1-2y",
-    "category": "medical",
     "name": "2 Year Checkup",
     "description": "Two years strong!",
     "icon": "medkit-outline",
     "months_from": 24,
     "xp": 25,
     "properties": [],
-    "sort_order": 130
+    "sort_order": 130,
+    "id": 65,
+    "template_milestone_id": 4,
+    "category_id": 8
   },
   {
-    "slug": "growth-2y",
-    "milestone": "1-2y",
-    "category": "growth",
     "name": "2 Year Measurements",
     "description": "Two years tall!",
     "icon": "trending-up-outline",
@@ -1017,96 +1014,96 @@
         "sort_order": 30
       }
     ],
-    "sort_order": 140
+    "sort_order": 140,
+    "id": 66,
+    "template_milestone_id": 4,
+    "category_id": 2
   },
   {
-    "slug": "pretend-play",
-    "milestone": "2-3y",
-    "category": "creative",
     "name": "Pretend Play",
     "description": "Imagination comes alive!",
     "icon": "sparkles-outline",
     "months_from": 24,
     "xp": 20,
     "properties": [],
-    "sort_order": 10
+    "sort_order": 10,
+    "id": 67,
+    "template_milestone_id": 5,
+    "category_id": 7
   },
   {
-    "slug": "empathy-moment",
-    "milestone": "2-3y",
-    "category": "emotional",
     "name": "First Show of Empathy",
     "description": "Caring for others.",
     "icon": "heart-circle-outline",
     "months_from": 24,
     "xp": 20,
     "properties": [],
-    "sort_order": 20
+    "sort_order": 20,
+    "id": 68,
+    "template_milestone_id": 5,
+    "category_id": 6
   },
   {
-    "slug": "favorite-song",
-    "milestone": "2-3y",
-    "category": "creative",
     "name": "Favorite Song",
     "description": "On repeat, forever.",
     "icon": "musical-notes-outline",
     "months_from": 24,
     "xp": 20,
     "properties": [],
-    "sort_order": 30
+    "sort_order": 30,
+    "id": 69,
+    "template_milestone_id": 5,
+    "category_id": 7
   },
   {
-    "slug": "fears",
-    "milestone": "2-3y",
-    "category": "emotional",
     "name": "Their Fears",
     "description": "What scares them?",
     "icon": "flash-outline",
     "months_from": 24,
     "xp": 20,
     "properties": [],
-    "sort_order": 40
+    "sort_order": 40,
+    "id": 70,
+    "template_milestone_id": 5,
+    "category_id": 6
   },
   {
-    "slug": "visiting-relatives",
-    "milestone": "2-3y",
-    "category": "family",
     "name": "Visiting Extended Family",
     "description": "Exploring the family tree.",
     "icon": "airplane-outline",
     "months_from": 24,
     "xp": 20,
     "properties": [],
-    "sort_order": 50
+    "sort_order": 50,
+    "id": 71,
+    "template_milestone_id": 5,
+    "category_id": 3
   },
   {
-    "slug": "bedtime-story",
-    "milestone": "2-3y",
-    "category": "daily-life",
     "name": "Favorite Bedtime Story",
     "description": "Read it again! Again!",
     "icon": "book-outline",
     "months_from": 24,
     "xp": 20,
     "properties": [],
-    "sort_order": 60
+    "sort_order": 60,
+    "id": 72,
+    "template_milestone_id": 5,
+    "category_id": 5
   },
   {
-    "slug": "dentist-visit",
-    "milestone": "2-3y",
-    "category": "medical",
     "name": "First Dentist Visit",
     "description": "Open wide!",
     "icon": "happy-outline",
     "months_from": 24,
     "xp": 20,
     "properties": [],
-    "sort_order": 70
+    "sort_order": 70,
+    "id": 73,
+    "template_milestone_id": 5,
+    "category_id": 8
   },
   {
-    "slug": "potty-training",
-    "milestone": "2-3y",
-    "category": "growth",
     "name": "Potty Training",
     "description": "A big milestone in growing up!",
     "icon": "trophy-outline",
@@ -1129,48 +1126,48 @@
         "sort_order": 30
       }
     ],
-    "sort_order": 80
+    "sort_order": 80,
+    "id": 74,
+    "template_milestone_id": 5,
+    "category_id": 2
   },
   {
-    "slug": "favorite-show",
-    "milestone": "2-3y",
-    "category": "daily-life",
     "name": "Favorite Show",
     "description": "The one on repeat.",
     "icon": "tv-outline",
     "months_from": 24,
     "xp": 20,
     "properties": [],
-    "sort_order": 90
+    "sort_order": 90,
+    "id": 75,
+    "template_milestone_id": 5,
+    "category_id": 5
   },
   {
-    "slug": "first-friend",
-    "milestone": "2-3y",
-    "category": "firsts",
     "name": "First Friend",
     "description": "Making their very first friend.",
     "icon": "people-outline",
     "months_from": 24,
     "xp": 35,
     "properties": [],
-    "sort_order": 100
+    "sort_order": 100,
+    "id": 76,
+    "template_milestone_id": 5,
+    "category_id": 1
   },
   {
-    "slug": "first-abc",
-    "milestone": "2-3y",
-    "category": "firsts",
     "name": "First ABCs",
     "description": "Learning the alphabet!",
     "icon": "text-outline",
     "months_from": 24,
     "xp": 35,
     "properties": [],
-    "sort_order": 110
+    "sort_order": 110,
+    "id": 77,
+    "template_milestone_id": 5,
+    "category_id": 1
   },
   {
-    "slug": "growth-30mo",
-    "milestone": "2-3y",
-    "category": "growth",
     "name": "30 Month Checkup",
     "description": "Two and a half years!",
     "icon": "trending-up-outline",
@@ -1188,24 +1185,24 @@
         "sort_order": 20
       }
     ],
-    "sort_order": 120
+    "sort_order": 120,
+    "id": 78,
+    "template_milestone_id": 5,
+    "category_id": 2
   },
   {
-    "slug": "third-birthday",
-    "milestone": "2-3y",
-    "category": "events",
     "name": "Third Birthday",
     "description": "Three candles on the cake!",
     "icon": "balloon-outline",
     "months_from": 36,
     "xp": 50,
     "properties": [],
-    "sort_order": 130
+    "sort_order": 130,
+    "id": 79,
+    "template_milestone_id": 5,
+    "category_id": 4
   },
   {
-    "slug": "growth-3y",
-    "milestone": "2-3y",
-    "category": "growth",
     "name": "3 Year Measurements",
     "description": "Growing so fast!",
     "icon": "trending-up-outline",
@@ -1223,60 +1220,60 @@
         "sort_order": 20
       }
     ],
-    "sort_order": 140
+    "sort_order": 140,
+    "id": 80,
+    "template_milestone_id": 5,
+    "category_id": 2
   },
   {
-    "slug": "first-drawing",
-    "milestone": "3-4y",
-    "category": "creative",
     "name": "First Real Drawing",
     "description": "You can actually tell what it is!",
     "icon": "color-palette-outline",
     "months_from": 36,
     "xp": 20,
     "properties": [],
-    "sort_order": 10
+    "sort_order": 10,
+    "id": 81,
+    "template_milestone_id": 6,
+    "category_id": 7
   },
   {
-    "slug": "family-resemblance",
-    "milestone": "3-4y",
-    "category": "family",
     "name": "Family Resemblance",
     "description": "They look just like...",
     "icon": "eye-outline",
     "months_from": 36,
     "xp": 20,
     "properties": [],
-    "sort_order": 20
+    "sort_order": 20,
+    "id": 82,
+    "template_milestone_id": 6,
+    "category_id": 3
   },
   {
-    "slug": "proud-moment",
-    "milestone": "3-4y",
-    "category": "emotional",
     "name": "Proudest Moment",
     "description": "I did it!",
     "icon": "trophy-outline",
     "months_from": 36,
     "xp": 20,
     "properties": [],
-    "sort_order": 30
+    "sort_order": 30,
+    "id": 83,
+    "template_milestone_id": 6,
+    "category_id": 6
   },
   {
-    "slug": "dressing-alone",
-    "milestone": "3-4y",
-    "category": "growth",
     "name": "Dressing Themselves",
     "description": "I can do it myself!",
     "icon": "shirt-outline",
     "months_from": 36,
     "xp": 20,
     "properties": [],
-    "sort_order": 40
+    "sort_order": 40,
+    "id": 84,
+    "template_milestone_id": 6,
+    "category_id": 2
   },
   {
-    "slug": "growth-42mo",
-    "milestone": "3-4y",
-    "category": "growth",
     "name": "3.5 Year Checkup",
     "description": "Three and a half years!",
     "icon": "trending-up-outline",
@@ -1294,72 +1291,72 @@
         "sort_order": 20
       }
     ],
-    "sort_order": 50
+    "sort_order": 50,
+    "id": 85,
+    "template_milestone_id": 6,
+    "category_id": 2
   },
   {
-    "slug": "playground-favorite",
-    "milestone": "3-4y",
-    "category": "daily-life",
     "name": "Playground Favorite",
     "description": "Slide, swing, or monkey bars?",
     "icon": "baseball-outline",
     "months_from": 36,
     "xp": 20,
     "properties": [],
-    "sort_order": 60
+    "sort_order": 60,
+    "id": 86,
+    "template_milestone_id": 6,
+    "category_id": 5
   },
   {
-    "slug": "first-bike",
-    "milestone": "3-4y",
-    "category": "firsts",
     "name": "First Bike Ride",
     "description": "Pedaling on their own!",
     "icon": "bicycle-outline",
     "months_from": 36,
     "xp": 35,
     "properties": [],
-    "sort_order": 70
+    "sort_order": 70,
+    "id": 87,
+    "template_milestone_id": 6,
+    "category_id": 1
   },
   {
-    "slug": "first-sleepover",
-    "milestone": "3-4y",
-    "category": "firsts",
     "name": "First Sleepover",
     "description": "A big kid milestone!",
     "icon": "moon-outline",
     "months_from": 36,
     "xp": 35,
     "properties": [],
-    "sort_order": 80
+    "sort_order": 80,
+    "id": 88,
+    "template_milestone_id": 6,
+    "category_id": 1
   },
   {
-    "slug": "fourth-birthday",
-    "milestone": "3-4y",
-    "category": "events",
     "name": "Fourth Birthday",
     "description": "Growing up so fast!",
     "icon": "balloon-outline",
     "months_from": 48,
     "xp": 50,
     "properties": [],
-    "sort_order": 90
+    "sort_order": 90,
+    "id": 89,
+    "template_milestone_id": 6,
+    "category_id": 4
   },
   {
-    "slug": "checkup-4y",
-    "milestone": "3-4y",
-    "category": "medical",
     "name": "4 Year Checkup",
     "description": "Four years of health!",
     "icon": "medkit-outline",
     "months_from": 48,
     "xp": 25,
     "properties": [],
-    "sort_order": 100
+    "sort_order": 100,
+    "id": 90,
+    "template_milestone_id": 6,
+    "category_id": 8
   },
   {
-    "slug": "growth-4y",
-    "milestone": "3-4y",
-    "category": "growth",
     "name": "4 Year Measurements",
     "description": "Four years of amazing growth!",
     "icon": "trending-up-outline",
@@ -1377,60 +1374,60 @@
         "sort_order": 20
       }
     ],
-    "sort_order": 110
+    "sort_order": 110,
+    "id": 91,
+    "template_milestone_id": 6,
+    "category_id": 2
   },
   {
-    "slug": "storytelling",
-    "milestone": "4-5y",
-    "category": "creative",
     "name": "Making Up Stories",
     "description": "Once upon a time...",
     "icon": "book-outline",
     "months_from": 48,
     "xp": 20,
     "properties": [],
-    "sort_order": 10
+    "sort_order": 10,
+    "id": 92,
+    "template_milestone_id": 7,
+    "category_id": 7
   },
   {
-    "slug": "big-emotions",
-    "milestone": "4-5y",
-    "category": "emotional",
     "name": "Big Emotions",
     "description": "Learning to handle feelings.",
     "icon": "cloud-outline",
     "months_from": 48,
     "xp": 20,
     "properties": [],
-    "sort_order": 20
+    "sort_order": 20,
+    "id": 93,
+    "template_milestone_id": 7,
+    "category_id": 6
   },
   {
-    "slug": "family-tree-project",
-    "milestone": "4-5y",
-    "category": "family",
     "name": "Learning Family Tree",
     "description": "Understanding where they come from.",
     "icon": "leaf-outline",
     "months_from": 48,
     "xp": 20,
     "properties": [],
-    "sort_order": 30
+    "sort_order": 30,
+    "id": 94,
+    "template_milestone_id": 7,
+    "category_id": 3
   },
   {
-    "slug": "eye-exam",
-    "milestone": "4-5y",
-    "category": "medical",
     "name": "First Eye Exam",
     "description": "Can you read the letters?",
     "icon": "eye-outline",
     "months_from": 48,
     "xp": 20,
     "properties": [],
-    "sort_order": 40
+    "sort_order": 40,
+    "id": 95,
+    "template_milestone_id": 7,
+    "category_id": 8
   },
   {
-    "slug": "growth-54mo",
-    "milestone": "4-5y",
-    "category": "growth",
     "name": "4.5 Year Checkup",
     "description": "Four and a half years!",
     "icon": "trending-up-outline",
@@ -1448,60 +1445,60 @@
         "sort_order": 20
       }
     ],
-    "sort_order": 50
+    "sort_order": 50,
+    "id": 96,
+    "template_milestone_id": 7,
+    "category_id": 2
   },
   {
-    "slug": "helping-around",
-    "milestone": "4-5y",
-    "category": "daily-life",
     "name": "Little Helper",
     "description": "They want to help with everything!",
     "icon": "construct-outline",
     "months_from": 48,
     "xp": 20,
     "properties": [],
-    "sort_order": 60
+    "sort_order": 60,
+    "id": 97,
+    "template_milestone_id": 7,
+    "category_id": 5
   },
   {
-    "slug": "first-school-day",
-    "milestone": "4-5y",
-    "category": "firsts",
     "name": "First Day of School",
     "description": "A whole new adventure begins.",
     "icon": "school-outline",
     "months_from": 48,
     "xp": 35,
     "properties": [],
-    "sort_order": 70
+    "sort_order": 70,
+    "id": 98,
+    "template_milestone_id": 7,
+    "category_id": 1
   },
   {
-    "slug": "first-lost-tooth",
-    "milestone": "4-5y",
-    "category": "firsts",
     "name": "First Lost Tooth",
     "description": "The tooth fairy is coming!",
     "icon": "sparkles-outline",
     "months_from": 48,
     "xp": 35,
     "properties": [],
-    "sort_order": 80
+    "sort_order": 80,
+    "id": 99,
+    "template_milestone_id": 7,
+    "category_id": 1
   },
   {
-    "slug": "what-i-want-to-be",
-    "milestone": "4-5y",
-    "category": "emotional",
     "name": "What I Want to Be",
     "description": "Their first dream job!",
     "icon": "rocket-outline",
     "months_from": 48,
     "xp": 20,
     "properties": [],
-    "sort_order": 90
+    "sort_order": 90,
+    "id": 100,
+    "template_milestone_id": 7,
+    "category_id": 6
   },
   {
-    "slug": "favorite-things",
-    "milestone": "4-5y",
-    "category": "emotional",
     "name": "My Favorite Things",
     "description": "A snapshot of what they love.",
     "icon": "heart-outline",
@@ -1529,36 +1526,36 @@
         "sort_order": 40
       }
     ],
-    "sort_order": 100
+    "sort_order": 100,
+    "id": 101,
+    "template_milestone_id": 7,
+    "category_id": 6
   },
   {
-    "slug": "superpower",
-    "milestone": "4-5y",
-    "category": "emotional",
     "name": "My Superpower",
     "description": "If they could have any superpower...",
     "icon": "flash-outline",
     "months_from": 48,
     "xp": 20,
     "properties": [],
-    "sort_order": 110
+    "sort_order": 110,
+    "id": 102,
+    "template_milestone_id": 7,
+    "category_id": 6
   },
   {
-    "slug": "fifth-birthday",
-    "milestone": "4-5y",
-    "category": "events",
     "name": "Fifth Birthday",
     "description": "High five! They're FIVE!",
     "icon": "balloon-outline",
     "months_from": 60,
     "xp": 50,
     "properties": [],
-    "sort_order": 120
+    "sort_order": 120,
+    "id": 103,
+    "template_milestone_id": 7,
+    "category_id": 4
   },
   {
-    "slug": "growth-5y",
-    "milestone": "4-5y",
-    "category": "growth",
     "name": "5 Year Measurements",
     "description": "Five years of amazing growth!",
     "icon": "trending-up-outline",
@@ -1576,60 +1573,60 @@
         "sort_order": 20
       }
     ],
-    "sort_order": 130
+    "sort_order": 130,
+    "id": 104,
+    "template_milestone_id": 7,
+    "category_id": 2
   },
   {
-    "slug": "creative-project",
-    "milestone": "5-6y",
-    "category": "creative",
     "name": "Creative Project",
     "description": "Their masterpiece!",
     "icon": "color-palette-outline",
     "months_from": 60,
     "xp": 20,
     "properties": [],
-    "sort_order": 10
+    "sort_order": 10,
+    "id": 105,
+    "template_milestone_id": 8,
+    "category_id": 7
   },
   {
-    "slug": "dream-future",
-    "milestone": "5-6y",
-    "category": "emotional",
     "name": "What They Want to Be",
     "description": "When I grow up...",
     "icon": "rocket-outline",
     "months_from": 60,
     "xp": 20,
     "properties": [],
-    "sort_order": 20
+    "sort_order": 20,
+    "id": 106,
+    "template_milestone_id": 8,
+    "category_id": 6
   },
   {
-    "slug": "letter-to-future",
-    "milestone": "5-6y",
-    "category": "family",
     "name": "Letter to Future Self",
     "description": "A message across time.",
     "icon": "time-outline",
     "months_from": 60,
     "xp": 40,
     "properties": [],
-    "sort_order": 30
+    "sort_order": 30,
+    "id": 107,
+    "template_milestone_id": 8,
+    "category_id": 3
   },
   {
-    "slug": "graduation",
-    "milestone": "5-6y",
-    "category": "events",
     "name": "Preschool Graduation",
     "description": "Cap and gown, tiny size!",
     "icon": "school-outline",
     "months_from": 60,
     "xp": 25,
     "properties": [],
-    "sort_order": 40
+    "sort_order": 40,
+    "id": 108,
+    "template_milestone_id": 8,
+    "category_id": 4
   },
   {
-    "slug": "growth-66mo",
-    "milestone": "5-6y",
-    "category": "growth",
     "name": "5.5 Year Checkup",
     "description": "Five and a half years!",
     "icon": "trending-up-outline",
@@ -1647,108 +1644,108 @@
         "sort_order": 20
       }
     ],
-    "sort_order": 50
+    "sort_order": 50,
+    "id": 109,
+    "template_milestone_id": 8,
+    "category_id": 2
   },
   {
-    "slug": "daily-6y",
-    "milestone": "5-6y",
-    "category": "daily-life",
     "name": "A Day in Their Life",
     "description": "What does a typical day look like?",
     "icon": "calendar-outline",
     "months_from": 60,
     "xp": 20,
     "properties": [],
-    "sort_order": 60
+    "sort_order": 60,
+    "id": 110,
+    "template_milestone_id": 8,
+    "category_id": 5
   },
   {
-    "slug": "biggest-dream",
-    "milestone": "5-6y",
-    "category": "emotional",
     "name": "Biggest Dream",
     "description": "Dreaming big dreams.",
     "icon": "sparkles-outline",
     "months_from": 60,
     "xp": 20,
     "properties": [],
-    "sort_order": 70
+    "sort_order": 70,
+    "id": 111,
+    "template_milestone_id": 8,
+    "category_id": 6
   },
   {
-    "slug": "first-read",
-    "milestone": "5-6y",
-    "category": "firsts",
     "name": "First Book Read",
     "description": "Reading all by themselves!",
     "icon": "book-outline",
     "months_from": 60,
     "xp": 35,
     "properties": [],
-    "sort_order": 80
+    "sort_order": 80,
+    "id": 112,
+    "template_milestone_id": 8,
+    "category_id": 1
   },
   {
-    "slug": "letter-from-parent",
-    "milestone": "5-6y",
-    "category": "emotional",
     "name": "A Letter from Me",
     "description": "Your hopes and dreams for them.",
     "icon": "mail-outline",
     "months_from": 60,
     "xp": 40,
     "properties": [],
-    "sort_order": 90
+    "sort_order": 90,
+    "id": 113,
+    "template_milestone_id": 8,
+    "category_id": 6
   },
   {
-    "slug": "first-swim",
-    "milestone": "5-6y",
-    "category": "firsts",
     "name": "First Swim Alone",
     "description": "Swimming without floaties!",
     "icon": "water-outline",
     "months_from": 60,
     "xp": 35,
     "properties": [],
-    "sort_order": 100
+    "sort_order": 100,
+    "id": 114,
+    "template_milestone_id": 8,
+    "category_id": 1
   },
   {
-    "slug": "time-capsule",
-    "milestone": "5-6y",
-    "category": "emotional",
     "name": "Time Capsule",
     "description": "Capture this moment in time.",
     "icon": "time-outline",
     "months_from": 60,
     "xp": 40,
     "properties": [],
-    "sort_order": 110
+    "sort_order": 110,
+    "id": 115,
+    "template_milestone_id": 8,
+    "category_id": 6
   },
   {
-    "slug": "sixth-birthday",
-    "milestone": "5-6y",
-    "category": "events",
     "name": "Sixth Birthday",
     "description": "A big kid birthday!",
     "icon": "balloon-outline",
     "months_from": 72,
     "xp": 50,
     "properties": [],
-    "sort_order": 120
+    "sort_order": 120,
+    "id": 116,
+    "template_milestone_id": 8,
+    "category_id": 4
   },
   {
-    "slug": "checkup-6y",
-    "milestone": "5-6y",
-    "category": "medical",
     "name": "6 Year Checkup",
     "description": "Ready for big kid school!",
     "icon": "medkit-outline",
     "months_from": 72,
     "xp": 25,
     "properties": [],
-    "sort_order": 130
+    "sort_order": 130,
+    "id": 117,
+    "template_milestone_id": 8,
+    "category_id": 8
   },
   {
-    "slug": "growth-6y",
-    "milestone": "5-6y",
-    "category": "growth",
     "name": "6 Year Measurements",
     "description": "Getting so big!",
     "icon": "trending-up-outline",
@@ -1766,6 +1763,9 @@
         "sort_order": 20
       }
     ],
-    "sort_order": 140
+    "sort_order": 140,
+    "id": 118,
+    "template_milestone_id": 8,
+    "category_id": 2
   }
 ]

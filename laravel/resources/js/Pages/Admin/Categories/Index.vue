@@ -24,7 +24,6 @@ import { useIndexFilters } from '../../../composables/useIndexFilters';
 
 interface Category {
     id: number;
-    slug: string;
     name: string;
     description: string | null;
     icon: string;
@@ -52,7 +51,6 @@ const editing = ref<Category | null>(null);
 const toDelete = ref<Category | null>(null);
 
 const form = useForm({
-    slug: '',
     name: '',
     description: '',
     icon: 'sparkles',
@@ -64,7 +62,6 @@ const form = useForm({
 function startCreate() {
     editing.value = null;
     form.defaults({
-        slug: '',
         name: '',
         description: '',
         icon: 'sparkles',
@@ -80,7 +77,6 @@ function startCreate() {
 function startEdit(category: Category) {
     editing.value = category;
     form.defaults({
-        slug: category.slug,
         name: category.name,
         description: category.description ?? '',
         icon: category.icon,
@@ -132,14 +128,6 @@ function performDelete() {
                 >
                     Name
                 </UiSortableTableHeader>
-                <UiSortableTableHeader
-                    sort-key="slug"
-                    :active-key="sortKey"
-                    :active-order="sortOrder"
-                    @sort="toggleSort"
-                >
-                    Slug
-                </UiSortableTableHeader>
                 <UiTableHeader>Icon</UiTableHeader>
                 <UiSortableTableHeader
                     sort-key="template_steps_count"
@@ -173,7 +161,6 @@ function performDelete() {
                             {{ category.description }}
                         </p>
                     </UiTableCell>
-                    <UiTableCell cell-class="text-slate-500">{{ category.slug }}</UiTableCell>
                     <UiTableCell cell-class="text-slate-500">{{ category.icon }}</UiTableCell>
                     <UiTableCell align="right">{{ category.template_steps_count }}</UiTableCell>
                     <UiTableCell align="right">{{ category.sort_order }}</UiTableCell>
@@ -194,7 +181,6 @@ function performDelete() {
         <UiModal v-model="formOpen" :title="editing ? 'Edit category' : 'New category'">
             <form id="category-form" class="flex flex-col gap-4" @submit.prevent="submit">
                 <UiInput v-model="form.name" label="Name" required :error="form.errors.name" />
-                <UiInput v-model="form.slug" label="Slug" required :error="form.errors.slug" />
                 <UiInput v-model="form.description" label="Description" :error="form.errors.description" />
                 <UiSelect
                     v-model="form.icon"

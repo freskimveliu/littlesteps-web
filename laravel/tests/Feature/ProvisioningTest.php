@@ -22,7 +22,7 @@ it('copies the words rather than joining them, so an admin edit cannot rewrite a
     $step = $child->steps()->where('name', 'Birth Day')->first();
     $step->template_step_id and $step->templateStep = null;
 
-    App\Models\TemplateStep::where('slug', 'birth-day')->update(['name' => 'Renamed by admin']);
+    App\Models\TemplateStep::where('name', 'Birth Day')->update(['name' => 'Renamed by admin']);
 
     expect($child->steps()->find($step->id)->name)->toBe('Birth Day')
         ->and($step->template_step_id)->not->toBeNull();

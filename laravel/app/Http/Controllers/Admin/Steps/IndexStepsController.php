@@ -34,8 +34,8 @@ class IndexStepsController extends Controller
         $steps = IndexQuery::apply(
             $query,
             $request,
-            searchable: ['name', 'slug', 'description'],
-            sortable: ['name', 'slug', 'months_from', 'xp', 'sort_order'],
+            searchable: ['name', 'description'],
+            sortable: ['name', 'months_from', 'xp', 'sort_order'],
         )->paginate(50)->withQueryString();
 
         return Inertia::render('Admin/Steps/Index', [

@@ -49,9 +49,11 @@ Route::prefix('admin')->group(function () {
         Route::post('login', LoginController::class);
     });
 
-    Route::middleware(['auth', EnsureUserIsAdmin::class])->group(function () {
-        Route::post('logout', LogoutController::class);
+    // Signing out only needs a session, not the admin gate — otherwise someone
+    // who is signed in but not an admin lands on a 403 with no way back out.
+    Route::post('logout', LogoutController::class)->middleware('auth');
 
+    Route::middleware(['auth', EnsureUserIsAdmin::class])->group(function () {
         Route::get('/', DashboardController::class)->name('admin.dashboard');
 
         Route::get('chapters', IndexChaptersController::class)->name('admin.chapters');
