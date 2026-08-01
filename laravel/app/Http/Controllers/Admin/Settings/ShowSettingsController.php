@@ -19,6 +19,7 @@ class ShowSettingsController extends Controller
         'daily_milestone_entries' => 'Milestone memories a parent can record in one day.',
         'max_custom_milestones_per_chapter' => 'How many of their own milestones a parent can add to one chapter.',
         'min_milestones_to_complete_chapter' => 'Visible milestones a chapter needs before it can be finished — the guard against hiding a chapter down to a handful and collecting the gift.',
+        'max_media_per_entry' => 'Photos one memory can hold.',
     ];
 
     public function __invoke(): Response

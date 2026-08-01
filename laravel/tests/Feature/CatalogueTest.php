@@ -16,7 +16,7 @@ it('seeds the whole catalogue', function () {
         ->and(Chapter::count())->toBe(8)
         ->and(Milestone::count())->toBe(118)
         ->and(Level::count())->toBe(14)
-        ->and(AppSetting::count())->toBe(5);
+        ->and(AppSetting::count())->toBe(6);
 });
 
 it('is idempotent', function () {

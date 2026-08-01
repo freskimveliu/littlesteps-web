@@ -43,6 +43,10 @@ class RecordEntry
                 $entry->properties()->create([...$property, 'sort_order' => ($i + 1) * 10]);
             }
 
+            foreach ($data->photos as $photo) {
+                $entry->addMedia($photo)->toMediaCollection(ChildEntry::PHOTOS);
+            }
+
             return $entry;
         });
 
@@ -51,7 +55,7 @@ class RecordEntry
         $this->streak->handle($user, $entry);
 
         return [
-            'entry' => $entry->load(['properties', 'milestone']),
+            'entry' => $entry->load(['properties', 'milestone', 'media'])->bindMediaOwner(),
             'xp' => $xp,
             'unlocked' => $this->trophies->handle($child->refresh()),
         ];

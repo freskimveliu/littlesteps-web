@@ -23,6 +23,8 @@ class IndexEntriesController extends Controller
             ->orderByDesc('id')
             ->paginate($request->integer('per_page', 30));
 
+        $entries->getCollection()->each->bindMediaOwner();
+
         return ApiResponse::success([
             'items' => ChildEntryResource::collection($entries)->resolve(),
             'meta' => [

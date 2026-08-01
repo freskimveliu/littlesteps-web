@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Enums\AppSettingKey;
+use App\Enums\Mood;
 use App\Models\AppSetting;
 
 function freeMemory(App\Models\Child $child, array $overrides = []): Illuminate\Testing\TestResponse
@@ -10,6 +11,19 @@ function freeMemory(App\Models\Child $child, array $overrides = []): Illuminate\
     return test()->postJson("/api/v1/children/{$child->id}/entries", [
         'description' => 'She laughed at the cat.',
         'date' => now()->toDateString(),
+        'mood' => Mood::Joyful->value,
+        ...$overrides,
+    ]);
+}
+
+/** Every memory has to carry a mood and either words or a photo. */
+function milestoneMemory(App\Models\Child $child, int $milestoneId, array $overrides = []): Illuminate\Testing\TestResponse
+{
+    return test()->postJson("/api/v1/children/{$child->id}/entries", [
+        'child_milestone_id' => $milestoneId,
+        'description' => 'One for the album.',
+        'date' => now()->toDateString(),
+        'mood' => Mood::Proud->value,
         ...$overrides,
     ]);
 }
@@ -41,16 +55,10 @@ it('allows five milestone memories a day, each worth its own milestone', functio
         ->orderBy('sort_order')->take(6)->get();
 
     foreach ($milestones->take(5) as $milestone) {
-        test()->postJson("/api/v1/children/{$child->id}/entries", [
-            'child_milestone_id' => $milestone->id,
-            'date' => now()->toDateString(),
-        ])->assertCreated();
+        milestoneMemory($child, $milestone->id)->assertCreated();
     }
 
-    test()->postJson("/api/v1/children/{$child->id}/entries", [
-        'child_milestone_id' => $milestones->last()->id,
-        'date' => now()->toDateString(),
-    ])->assertJsonValidationErrorFor('date');
+    milestoneMemory($child, $milestones->last()->id)->assertJsonValidationErrorFor('date');
 
     expect($child->entries()->count())->toBe(5);
 });
@@ -96,20 +104,13 @@ it('refuses a second memory on the same milestone', function () {
     [, $child] = family(ageMonths: 12);
     $milestone = $child->milestones()->where('name', 'Birth Day')->first();
 
-    $this->postJson("/api/v1/children/{$child->id}/entries", [
-        'child_milestone_id' => $milestone->id, 'date' => now()->toDateString(),
-    ])->assertCreated();
-
-    $this->postJson("/api/v1/children/{$child->id}/entries", [
-        'child_milestone_id' => $milestone->id, 'date' => now()->toDateString(),
-    ])->assertJsonValidationErrorFor('child_milestone_id');
+    milestoneMemory($child, $milestone->id)->assertCreated();
+    milestoneMemory($child, $milestone->id)->assertJsonValidationErrorFor('child_milestone_id');
 });
 
 it('refuses a memory on a milestone the child is too young for', function () {
     [, $child] = family(ageMonths: 1);
     $milestone = $child->milestones()->where('name', 'Month 6')->first();
 
-    $this->postJson("/api/v1/children/{$child->id}/entries", [
-        'child_milestone_id' => $milestone->id, 'date' => now()->toDateString(),
-    ])->assertJsonValidationErrorFor('child_milestone_id');
+    milestoneMemory($child, $milestone->id)->assertJsonValidationErrorFor('child_milestone_id');
 });

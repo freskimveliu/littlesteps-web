@@ -74,6 +74,11 @@ class Limits
         return AppSetting::number(AppSettingKey::FreeEntryXp);
     }
 
+    public function maxMediaPerEntry(): int
+    {
+        return AppSetting::number(AppSettingKey::MaxMediaPerEntry);
+    }
+
     /** @return array{0: \Carbon\CarbonImmutable, 1: \Carbon\CarbonImmutable} */
     private function today(User $user): array
     {

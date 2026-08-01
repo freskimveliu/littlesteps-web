@@ -5,7 +5,7 @@
     "icon": "flame",
     "metric": "days",
     "threshold": 7,
-    "xp": 60,
+    "xp": 20,
     "reward": null,
     "id": 1,
     "sort_order": 10
@@ -16,7 +16,7 @@
     "icon": "barbell",
     "metric": "streak",
     "threshold": 7,
-    "xp": 75,
+    "xp": 25,
     "reward": null,
     "id": 2,
     "sort_order": 20
@@ -27,7 +27,7 @@
     "icon": "ribbon",
     "metric": "chapters",
     "threshold": 1,
-    "xp": 200,
+    "xp": 65,
     "reward": "image",
     "id": 3,
     "sort_order": 30
@@ -38,7 +38,7 @@
     "icon": "calendar",
     "metric": "days",
     "threshold": 30,
-    "xp": 150,
+    "xp": 50,
     "reward": null,
     "id": 4,
     "sort_order": 40
@@ -49,7 +49,7 @@
     "icon": "camera",
     "metric": "photos",
     "threshold": 25,
-    "xp": 100,
+    "xp": 35,
     "reward": null,
     "id": 5,
     "sort_order": 50
@@ -60,7 +60,7 @@
     "icon": "book",
     "metric": "chapters",
     "threshold": 2,
-    "xp": 300,
+    "xp": 100,
     "reward": null,
     "id": 6,
     "sort_order": 60
@@ -71,7 +71,7 @@
     "icon": "today",
     "metric": "on_time_milestones",
     "threshold": 10,
-    "xp": 120,
+    "xp": 40,
     "reward": null,
     "id": 7,
     "sort_order": 70
@@ -82,7 +82,7 @@
     "icon": "compass",
     "metric": "categories",
     "threshold": 6,
-    "xp": 150,
+    "xp": 50,
     "reward": null,
     "id": 8,
     "sort_order": 80
@@ -93,7 +93,7 @@
     "icon": "flash",
     "metric": "days",
     "threshold": 100,
-    "xp": 300,
+    "xp": 100,
     "reward": null,
     "id": 9,
     "sort_order": 90
@@ -104,7 +104,7 @@
     "icon": "heart",
     "metric": "months",
     "threshold": 10,
-    "xp": 400,
+    "xp": 135,
     "reward": "story",
     "id": 10,
     "sort_order": 100
@@ -115,7 +115,7 @@
     "icon": "walk",
     "metric": "chapters",
     "threshold": 3,
-    "xp": 450,
+    "xp": 150,
     "reward": null,
     "id": 11,
     "sort_order": 110
@@ -126,7 +126,7 @@
     "icon": "medal",
     "metric": "streak",
     "threshold": 30,
-    "xp": 250,
+    "xp": 85,
     "reward": null,
     "id": 12,
     "sort_order": 120
@@ -137,7 +137,7 @@
     "icon": "color-palette",
     "metric": "categories",
     "threshold": 8,
-    "xp": 300,
+    "xp": 100,
     "reward": null,
     "id": 13,
     "sort_order": 130
@@ -148,7 +148,7 @@
     "icon": "images",
     "metric": "photos",
     "threshold": 150,
-    "xp": 500,
+    "xp": 165,
     "reward": null,
     "id": 14,
     "sort_order": 140
@@ -159,7 +159,7 @@
     "icon": "star",
     "metric": "months",
     "threshold": 20,
-    "xp": 700,
+    "xp": 235,
     "reward": "story",
     "id": 15,
     "sort_order": 150
@@ -170,7 +170,7 @@
     "icon": "map",
     "metric": "chapters",
     "threshold": 4,
-    "xp": 800,
+    "xp": 265,
     "reward": null,
     "id": 16,
     "sort_order": 160
@@ -181,7 +181,7 @@
     "icon": "sunny",
     "metric": "days",
     "threshold": 200,
-    "xp": 600,
+    "xp": 200,
     "reward": "image",
     "id": 17,
     "sort_order": 170
@@ -192,7 +192,7 @@
     "icon": "hourglass",
     "metric": "on_time_milestones",
     "threshold": 40,
-    "xp": 400,
+    "xp": 135,
     "reward": null,
     "id": 18,
     "sort_order": 180
@@ -203,7 +203,7 @@
     "icon": "infinite",
     "metric": "streak",
     "threshold": 100,
-    "xp": 600,
+    "xp": 200,
     "reward": null,
     "id": 19,
     "sort_order": 190
@@ -214,7 +214,7 @@
     "icon": "leaf",
     "metric": "months",
     "threshold": 30,
-    "xp": 1000,
+    "xp": 335,
     "reward": null,
     "id": 20,
     "sort_order": 200
@@ -225,7 +225,7 @@
     "icon": "trophy",
     "metric": "chapters",
     "threshold": 5,
-    "xp": 1200,
+    "xp": 400,
     "reward": "story",
     "id": 21,
     "sort_order": 210
@@ -236,7 +236,7 @@
     "icon": "shield-checkmark",
     "metric": "days",
     "threshold": 300,
-    "xp": 900,
+    "xp": 300,
     "reward": null,
     "id": 22,
     "sort_order": 220
@@ -247,7 +247,7 @@
     "icon": "bookmarks",
     "metric": "on_time_milestones",
     "threshold": 60,
-    "xp": 700,
+    "xp": 235,
     "reward": null,
     "id": 23,
     "sort_order": 230
@@ -258,7 +258,7 @@
     "icon": "film",
     "metric": "photos",
     "threshold": 400,
-    "xp": 1000,
+    "xp": 335,
     "reward": null,
     "id": 24,
     "sort_order": 240
@@ -269,7 +269,7 @@
     "icon": "bulb",
     "metric": "months",
     "threshold": 40,
-    "xp": 1400,
+    "xp": 465,
     "reward": null,
     "id": 25,
     "sort_order": 250
@@ -280,7 +280,7 @@
     "icon": "earth",
     "metric": "chapters",
     "threshold": 6,
-    "xp": 1600,
+    "xp": 535,
     "reward": "image",
     "id": 26,
     "sort_order": 260
@@ -291,7 +291,7 @@
     "icon": "albums",
     "metric": "days",
     "threshold": 400,
-    "xp": 1200,
+    "xp": 400,
     "reward": null,
     "id": 27,
     "sort_order": 270
@@ -302,7 +302,7 @@
     "icon": "time",
     "metric": "on_time_milestones",
     "threshold": 80,
-    "xp": 900,
+    "xp": 300,
     "reward": null,
     "id": 28,
     "sort_order": 280
@@ -313,7 +313,7 @@
     "icon": "diamond",
     "metric": "months",
     "threshold": 50,
-    "xp": 1800,
+    "xp": 600,
     "reward": "story",
     "id": 29,
     "sort_order": 290
@@ -324,7 +324,7 @@
     "icon": "library",
     "metric": "chapters",
     "threshold": 7,
-    "xp": 2000,
+    "xp": 665,
     "reward": null,
     "id": 30,
     "sort_order": 300
@@ -335,7 +335,7 @@
     "icon": "rocket",
     "metric": "days",
     "threshold": 500,
-    "xp": 1500,
+    "xp": 500,
     "reward": null,
     "id": 31,
     "sort_order": 310
@@ -346,7 +346,7 @@
     "icon": "sparkles",
     "metric": "chapters",
     "threshold": 8,
-    "xp": 3000,
+    "xp": 1000,
     "reward": "book",
     "id": 32,
     "sort_order": 320

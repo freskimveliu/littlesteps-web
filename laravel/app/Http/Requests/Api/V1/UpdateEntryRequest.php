@@ -6,6 +6,8 @@ namespace App\Http\Requests\Api\V1;
 
 use App\Enums\Mood;
 use App\Enums\PropertyKey;
+use App\Models\ChildEntry;
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -17,11 +19,49 @@ class UpdateEntryRequest extends FormRequest
         return [
             'description' => ['nullable', 'string', 'max:5000'],
             'date' => ['sometimes', 'date', 'before_or_equal:today'],
-            'mood' => ['nullable', Rule::enum(Mood::class)],
+            'mood' => ['sometimes', 'required', Rule::enum(Mood::class)],
             'properties' => ['array'],
             'properties.*.key' => ['required', Rule::enum(PropertyKey::class)],
             'properties.*.name' => ['nullable', 'string', 'max:60'],
             'properties.*.value' => ['nullable', 'string', 'max:255'],
+        ];
+    }
+
+    /**
+     * A patch is partial, so the rules above can only judge what was sent. What matters
+     * is the entry the patch leaves behind — it still has to hold a mood and either
+     * words or a photo.
+     */
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $validator): void {
+            $entry = $this->route('entry');
+
+            if (! $entry instanceof ChildEntry) {
+                return;
+            }
+
+            $description = $this->has('description')
+                ? trim((string) $this->input('description'))
+                : (string) $entry->description;
+
+            if ($description === '' && $entry->photoCount() === 0) {
+                $validator->errors()->add('description', 'A memory needs a few words or a photo.');
+            }
+
+            $mood = $this->has('mood') ? $this->input('mood') : $entry->mood;
+
+            if (blank($mood)) {
+                $validator->errors()->add('mood', 'Tell us how this memory feels.');
+            }
+        });
+    }
+
+    /** @return array<string, string> */
+    public function messages(): array
+    {
+        return [
+            'mood.required' => 'Tell us how this memory feels.',
         ];
     }
 }

@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use App\Enums\Mood;
+
 it('lets a parent delete their own milestone while it is still empty', function () {
     [, $child] = family();
     $chapter = $child->chapters()->first();
@@ -26,6 +28,8 @@ it('refuses to delete a milestone once it holds a memory, so the xp cannot be re
     $this->postJson("/api/v1/children/{$child->id}/entries", [
         'child_milestone_id' => $milestone,
         'date' => now()->toDateString(),
+        'description' => 'Sand everywhere.',
+        'mood' => Mood::Joyful->value,
     ])->assertCreated();
 
     $this->deleteJson("/api/v1/children/{$child->id}/milestones/{$milestone}")->assertForbidden();
@@ -47,6 +51,7 @@ it('keeps a memory attached to a milestone forever, but allows editing it', func
         'child_milestone_id' => $milestone->id,
         'date' => now()->toDateString(),
         'description' => 'The longest night.',
+        'mood' => Mood::Tender->value,
     ])->assertCreated()->assertJsonPath('data.entry.isDeletable', false)->json('data.entry.id');
 
     $this->deleteJson("/api/v1/children/{$child->id}/entries/{$entry}")->assertForbidden();
@@ -62,6 +67,7 @@ it('lets a free memory be deleted', function () {
     $entry = $this->postJson("/api/v1/children/{$child->id}/entries", [
         'description' => 'She found her feet today.',
         'date' => now()->toDateString(),
+        'mood' => Mood::Proud->value,
     ])->assertCreated()->assertJsonPath('data.entry.isDeletable', true)->json('data.entry.id');
 
     $this->deleteJson("/api/v1/children/{$child->id}/entries/{$entry}")->assertNoContent();
@@ -71,7 +77,7 @@ it('keeps the xp when a free memory is deleted', function () {
     [, $child] = family();
 
     $entry = $this->postJson("/api/v1/children/{$child->id}/entries", [
-        'description' => 'A good day.', 'date' => now()->toDateString(),
+        'description' => 'A good day.', 'date' => now()->toDateString(), 'mood' => Mood::Joyful->value,
     ])->json('data.entry.id');
 
     expect($child->fresh()->xp)->toBe(10);
@@ -87,6 +93,7 @@ it('hides a recorded milestone without touching its memory', function () {
 
     $this->postJson("/api/v1/children/{$child->id}/entries", [
         'child_milestone_id' => $milestone->id, 'date' => now()->toDateString(),
+        'description' => 'Day one.', 'mood' => Mood::Tender->value,
     ])->assertCreated();
 
     $this->postJson("/api/v1/children/{$child->id}/milestones/{$milestone->id}/hide")->assertOk();
@@ -103,7 +110,7 @@ it('lets a viewer look but not write', function () {
 
     $this->getJson("/api/v1/children/{$child->id}")->assertOk();
     $this->postJson("/api/v1/children/{$child->id}/entries", [
-        'description' => 'Trying anyway.', 'date' => now()->toDateString(),
+        'description' => 'Trying anyway.', 'date' => now()->toDateString(), 'mood' => Mood::Joyful->value,
     ])->assertForbidden();
 });
 

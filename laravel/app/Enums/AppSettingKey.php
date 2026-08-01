@@ -16,6 +16,7 @@ enum AppSettingKey: string
     case DailyMilestoneEntries = 'daily_milestone_entries';
     case MaxCustomMilestonesPerChapter = 'max_custom_milestones_per_chapter';
     case MinMilestonesToCompleteChapter = 'min_milestones_to_complete_chapter';
+    case MaxMediaPerEntry = 'max_media_per_entry';
 
     public function default(): int
     {
@@ -25,6 +26,7 @@ enum AppSettingKey: string
             self::DailyMilestoneEntries => 5,
             self::MaxCustomMilestonesPerChapter => 10,
             self::MinMilestonesToCompleteChapter => 10,
+            self::MaxMediaPerEntry => 3,
         };
     }
 }

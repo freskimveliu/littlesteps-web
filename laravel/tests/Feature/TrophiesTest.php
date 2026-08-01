@@ -170,13 +170,14 @@ it('keeps the wording and the rule the child earned, whatever the catalogue says
 
     $trophy = Trophy::where('name', 'First Week')->first();
     $earned = $child->trophies()->where('trophy_id', $trophy->id)->first();
+    $wasWorth = $trophy->xp;
 
     $trophy->update(['name' => 'Seven Whole Days', 'threshold' => 99, 'xp' => 5, 'reward' => 'book']);
 
     expect($earned->fresh())
         ->name->toBe('First Week')
         ->threshold->toBe(7)
-        ->xp->toBe(60)
+        ->xp->toBe($wasWorth)
         ->reward->toBeNull();
 });
 

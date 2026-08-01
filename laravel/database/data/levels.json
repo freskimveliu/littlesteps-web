@@ -9,78 +9,78 @@
     "id": 2,
     "name": "Memory Maker",
     "icon": "camera",
-    "min_xp": 120
+    "min_xp": 750
   },
   {
     "id": 3,
     "name": "Story Keeper",
     "icon": "book",
-    "min_xp": 350
+    "min_xp": 1550
   },
   {
     "id": 4,
     "name": "Moment Collector",
     "icon": "albums",
-    "min_xp": 750
+    "min_xp": 2650
   },
   {
     "id": 5,
     "name": "Rising Star",
     "icon": "shield-checkmark",
-    "min_xp": 1400
+    "min_xp": 2900
   },
   {
     "id": 6,
     "name": "Memory Wizard",
     "icon": "sparkles",
-    "min_xp": 2400
+    "min_xp": 3300
   },
   {
     "id": 7,
     "name": "Chronicle Keeper",
     "icon": "library",
-    "min_xp": 3800
+    "min_xp": 4250
   },
   {
     "id": 8,
     "name": "Storyteller",
     "icon": "chatbubbles",
-    "min_xp": 5600
+    "min_xp": 4950
   },
   {
     "id": 9,
     "name": "Time Traveller",
     "icon": "time",
-    "min_xp": 8000
+    "min_xp": 6550
   },
   {
     "id": 10,
     "name": "Master Archivist",
     "icon": "folder-open",
-    "min_xp": 11000
+    "min_xp": 7000
   },
   {
     "id": 11,
     "name": "Keeper of Years",
     "icon": "calendar",
-    "min_xp": 14800
+    "min_xp": 8950
   },
   {
     "id": 12,
     "name": "Legend",
     "icon": "diamond",
-    "min_xp": 19500
+    "min_xp": 9500
   },
   {
     "id": 13,
     "name": "Hall of Fame",
     "icon": "trophy",
-    "min_xp": 25000
+    "min_xp": 11150
   },
   {
     "id": 14,
     "name": "Living Legacy",
     "icon": "star",
-    "min_xp": 32000
+    "min_xp": 13400
   }
 ]

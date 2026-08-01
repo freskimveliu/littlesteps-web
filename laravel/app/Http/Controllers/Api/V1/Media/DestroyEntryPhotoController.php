@@ -10,6 +10,7 @@ use App\Models\Child;
 use App\Models\ChildEntry;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 class DestroyEntryPhotoController extends Controller
 {
@@ -20,6 +21,12 @@ class DestroyEntryPhotoController extends Controller
 
         $file = $entry->getMedia(ChildEntry::PHOTOS)->firstWhere('id', $media);
         abort_unless($file, 404);
+
+        if ($entry->photoCount() === 1 && blank($entry->description)) {
+            throw ValidationException::withMessages([
+                'photo' => 'This memory has no words yet — add some before removing its last photo.',
+            ]);
+        }
 
         $file->delete();
 

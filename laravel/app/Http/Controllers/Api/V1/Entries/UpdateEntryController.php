@@ -40,7 +40,7 @@ class UpdateEntryController extends Controller
         });
 
         return ApiResponse::success(
-            new ChildEntryResource($entry->fresh()->load(['milestone', 'properties', 'media'])),
+            new ChildEntryResource($entry->fresh()->load(['milestone', 'properties', 'media'])->bindMediaOwner()),
             'Saved.',
         );
     }

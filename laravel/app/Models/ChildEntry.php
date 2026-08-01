@@ -70,6 +70,35 @@ class ChildEntry extends Model implements HasMedia
         return $this->child_milestone_id === null;
     }
 
+    public function photoCount(): int
+    {
+        return $this->getMedia(self::PHOTOS)->count();
+    }
+
+    /**
+     * Building a photo URL asks the media for the model that owns it, because files are
+     * filed under the account. Freshly loaded media has no such relation and would go
+     * back to the database for a model we are already holding — which lazy loading
+     * prevention turns into an exception. Hand it over instead.
+     */
+    public function bindMediaOwner(): static
+    {
+        if ($this->relationLoaded('media')) {
+            $this->media->each(fn (Media $media) => $media->setRelation('model', $this));
+        }
+
+        return $this;
+    }
+
+    /**
+     * A memory has to carry something of the moment — words or a picture. Mood alone
+     * leaves an empty step ticked off, which is what this rule exists to prevent.
+     */
+    public function hasSubstance(): bool
+    {
+        return filled($this->description) || $this->photoCount() > 0;
+    }
+
     /**
      * A memory attached to a milestone is permanent — the XP is already awarded and
      * the milestone has no other way of being un-recorded. A free one can go.

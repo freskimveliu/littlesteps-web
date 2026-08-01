@@ -46,10 +46,12 @@ it('awards the chapter xp and stamps who finished it', function () {
     $chapter->refresh();
 
     // More than the chapter's own XP: finishing the first chapter also earns
-    // the First Chapter trophy, which pays its own 200.
+    // the First Chapter trophy, which pays its own on top.
+    $trophyXp = App\Models\Trophy::where('name', 'First Chapter')->value('xp');
+
     expect($chapter->completed_at)->not->toBeNull()
         ->and($chapter->completed_by_user_id)->toBe($user->id)
-        ->and($child->fresh()->xp)->toBe($before + $chapter->xp + 200);
+        ->and($child->fresh()->xp)->toBe($before + $chapter->xp + $trophyXp);
 });
 
 it('refuses completion while a milestone is still empty', function () {

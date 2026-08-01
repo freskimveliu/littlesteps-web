@@ -19,6 +19,7 @@ class ChildChapterResource extends JsonResource
         $milestones = $this->whenLoaded('milestones');
         $visible = $this->relationLoaded('milestones') ? $this->milestones->where('is_hidden', false) : collect();
         $recorded = $visible->filter(fn ($milestone) => $milestone->isRecorded());
+        $limits = app(Limits::class);
 
         return [
             'id' => $this->id,
@@ -33,7 +34,8 @@ class ChildChapterResource extends JsonResource
             'isUnlocked' => $child ? $this->isUnlockedFor($child) : true,
             'isCompleted' => $this->isCompleted(),
             'completedAt' => $this->completed_at?->toIso8601String(),
-            'isCompletable' => app(Limits::class)->canCompleteMilestone($this->resource),
+            'isCompletable' => $limits->canCompleteMilestone($this->resource),
+            'canAddMilestone' => $limits->canAddCustomStep($this->resource),
             'stepsTotal' => $visible->count(),
             'stepsRecorded' => $recorded->count(),
             'milestones' => ChildMilestoneResource::collection($milestones),
