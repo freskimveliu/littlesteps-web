@@ -2,14 +2,17 @@
 
 declare(strict_types=1);
 
+use App\Actions\Children\CreateChild;
+use App\Data\ChildData;
 use App\Enums\Gender;
 use App\Enums\MemberRole;
 use App\Enums\Relation;
 use App\Models\Child;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 
-pest()->extend(Tests\TestCase::class)
+pest()->extend(TestCase::class)
     ->use(RefreshDatabase::class)
     ->in('Feature');
 
@@ -23,9 +26,9 @@ function family(int $ageMonths = 6): array
 {
     $user = User::factory()->create(['timezone' => 'Europe/Tirane']);
 
-    $child = app(App\Actions\Children\CreateChild::class)->handle(
+    $child = app(CreateChild::class)->handle(
         $user,
-        new App\Data\ChildData(
+        new ChildData(
             name: 'Liza',
             birthday: now()->subMonths($ageMonths)->toDateString(),
             gender: Gender::Girl,
@@ -46,6 +49,23 @@ function viewer(Child $child): User
         'user_id' => $user->id,
         'relation' => Relation::Grandparent,
         'role' => MemberRole::Viewer,
+    ]);
+
+    return $user;
+}
+
+/**
+ * A second parent who may add memories but does not own the child — the
+ * distinction ChildPolicy draws between contribute and update.
+ */
+function editor(Child $child): User
+{
+    $user = User::factory()->create();
+
+    $child->memberships()->create([
+        'user_id' => $user->id,
+        'relation' => Relation::Father,
+        'role' => MemberRole::Editor,
     ]);
 
     return $user;

@@ -149,10 +149,6 @@ Copy `deploy/.env.server.example` from this repo to
   echo "base64:$(openssl rand -base64 32)"
   ```
 - `DB_PASSWORD` — what you set in step 2.
-- `ADMIN_EMAIL` / `ADMIN_PASSWORD` — the first admin. `/admin/login` is the
-  only way into the web app and nothing else creates an account, so a
-  deployment with these blank is one you cannot sign in to. They are read
-  once, by the migration in step 6.
 - `REDIS_PASSWORD` — vault's. Both passwords you need are in one place:
   ```bash
   grep -E '^(DB|REDIS)_PASSWORD' /opt/vault/laravel/.env
@@ -234,15 +230,24 @@ today, 194 of them Pest higher-order syntax in `tests/` that PHPStan cannot
 resolve. None of it is new and none of it is about deployment. The step goes
 back in once it runs clean.
 
-The first admin creates itself. `2026_08_01_100004_create_admin_user` reads
-`ADMIN_EMAIL`, `ADMIN_PASSWORD` and `ADMIN_NAME` from the env file you wrote in
-step 3, so by the time the workflow goes green you can sign in at
-`https://littlesteps.freskimveliu.dev/admin/login`.
+The first admin creates itself. `2026_08_01_100004_create_admin_user` carries
+the credentials as constants, so by the time the workflow goes green you can
+sign in at `https://littlesteps.freskimveliu.dev/admin/login`.
 
 It is deliberately a migration and not a seeder: `migrate --force` already runs
 on every deploy, and a seeder here would be one more manual step to forget on
-the one day it matters. With those variables unset it does nothing, which is
-how it stays out of local development and CI.
+the one day it matters. It skips the `testing` environment so the suite keeps
+counting only the users a test made itself.
+
+**That password is public.** It sits in a public repository, and the app has no
+change-password route to rotate it through, so anyone reading the migration can
+sign in to `/admin`. Changing it means editing the constant and migrating a
+fresh database, or doing it in place:
+
+```bash
+docker compose exec app php artisan tinker
+>>> \App\Models\User::firstWhere('email', '...')->update(['password' => 'the new one']);
+```
 
 Do not create that account by hand instead. `is_admin` is not in the `User`
 model's `#[Fillable]` list, so a `User::create([...])` in tinker leaves the flag

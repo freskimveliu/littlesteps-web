@@ -6,6 +6,7 @@ namespace App\Models;
 
 use App\Enums\Gender;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -18,6 +19,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
 #[Fillable(['created_by_user_id', 'name', 'birthday', 'gender'])]
 class Child extends Model implements HasMedia
 {
+    use HasFactory;
     use InteractsWithMedia;
 
     public const PHOTO = 'photo';
