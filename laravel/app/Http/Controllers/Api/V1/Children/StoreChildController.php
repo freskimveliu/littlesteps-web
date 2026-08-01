@@ -10,6 +10,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\StoreChildRequest;
 use App\Http\Resources\ChildResource;
 use App\Http\Responses\ApiResponse;
+use App\Models\Child;
 use Illuminate\Http\JsonResponse;
 
 class StoreChildController extends Controller
@@ -18,8 +19,12 @@ class StoreChildController extends Controller
     {
         $child = $create->handle($request->user(), ChildData::fromRequest($request));
 
+        if ($request->hasFile('photo')) {
+            $child->addMediaFromRequest('photo')->toMediaCollection(Child::PHOTO);
+        }
+
         return ApiResponse::success(
-            new ChildResource($child->load('memberships.user')),
+            new ChildResource($child->fresh()->load('memberships.user')),
             'The adventure is ready.',
             201,
         );

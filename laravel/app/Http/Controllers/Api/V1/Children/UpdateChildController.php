@@ -17,8 +17,15 @@ class UpdateChildController extends Controller
     {
         $this->authorize('update', $child);
 
-        $child->update($request->validated());
+        $child->update($request->safe()->except('photo'));
 
-        return ApiResponse::success(new ChildResource($child->fresh()), 'Saved.');
+        if ($request->hasFile('photo')) {
+            $child->addMediaFromRequest('photo')->toMediaCollection(Child::PHOTO);
+        }
+
+        return ApiResponse::success(
+            new ChildResource($child->fresh()->load('memberships.user')),
+            'Saved.',
+        );
     }
 }

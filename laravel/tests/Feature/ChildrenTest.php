@@ -241,7 +241,7 @@ it('stores a photo and serves it back on the child', function () {
     Storage::fake('public');
     [, $child] = family();
 
-    $response = $this->postJson("/api/v1/children/{$child->id}/photo", [
+    $response = $this->patchJson("/api/v1/children/{$child->id}", [
         'photo' => UploadedFile::fake()->image('liza.jpg'),
     ])->assertOk();
 
@@ -250,12 +250,30 @@ it('stores a photo and serves it back on the child', function () {
         ->and($child->fresh()->getMedia(Child::PHOTO))->toHaveCount(1);
 });
 
+/** PHP only parses multipart on POST, so the app spoofs the method to send a photo. */
+it('takes the name and the photo together from a spoofed patch', function () {
+    Storage::fake('public');
+    [, $child] = family();
+
+    $response = $this->post("/api/v1/children/{$child->id}", [
+        '_method' => 'PATCH',
+        'name' => 'Liza',
+        'photo' => UploadedFile::fake()->image('liza.jpg'),
+    ])->assertOk();
+
+    expect($response->json('data.name'))->toBe('Liza')
+        ->and($response->json('data.photo.url'))->toBeString()
+        ->and($response->json('data.members'))->toBeArray()
+        ->and($child->fresh()->name)->toBe('Liza')
+        ->and($child->fresh()->getMedia(Child::PHOTO))->toHaveCount(1);
+});
+
 it('keeps only the newest photo', function () {
     Storage::fake('public');
     [, $child] = family();
 
     foreach (['first.jpg', 'second.jpg'] as $name) {
-        $this->postJson("/api/v1/children/{$child->id}/photo", [
+        $this->patchJson("/api/v1/children/{$child->id}", [
             'photo' => UploadedFile::fake()->image($name),
         ])->assertOk();
     }
@@ -268,7 +286,7 @@ it('refuses a photo that is not an image', function () {
     Storage::fake('public');
     [, $child] = family();
 
-    $this->postJson("/api/v1/children/{$child->id}/photo", [
+    $this->patchJson("/api/v1/children/{$child->id}", [
         'photo' => UploadedFile::fake()->create('notes.pdf', 100, 'application/pdf'),
     ])->assertJsonValidationErrorFor('photo');
 
@@ -279,7 +297,7 @@ it('refuses a photo larger than the cap', function () {
     Storage::fake('public');
     [, $child] = family();
 
-    $this->postJson("/api/v1/children/{$child->id}/photo", [
+    $this->patchJson("/api/v1/children/{$child->id}", [
         'photo' => UploadedFile::fake()->image('huge.jpg')->size(20481),
     ])->assertJsonValidationErrorFor('photo');
 
@@ -291,7 +309,7 @@ it('refuses a photo from a second parent who does not own the child', function (
     [, $child] = family();
 
     $this->actingAs(editor($child), 'sanctum')
-        ->postJson("/api/v1/children/{$child->id}/photo", [
+        ->patchJson("/api/v1/children/{$child->id}", [
             'photo' => UploadedFile::fake()->image('liza.jpg'),
         ])
         ->assertForbidden();

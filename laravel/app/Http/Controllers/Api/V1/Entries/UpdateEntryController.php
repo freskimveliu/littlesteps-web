@@ -26,7 +26,7 @@ class UpdateEntryController extends Controller
 
         DB::transaction(function () use ($request, $entry) {
             $entry->update([
-                ...$request->safe()->except('properties'),
+                ...$request->safe()->except(['properties', 'media']),
                 'updated_by_user_id' => $request->user()->id,
             ]);
 
@@ -36,6 +36,10 @@ class UpdateEntryController extends Controller
                 foreach ($request->array('properties') as $i => $property) {
                     $entry->properties()->create([...$property, 'sort_order' => ($i + 1) * 10]);
                 }
+            }
+
+            foreach ($request->file('media') ?? [] as $file) {
+                $entry->addMedia($file)->toMediaCollection(ChildEntry::MEDIA);
             }
         });
 

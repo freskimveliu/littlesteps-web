@@ -30,8 +30,6 @@ use App\Http\Controllers\Api\V1\Entries\IndexEntriesController;
 use App\Http\Controllers\Api\V1\Entries\StoreEntryController;
 use App\Http\Controllers\Api\V1\Entries\UpdateEntryController;
 use App\Http\Controllers\Api\V1\Media\DestroyEntryMediaController;
-use App\Http\Controllers\Api\V1\Media\StoreChildPhotoController;
-use App\Http\Controllers\Api\V1\Media\StoreEntryMediaController;
 use App\Http\Controllers\Api\V1\Media\StoreUserPhotoController;
 use App\Http\Controllers\Api\V1\Milestones\DestroyMilestoneController;
 use App\Http\Controllers\Api\V1\Milestones\HideMilestoneController;
@@ -62,7 +60,6 @@ Route::prefix('v1')->group(function () {
         Route::get('children/{child}', ShowChildController::class);
         Route::patch('children/{child}', UpdateChildController::class);
         Route::delete('children/{child}', DestroyChildController::class);
-        Route::post('children/{child}/photo', StoreChildPhotoController::class);
 
         Route::get('children/{child}/chapters', IndexChaptersController::class);
         Route::post('children/{child}/chapters', StoreChapterController::class);
@@ -81,7 +78,6 @@ Route::prefix('v1')->group(function () {
         Route::post('children/{child}/entries', StoreEntryController::class);
         Route::patch('children/{child}/entries/{entry}', UpdateEntryController::class);
         Route::delete('children/{child}/entries/{entry}', DestroyEntryController::class);
-        Route::post('children/{child}/entries/{entry}/media', StoreEntryMediaController::class);
         Route::delete('children/{child}/entries/{entry}/media/{media}', DestroyEntryMediaController::class);
 
         Route::get('children/{child}/progress', ShowProgressController::class);

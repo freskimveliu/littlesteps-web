@@ -19,6 +19,7 @@ class StoreChildRequest extends FormRequest
             'birthday' => ['required', 'date', 'before_or_equal:today'],
             'gender' => ['required', Rule::enum(Gender::class)],
             'relation' => ['required', Rule::enum(Relation::class)],
+            'photo' => ['sometimes', 'image', 'max:20480'],
         ];
     }
 }

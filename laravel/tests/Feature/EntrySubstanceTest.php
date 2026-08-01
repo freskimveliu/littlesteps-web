@@ -84,9 +84,9 @@ it('refuses an attachment beyond the cap added after the fact', function () {
             ->all(),
     ])->assertCreated()->json('data.entry.id');
 
-    $this->postJson("/api/v1/children/{$child->id}/entries/{$entry}/media", [
-        'file' => UploadedFile::fake()->image('one-too-many.jpg'),
-    ])->assertJsonValidationErrorFor('file');
+    $this->patchJson("/api/v1/children/{$child->id}/entries/{$entry}", [
+        'media' => [UploadedFile::fake()->image('one-too-many.jpg')],
+    ])->assertJsonValidationErrorFor('media');
 
     expect(ChildEntry::find($entry)->mediaCount())->toBe($most);
 });

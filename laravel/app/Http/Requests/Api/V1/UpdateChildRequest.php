@@ -17,6 +17,7 @@ class UpdateChildRequest extends FormRequest
             'name' => ['sometimes', 'string', 'max:60'],
             'birthday' => ['sometimes', 'date', 'before_or_equal:today'],
             'gender' => ['sometimes', Rule::enum(Gender::class)],
+            'photo' => ['sometimes', 'image', 'max:20480'],
         ];
     }
 }
