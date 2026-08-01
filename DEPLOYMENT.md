@@ -149,6 +149,10 @@ Copy `deploy/.env.server.example` from this repo to
   echo "base64:$(openssl rand -base64 32)"
   ```
 - `DB_PASSWORD` — what you set in step 2.
+- `ADMIN_EMAIL` / `ADMIN_PASSWORD` — the first admin. `/admin/login` is the
+  only way into the web app and nothing else creates an account, so a
+  deployment with these blank is one you cannot sign in to. They are read
+  once, by the migration in step 6.
 - `REDIS_PASSWORD` — vault's. Both passwords you need are in one place:
   ```bash
   grep -E '^(DB|REDIS)_PASSWORD' /opt/vault/laravel/.env
@@ -230,21 +234,24 @@ today, 194 of them Pest higher-order syntax in `tests/` that PHPStan cannot
 resolve. None of it is new and none of it is about deployment. The step goes
 back in once it runs clean.
 
-Then create the first user. There is no `make:admin` command in this project,
-so use tinker:
+The first admin creates itself. `2026_08_01_100004_create_admin_user` reads
+`ADMIN_EMAIL`, `ADMIN_PASSWORD` and `ADMIN_NAME` from the env file you wrote in
+step 3, so by the time the workflow goes green you can sign in at
+`https://littlesteps.freskimveliu.dev/admin/login`.
 
-```bash
-ssh ubuntu@$SERVER_IP
-cd /opt/littlesteps
-docker compose exec app php artisan tinker
-```
+It is deliberately a migration and not a seeder: `migrate --force` already runs
+on every deploy, and a seeder here would be one more manual step to forget on
+the one day it matters. With those variables unset it does nothing, which is
+how it stays out of local development and CI.
+
+Do not create that account by hand instead. `is_admin` is not in the `User`
+model's `#[Fillable]` list, so a `User::create([...])` in tinker leaves the flag
+false and the new account meets a 403 at `/admin` — the mistake this migration
+exists to stop. If you ever do need to promote someone:
 
 ```php
-\App\Models\User::create([
-    'name' => 'Freskim',
-    'email' => 'freskim.veliu@gmail.com',
-    'password' => bcrypt('a-real-password'),
-]);
+$u = \App\Models\User::firstWhere('email', '...');
+$u->forceFill(['is_admin' => true])->save();
 ```
 
 **Do not run `php artisan db:seed` on this server.** `DatabaseSeeder` calls
