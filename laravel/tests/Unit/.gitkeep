@@ -1,0 +1,3 @@
+# phpunit.xml declares a Unit suite for this directory. Git does not track
+# empty directories, so without this file a fresh checkout — CI — fails with
+# `Test directory "tests/Unit" not found`. Delete it once real unit tests land.
