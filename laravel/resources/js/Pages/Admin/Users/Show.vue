@@ -69,7 +69,7 @@ const props = defineProps<{
         description: string | null;
         date: string;
         mood: string | null;
-        photos: number;
+        media: number;
     }[];
 }>();
 
@@ -230,7 +230,7 @@ function initial(name: string): string {
                         <UiTableHeader>Child</UiTableHeader>
                         <UiTableHeader>Milestone</UiTableHeader>
                         <UiTableHeader>Story</UiTableHeader>
-                        <UiTableHeader align="right">Photos</UiTableHeader>
+                        <UiTableHeader align="right">Media</UiTableHeader>
                     </template>
                     <template #body>
                         <UiTableRow v-for="entry in recent" :key="entry.id">
@@ -254,7 +254,7 @@ function initial(name: string): string {
                                 <span class="text-slate-700">{{ entry.description ?? '—' }}</span>
                                 <UiBadge v-if="entry.mood" tone="primary" class="ml-2">{{ entry.mood }}</UiBadge>
                             </UiTableCell>
-                            <UiTableCell align="right">{{ entry.photos || '—' }}</UiTableCell>
+                            <UiTableCell align="right">{{ entry.media || '—' }}</UiTableCell>
                         </UiTableRow>
                     </template>
                 </UiTable>

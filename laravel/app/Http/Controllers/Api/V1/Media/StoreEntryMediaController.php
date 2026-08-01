@@ -14,7 +14,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
-class StoreEntryPhotoController extends Controller
+class StoreEntryMediaController extends Controller
 {
     public function __invoke(Request $request, Child $child, ChildEntry $entry, Limits $limits): JsonResponse
     {
@@ -22,24 +22,24 @@ class StoreEntryPhotoController extends Controller
         abort_unless($entry->child_id === $child->id, 404);
 
         $request->validate([
-            'photo' => ['required', 'image', 'max:20480'],
+            'file' => ['required', 'file', 'mimetypes:'.implode(',', ChildEntry::ACCEPTS), 'max:20480'],
         ]);
 
         $most = $limits->maxMediaPerEntry();
 
-        if ($entry->photoCount() >= $most) {
+        if ($entry->mediaCount() >= $most) {
             throw ValidationException::withMessages([
-                'photo' => $most === 1
-                    ? 'A memory holds one photo.'
-                    : "A memory holds up to {$most} photos.",
+                'file' => $most === 1
+                    ? 'A memory holds one attachment.'
+                    : "A memory holds up to {$most} attachments.",
             ]);
         }
 
-        $entry->addMediaFromRequest('photo')->toMediaCollection(ChildEntry::PHOTOS);
+        $entry->addMediaFromRequest('file')->toMediaCollection(ChildEntry::MEDIA);
 
         return ApiResponse::success(
             new ChildEntryResource($entry->fresh()->load(['milestone', 'properties', 'media'])->bindMediaOwner()),
-            'Photo added.',
+            'Added.',
             201,
         );
     }

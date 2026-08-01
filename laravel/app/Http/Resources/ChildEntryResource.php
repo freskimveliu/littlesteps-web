@@ -7,6 +7,7 @@ namespace App\Http\Resources;
 use App\Models\ChildEntry;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 /** @mixin ChildEntry */
 class ChildEntryResource extends JsonResource
@@ -26,11 +27,13 @@ class ChildEntryResource extends JsonResource
             'isEditable' => true,
             'isDeletable' => $this->isDeletable(),
             'properties' => ChildEntryPropertyResource::collection($this->whenLoaded('properties')),
-            'photos' => $this->getMedia(ChildEntry::PHOTOS)->map(fn ($media) => [
+            'media' => $this->getMedia(ChildEntry::MEDIA)->map(fn (Media $media) => [
                 'id' => $media->id,
+                'type' => $media->type,
+                'mimeType' => $media->mime_type,
                 'url' => $media->getUrl(),
-                'thumb' => $media->getUrl('thumb'),
-                'display' => $media->getUrl('display'),
+                'thumb' => $media->hasGeneratedConversion('thumb') ? $media->getUrl('thumb') : null,
+                'display' => $media->hasGeneratedConversion('display') ? $media->getUrl('display') : null,
             ])->values(),
             'createdAt' => $this->created_at?->toIso8601String(),
         ];

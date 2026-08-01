@@ -48,7 +48,7 @@ class ShowChildController extends Controller
                 'date' => $entry->date->toDateString(),
                 'mood' => $entry->mood,
                 'is_free' => $entry->isFree(),
-                'photos' => $entry->getMedia('photos')->count(),
+                'media' => $entry->mediaCount(),
                 'properties' => $entry->properties->map(fn ($p) => [
                     'label' => $p->name ?? ucfirst($p->key->value),
                     'value' => $p->value,

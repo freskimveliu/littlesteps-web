@@ -68,7 +68,8 @@ return new class extends Migration
             $table->foreignId('child_milestone_id')->nullable()->unique()->constrained()->cascadeOnDelete();
             $table->text('description')->nullable();
             $table->date('date');
-            $table->string('mood')->nullable();
+            // Every memory carries how it felt — the one thing a parent always knows.
+            $table->string('mood');
             $table->foreignId('created_by_user_id')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('updated_by_user_id')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();

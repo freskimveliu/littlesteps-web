@@ -106,11 +106,13 @@ class Metrics
         return $child->chapters()->whereNotNull('completed_at')->count();
     }
 
+    /** Trophies are awarded for photos kept, so this stays images even as a memory may carry more. */
     public function photos(Child $child): int
     {
         return DB::table('media')
             ->where('model_type', ChildEntry::class)
-            ->where('collection_name', ChildEntry::PHOTOS)
+            ->where('collection_name', ChildEntry::MEDIA)
+            ->where('mime_type', 'like', 'image/%')
             ->whereIn('model_id', $child->entries()->select('id'))
             ->count();
     }

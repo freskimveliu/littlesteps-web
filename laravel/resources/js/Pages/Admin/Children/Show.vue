@@ -83,7 +83,7 @@ const props = defineProps<{
         date: string;
         mood: string | null;
         is_free: boolean;
-        photos: number;
+        media: number;
         properties: { label: string; value: string | null; unit: string | null }[];
         created_at: string | null;
     }[];
@@ -269,7 +269,7 @@ function toggleChapter(id: number) {
                 <UiTableHeader>Milestone</UiTableHeader>
                 <UiTableHeader>Story</UiTableHeader>
                 <UiTableHeader>Measured</UiTableHeader>
-                <UiTableHeader align="right">Photos</UiTableHeader>
+                <UiTableHeader align="right">Media</UiTableHeader>
             </template>
             <template #body>
                 <UiTableRow v-for="entry in entries" :key="entry.id">
@@ -291,7 +291,7 @@ function toggleChapter(id: number) {
                             </UiBadge>
                         </div>
                     </UiTableCell>
-                    <UiTableCell align="right">{{ entry.photos || '—' }}</UiTableCell>
+                    <UiTableCell align="right">{{ entry.media || '—' }}</UiTableCell>
                 </UiTableRow>
             </template>
             <template #footer>

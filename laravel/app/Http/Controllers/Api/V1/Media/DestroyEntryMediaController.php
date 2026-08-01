@@ -12,19 +12,19 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
-class DestroyEntryPhotoController extends Controller
+class DestroyEntryMediaController extends Controller
 {
     public function __invoke(Request $request, Child $child, ChildEntry $entry, int $media): JsonResponse
     {
         $this->authorize('contribute', $child);
         abort_unless($entry->child_id === $child->id, 404);
 
-        $file = $entry->getMedia(ChildEntry::PHOTOS)->firstWhere('id', $media);
+        $file = $entry->getMedia(ChildEntry::MEDIA)->firstWhere('id', $media);
         abort_unless($file, 404);
 
-        if ($entry->photoCount() === 1 && blank($entry->description)) {
+        if ($entry->mediaCount() === 1 && blank($entry->description)) {
             throw ValidationException::withMessages([
-                'photo' => 'This memory has no words yet — add some before removing its last photo.',
+                'file' => 'This memory has no words yet — add some before removing the last of it.',
             ]);
         }
 

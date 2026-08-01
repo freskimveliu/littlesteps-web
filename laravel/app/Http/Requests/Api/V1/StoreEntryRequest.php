@@ -6,6 +6,7 @@ namespace App\Http\Requests\Api\V1;
 
 use App\Enums\Mood;
 use App\Enums\PropertyKey;
+use App\Models\ChildEntry;
 use App\Support\Limits;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -17,11 +18,11 @@ class StoreEntryRequest extends FormRequest
     {
         return [
             'child_milestone_id' => ['nullable', 'integer'],
-            'description' => ['nullable', 'string', 'max:5000', 'required_without:photos'],
+            'description' => ['nullable', 'string', 'max:5000', 'required_without:media'],
             'date' => ['required', 'date', 'before_or_equal:today'],
             'mood' => ['required', Rule::enum(Mood::class)],
-            'photos' => ['array', 'max:'.$limits->maxMediaPerEntry()],
-            'photos.*' => ['image', 'max:20480'],
+            'media' => ['array', 'max:'.$limits->maxMediaPerEntry()],
+            'media.*' => ['file', 'mimetypes:'.implode(',', ChildEntry::ACCEPTS), 'max:20480'],
             'properties' => ['array'],
             'properties.*.key' => ['required', Rule::enum(PropertyKey::class)],
             'properties.*.name' => ['nullable', 'string', 'max:60', 'required_if:properties.*.key,custom'],
@@ -33,9 +34,9 @@ class StoreEntryRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'description.required_without' => 'A memory needs a few words or a photo.',
+            'description.required_without' => 'A memory needs a few words or something to show for it.',
             'mood.required' => 'Tell us how this memory feels.',
-            'photos.max' => 'A memory can hold at most :max photos.',
+            'media.max' => 'A memory holds up to :max attachments.',
         ];
     }
 }

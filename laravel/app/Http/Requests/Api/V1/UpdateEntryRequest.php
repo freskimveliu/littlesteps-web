@@ -30,7 +30,7 @@ class UpdateEntryRequest extends FormRequest
     /**
      * A patch is partial, so the rules above can only judge what was sent. What matters
      * is the entry the patch leaves behind — it still has to hold a mood and either
-     * words or a photo.
+     * words or an attachment.
      */
     public function withValidator(Validator $validator): void
     {
@@ -45,8 +45,8 @@ class UpdateEntryRequest extends FormRequest
                 ? trim((string) $this->input('description'))
                 : (string) $entry->description;
 
-            if ($description === '' && $entry->photoCount() === 0) {
-                $validator->errors()->add('description', 'A memory needs a few words or a photo.');
+            if ($description === '' && $entry->mediaCount() === 0) {
+                $validator->errors()->add('description', 'A memory needs a few words or something to show for it.');
             }
 
             $mood = $this->has('mood') ? $this->input('mood') : $entry->mood;

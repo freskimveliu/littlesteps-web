@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Enums\Mood;
 use App\Enums\PropertyKey;
 
 it('records measurements against a milestone and charts them by age', function () {
@@ -13,6 +14,7 @@ it('records measurements against a milestone and charts them by age', function (
         $child->entries()->create([
             'child_milestone_id' => $milestone->id,
             'date' => $child->birthday->copy()->addMonths($month)->toDateString(),
+            'mood' => Mood::Joyful,
             'created_by_user_id' => $child->created_by_user_id,
         ])->properties()->createMany([
             ['key' => PropertyKey::Weight, 'value' => (string) (4 + $month)],
@@ -36,6 +38,7 @@ it('keeps custom properties out of the chart', function () {
 
     $child->entries()->create([
         'date' => now()->toDateString(),
+        'mood' => Mood::Joyful,
         'created_by_user_id' => $child->created_by_user_id,
     ])->properties()->create([
         'key' => PropertyKey::Custom,

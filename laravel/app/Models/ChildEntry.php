@@ -23,7 +23,14 @@ class ChildEntry extends Model implements HasMedia
 {
     use InteractsWithMedia;
 
-    public const PHOTOS = 'photos';
+    public const MEDIA = 'media';
+
+    /**
+     * What a memory is allowed to carry. Images are all a parent can attach today, but
+     * nothing above this list knows that — widen it here and the collection, the upload
+     * rules and the API move together.
+     */
+    public const ACCEPTS = ['image/jpeg', 'image/png', 'image/webp', 'image/heic'];
 
     protected function casts(): array
     {
@@ -35,8 +42,8 @@ class ChildEntry extends Model implements HasMedia
 
     public function registerMediaCollections(): void
     {
-        $this->addMediaCollection(self::PHOTOS)
-            ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/webp', 'image/heic']);
+        $this->addMediaCollection(self::MEDIA)
+            ->acceptsMimeTypes(self::ACCEPTS);
     }
 
     public function registerMediaConversions(?Media $media = null): void
@@ -70,13 +77,13 @@ class ChildEntry extends Model implements HasMedia
         return $this->child_milestone_id === null;
     }
 
-    public function photoCount(): int
+    public function mediaCount(): int
     {
-        return $this->getMedia(self::PHOTOS)->count();
+        return $this->getMedia(self::MEDIA)->count();
     }
 
     /**
-     * Building a photo URL asks the media for the model that owns it, because files are
+     * Building a media URL asks the media for the model that owns it, because files are
      * filed under the account. Freshly loaded media has no such relation and would go
      * back to the database for a model we are already holding — which lazy loading
      * prevention turns into an exception. Hand it over instead.
@@ -91,12 +98,12 @@ class ChildEntry extends Model implements HasMedia
     }
 
     /**
-     * A memory has to carry something of the moment — words or a picture. Mood alone
+     * A memory has to carry something of the moment — words or an attachment. Mood alone
      * leaves an empty step ticked off, which is what this rule exists to prevent.
      */
     public function hasSubstance(): bool
     {
-        return filled($this->description) || $this->photoCount() > 0;
+        return filled($this->description) || $this->mediaCount() > 0;
     }
 
     /**

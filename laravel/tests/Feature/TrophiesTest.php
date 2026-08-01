@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Actions\Progress\EvaluateTrophies;
+use App\Enums\Mood;
 use App\Enums\RewardStatus;
 use App\Models\Child;
 use App\Models\Trophy;
@@ -15,6 +16,7 @@ function memoriesOn(Child $child, array $dates): void
         $child->entries()->create([
             'date' => $date,
             'description' => 'A day.',
+            'mood' => Mood::Joyful,
             'created_by_user_id' => $child->created_by_user_id,
         ]);
     }
@@ -59,6 +61,7 @@ it('only counts a milestone as on time when it was caught at the right age', fun
     $entry = $child->entries()->create([
         'child_milestone_id' => $milestone->id,
         'date' => $child->birthday->copy()->addMonths(11)->toDateString(),
+        'mood' => Mood::Joyful,
         'created_by_user_id' => $child->created_by_user_id,
     ]);
 
@@ -113,6 +116,7 @@ it('reserves a gift unclaimed rather than generating it', function () {
         $child->entries()->create([
             'child_milestone_id' => $milestone->id,
             'date' => now()->toDateString(),
+            'mood' => Mood::Joyful,
             'created_by_user_id' => $child->created_by_user_id,
         ]);
     }
@@ -134,6 +138,7 @@ it('starts a generation only when the parent claims it', function () {
     foreach ($chapter->milestones()->visible()->get() as $milestone) {
         $child->entries()->create([
             'child_milestone_id' => $milestone->id, 'date' => now()->toDateString(),
+            'mood' => Mood::Joyful,
             'created_by_user_id' => $child->created_by_user_id,
         ]);
     }

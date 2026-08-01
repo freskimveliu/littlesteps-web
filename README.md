@@ -18,13 +18,9 @@ Laravel + Inertia + Vue + Tailwind, running on Docker behind Traefik with local 
 .
 ├── Dockerfile                      # multi-stage: base → development / builder → production
 ├── docker-compose.yml              # dev stack
-├── docker-compose.production.yml   # server stack, built locally
-├── DEPLOYMENT.md                   # how the app is published
+├── docker-compose.production.yml   # server stack
 ├── .env                            # single source of truth (laravel/.env symlinks to it)
 ├── bin/docker-exec                 # command proxy into the containers
-├── deploy/                         # the production deployment
-│   ├── docker-compose.server.yml   # what actually runs, pulling the CI image
-│   └── ansible/                    # provisioning + config, setup.sh / apply.sh
 ├── docker/
 │   ├── nginx/                      # dev webserver image + vhost
 │   └── mysql/init/                 # creates the `testing` database
@@ -44,18 +40,27 @@ Nothing else is domain-specific.
 
 ## First-time setup
 
-1. Start the shared proxy — see `../proxy/README.md`. Once its wildcard DNS is
-   in place, any `*.dev.freskimveliu.dev` name resolves with no `/etc/hosts`
-   entry.
+1. Start the shared proxy — see `../proxy/README.md`. It owns 80/443 and holds
+   the certificate for `*.dev.freskimveliu.dev`.
 
-2. Copy the env file and generate a key (already done on this checkout):
+2. Point the hostname at your machine. There is no public DNS record for
+   `*.dev.freskimveliu.dev`, so each dev hostname needs an `/etc/hosts` entry:
+
+   ```bash
+   echo "127.0.0.1 littlesteps.dev.freskimveliu.dev" | sudo tee -a /etc/hosts
+   ```
+
+   Without it the browser fails with `ERR_NAME_NOT_RESOLVED` before it ever
+   reaches Traefik — even with the whole stack running.
+
+3. Copy the env file and generate a key (already done on this checkout):
 
    ```bash
    cp .env.example .env
    ./bin/docker-exec artisan key:generate
    ```
 
-3. Start everything and migrate:
+4. Start everything and migrate:
 
    ```bash
    docker compose up -d
@@ -113,14 +118,6 @@ Frontend type-checking:
 - Ziggy is installed, so `route()` is available in Vue components.
 
 ## Deploying
-
-The app runs on its own EC2 instance at **https://littlesteps.freskimveliu.dev**
-— see **[DEPLOYMENT.md](DEPLOYMENT.md)** for the full runbook. In short: push to
-`main`, and GitHub Actions tests it, builds the image to GHCR and calls a
-webhook that swaps the container. `deploy/ansible/setup.sh` provisions the
-server; `deploy/ansible/apply.sh` applies every later change.
-
-Everything below describes deploying the stack by hand, without that pipeline.
 
 The shared proxy must be running on the server first — see
 `../proxy/README.md`. It gets certificates from Let's Encrypt automatically, so

@@ -13,7 +13,7 @@ readonly class EntryData
 {
     /**
      * @param  array<int, array{key: PropertyKey, name: ?string, value: ?string}>  $properties
-     * @param  array<int, UploadedFile>  $photos
+     * @param  array<int, UploadedFile>  $media
      */
     public function __construct(
         public ?int $childStepId,
@@ -21,7 +21,7 @@ readonly class EntryData
         public string $date,
         public ?Mood $mood,
         public array $properties,
-        public array $photos = [],
+        public array $media = [],
     ) {}
 
     public static function fromRequest(Request $request): self
@@ -40,7 +40,7 @@ readonly class EntryData
             date: $request->date('date')?->toDateString() ?? now()->toDateString(),
             mood: $request->filled('mood') ? Mood::from($request->string('mood')->toString()) : null,
             properties: $properties,
-            photos: array_values($request->file('photos') ?? []),
+            media: array_values($request->file('media') ?? []),
         );
     }
 

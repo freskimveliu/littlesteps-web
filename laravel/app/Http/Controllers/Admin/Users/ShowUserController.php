@@ -81,7 +81,8 @@ class ShowUserController extends Controller
             'written' => ChildEntry::where('created_by_user_id', $parent->id)->count(),
             'photos' => DB::table('media')
                 ->where('model_type', ChildEntry::class)
-                ->where('collection_name', ChildEntry::PHOTOS)
+                ->where('collection_name', ChildEntry::MEDIA)
+                ->where('mime_type', 'like', 'image/%')
                 ->whereIn('model_id', ChildEntry::where('created_by_user_id', $parent->id)->select('id'))
                 ->count(),
             'chapterCount' => Chapter::count(),
@@ -150,7 +151,7 @@ class ShowUserController extends Controller
                 'description' => $entry->description,
                 'date' => $entry->date->toDateString(),
                 'mood' => $entry->mood,
-                'photos' => $entry->getMedia(ChildEntry::PHOTOS)->count(),
+                'media' => $entry->mediaCount(),
             ])
             ->all();
     }

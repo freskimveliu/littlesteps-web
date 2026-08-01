@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Enums\AppSettingKey;
+use App\Enums\Mood;
 use App\Models\AppSetting;
 use App\Models\Child;
 use App\Models\ChildChapter;
@@ -15,6 +16,7 @@ function fillChapter(Child $child, ChildChapter $chapter): void
         $child->entries()->create([
             'child_milestone_id' => $milestone->id,
             'date' => now()->toDateString(),
+            'mood' => Mood::Joyful,
             'created_by_user_id' => $child->created_by_user_id,
         ]);
     }

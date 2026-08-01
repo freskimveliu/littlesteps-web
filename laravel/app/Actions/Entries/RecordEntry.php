@@ -43,8 +43,8 @@ class RecordEntry
                 $entry->properties()->create([...$property, 'sort_order' => ($i + 1) * 10]);
             }
 
-            foreach ($data->photos as $photo) {
-                $entry->addMedia($photo)->toMediaCollection(ChildEntry::PHOTOS);
+            foreach ($data->media as $file) {
+                $entry->addMedia($file)->toMediaCollection(ChildEntry::MEDIA);
             }
 
             return $entry;

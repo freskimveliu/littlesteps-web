@@ -11,6 +11,9 @@ use App\Http\Controllers\Api\V1\Auth\RegisterController;
 use App\Http\Controllers\Api\V1\Auth\UpdateProfileController;
 use App\Http\Controllers\Api\V1\Catalogue\ShowCatalogueController;
 use App\Http\Controllers\Api\V1\Catalogue\ShowPromptController;
+use App\Http\Controllers\Api\V1\Chapters\CompleteChapterController;
+use App\Http\Controllers\Api\V1\Chapters\HideChapterController;
+use App\Http\Controllers\Api\V1\Chapters\IndexChaptersController;
 use App\Http\Controllers\Api\V1\Children\DestroyChildController;
 use App\Http\Controllers\Api\V1\Children\IndexChildrenController;
 use App\Http\Controllers\Api\V1\Children\ShowChildController;
@@ -22,21 +25,18 @@ use App\Http\Controllers\Api\V1\Entries\DestroyEntryController;
 use App\Http\Controllers\Api\V1\Entries\IndexEntriesController;
 use App\Http\Controllers\Api\V1\Entries\StoreEntryController;
 use App\Http\Controllers\Api\V1\Entries\UpdateEntryController;
-use App\Http\Controllers\Api\V1\Media\DestroyEntryPhotoController;
+use App\Http\Controllers\Api\V1\Media\DestroyEntryMediaController;
 use App\Http\Controllers\Api\V1\Media\StoreChildPhotoController;
-use App\Http\Controllers\Api\V1\Media\StoreEntryPhotoController;
+use App\Http\Controllers\Api\V1\Media\StoreEntryMediaController;
 use App\Http\Controllers\Api\V1\Media\StoreUserPhotoController;
-use App\Http\Controllers\Api\V1\Chapters\CompleteChapterController;
-use App\Http\Controllers\Api\V1\Chapters\HideChapterController;
-use App\Http\Controllers\Api\V1\Chapters\IndexChaptersController;
-use App\Http\Controllers\Api\V1\Progress\ClaimRewardController;
-use App\Http\Controllers\Api\V1\Progress\IndexRewardsController;
-use App\Http\Controllers\Api\V1\Progress\ShowGrowthController;
-use App\Http\Controllers\Api\V1\Progress\ShowProgressController;
 use App\Http\Controllers\Api\V1\Milestones\DestroyMilestoneController;
 use App\Http\Controllers\Api\V1\Milestones\HideMilestoneController;
 use App\Http\Controllers\Api\V1\Milestones\StoreMilestoneController;
 use App\Http\Controllers\Api\V1\Milestones\UpdateMilestoneController;
+use App\Http\Controllers\Api\V1\Progress\ClaimRewardController;
+use App\Http\Controllers\Api\V1\Progress\IndexRewardsController;
+use App\Http\Controllers\Api\V1\Progress\ShowGrowthController;
+use App\Http\Controllers\Api\V1\Progress\ShowProgressController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
@@ -73,8 +73,8 @@ Route::prefix('v1')->group(function () {
         Route::post('children/{child}/entries', StoreEntryController::class);
         Route::patch('children/{child}/entries/{entry}', UpdateEntryController::class);
         Route::delete('children/{child}/entries/{entry}', DestroyEntryController::class);
-        Route::post('children/{child}/entries/{entry}/photos', StoreEntryPhotoController::class);
-        Route::delete('children/{child}/entries/{entry}/photos/{media}', DestroyEntryPhotoController::class);
+        Route::post('children/{child}/entries/{entry}/media', StoreEntryMediaController::class);
+        Route::delete('children/{child}/entries/{entry}/media/{media}', DestroyEntryMediaController::class);
 
         Route::get('children/{child}/progress', ShowProgressController::class);
         Route::get('children/{child}/growth', ShowGrowthController::class);
