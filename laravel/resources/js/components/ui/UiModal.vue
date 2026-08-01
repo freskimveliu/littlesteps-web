@@ -24,11 +24,20 @@ function onKeydown(event: KeyboardEvent) {
     if (event.key === 'Escape') close();
 }
 
+/**
+ * The page scrolls on documentElement, not body — locking body alone let the
+ * table keep scrolling behind an open modal.
+ */
+function lockScroll(locked: boolean) {
+    if (typeof document === 'undefined') return;
+    document.documentElement.style.overflow = locked ? 'hidden' : '';
+    document.body.style.overflow = locked ? 'hidden' : '';
+}
+
 watch(
     open,
     (isOpen) => {
-        if (typeof document === 'undefined') return;
-        document.body.style.overflow = isOpen ? 'hidden' : '';
+        lockScroll(isOpen);
         isOpen
             ? document.addEventListener('keydown', onKeydown)
             : document.removeEventListener('keydown', onKeydown);
@@ -37,8 +46,8 @@ watch(
 );
 
 onBeforeUnmount(() => {
+    lockScroll(false);
     if (typeof document === 'undefined') return;
-    document.body.style.overflow = '';
     document.removeEventListener('keydown', onKeydown);
 });
 </script>

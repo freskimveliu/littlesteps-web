@@ -80,15 +80,15 @@ class ShowChildController extends Controller
                 'role' => $m->role,
                 'is_creator' => $m->user_id === $record->created_by_user_id,
             ]),
-            'chapters' => $record->milestones->map(fn ($chapter) => [
-                'id' => $chapter->id,
-                'name' => $chapter->name,
-                'months_from' => $chapter->months_from,
-                'xp' => $chapter->xp,
-                'is_hidden' => $chapter->is_hidden,
-                'completed_at' => $chapter->completed_at?->toIso8601String(),
-                'steps_total' => $chapter->steps_total,
-                'steps_recorded' => $chapter->steps_recorded,
+            'milestones' => $record->milestones->map(fn ($milestone) => [
+                'id' => $milestone->id,
+                'name' => $milestone->name,
+                'months_from' => $milestone->months_from,
+                'xp' => $milestone->xp,
+                'is_hidden' => $milestone->is_hidden,
+                'completed_at' => $milestone->completed_at?->toIso8601String(),
+                'steps_total' => $milestone->steps_total,
+                'steps_recorded' => $milestone->steps_recorded,
             ]),
             'badges' => TemplateAchievement::query()
                 ->active()

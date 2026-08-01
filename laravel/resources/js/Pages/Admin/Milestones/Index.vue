@@ -23,7 +23,7 @@ import UiSwitch from '../../../components/ui/UiSwitch.vue';
 import UiConfirmationModal from '../../../components/ui/UiConfirmationModal.vue';
 import { useIndexFilters } from '../../../composables/useIndexFilters';
 
-interface Chapter {
+interface Milestone {
     id: number;
     name: string;
     description: string | null;
@@ -37,21 +37,21 @@ interface Chapter {
 }
 
 const props = defineProps<{
-    chapters: Chapter[];
+    milestones: Milestone[];
     filters: { search: string | null; sort: string | null; order: string | null };
     icons: string[];
 }>();
 
 const { search, searching, sortKey, sortOrder, toggleSort } = useIndexFilters({
-    url: '/admin/chapters',
+    url: '/admin/milestones',
     search: props.filters.search,
     sortKey: props.filters.sort,
     sortOrder: props.filters.order as 'asc' | 'desc' | null,
 });
 
 const formOpen = ref(false);
-const editing = ref<Chapter | null>(null);
-const toDelete = ref<Chapter | null>(null);
+const editing = ref<Milestone | null>(null);
+const toDelete = ref<Milestone | null>(null);
 
 const form = useForm({
     name: '',
@@ -72,7 +72,7 @@ function startCreate() {
         icon: 'star',
         months_from: 0,
         xp: 150,
-        sort_order: (props.chapters.at(-1)?.sort_order ?? 0) + 10,
+        sort_order: (props.milestones.at(-1)?.sort_order ?? 0) + 10,
         is_editable: false,
         is_active: true,
     });
@@ -81,17 +81,17 @@ function startCreate() {
     formOpen.value = true;
 }
 
-function startEdit(chapter: Chapter) {
-    editing.value = chapter;
+function startEdit(milestone: Milestone) {
+    editing.value = milestone;
     form.defaults({
-        name: chapter.name,
-        description: chapter.description ?? '',
-        icon: chapter.icon,
-        months_from: chapter.months_from ?? 0,
-        xp: chapter.xp,
-        sort_order: chapter.sort_order,
-        is_editable: chapter.is_editable,
-        is_active: chapter.is_active,
+        name: milestone.name,
+        description: milestone.description ?? '',
+        icon: milestone.icon,
+        months_from: milestone.months_from ?? 0,
+        xp: milestone.xp,
+        sort_order: milestone.sort_order,
+        is_editable: milestone.is_editable,
+        is_active: milestone.is_active,
     });
     form.reset();
     form.clearErrors();
@@ -100,12 +100,12 @@ function startEdit(chapter: Chapter) {
 
 function submit() {
     const done = { onSuccess: () => (formOpen.value = false) };
-    editing.value ? form.put(`/admin/chapters/${editing.value.id}`, done) : form.post('/admin/chapters', done);
+    editing.value ? form.put(`/admin/milestones/${editing.value.id}`, done) : form.post('/admin/milestones', done);
 }
 
 function performDelete() {
     if (!toDelete.value) return;
-    router.delete(`/admin/chapters/${toDelete.value.id}`, {
+    router.delete(`/admin/milestones/${toDelete.value.id}`, {
         preserveScroll: true,
         onFinish: () => (toDelete.value = null),
     });
@@ -113,21 +113,21 @@ function performDelete() {
 </script>
 
 <template>
-    <Head title="Chapters" />
+    <Head title="Milestones" />
 
     <AdminLayout>
         <UiPageHeader
-            title="Chapters"
-            subtitle="The eight parts of the journey. A chapter opens at its months_from and is finished by the parent."
+            title="Milestones"
+            subtitle="The eight parts of the journey. A milestone opens at its months_from and is finished by the parent."
         />
 
-        <UiTable :empty="chapters.length === 0" empty-title="No chapters yet">
+        <UiTable :empty="milestones.length === 0" empty-title="No milestones yet">
             <template #toolbar>
                 <UiSpinner v-if="searching" size="xs" tone="primary" class="mr-2" />
-                <UiSearchInput v-model="search" placeholder="Search chapters…" />
+                <UiSearchInput v-model="search" placeholder="Search milestones…" />
                 <UiButton @click="startCreate">
                     <PlusIcon class="h-3.5 w-3.5" />
-                    New chapter
+                    New milestone
                 </UiButton>
             </template>
 
@@ -166,30 +166,30 @@ function performDelete() {
             </template>
 
             <template #body>
-                <UiTableRow v-for="chapter in chapters" :key="chapter.id">
+                <UiTableRow v-for="milestone in milestones" :key="milestone.id">
                     <UiTableCell>
                         <div class="flex items-center gap-2">
-                            <span class="font-medium text-slate-900">{{ chapter.name }}</span>
-                            <UiBadge v-if="!chapter.is_active" tone="danger">inactive</UiBadge>
+                            <span class="font-medium text-slate-900">{{ milestone.name }}</span>
+                            <UiBadge v-if="!milestone.is_active" tone="danger">inactive</UiBadge>
                         </div>
-                        <p v-if="chapter.description" class="text-label text-slate-400">{{ chapter.description }}</p>
+                        <p v-if="milestone.description" class="text-label text-slate-400">{{ milestone.description }}</p>
                     </UiTableCell>
-                    <UiTableCell align="right">{{ chapter.months_from }} mo</UiTableCell>
+                    <UiTableCell align="right">{{ milestone.months_from }} mo</UiTableCell>
                     <UiTableCell align="right">
                         <Link
-                            :href="`/admin/steps?chapter=${chapter.id}`"
+                            :href="`/admin/steps?milestone=${milestone.id}`"
                             class="text-primary-accessible hover:underline"
                         >
-                            {{ chapter.steps_count }}
+                            {{ milestone.steps_count }}
                         </Link>
                     </UiTableCell>
-                    <UiTableCell align="right">{{ chapter.xp }}</UiTableCell>
+                    <UiTableCell align="right">{{ milestone.xp }}</UiTableCell>
                     <UiTableCell align="right">
                         <div class="flex items-center justify-end gap-2">
-                            <UiActionButton title="Edit" size="sm" @click="startEdit(chapter)">
+                            <UiActionButton title="Edit" size="sm" @click="startEdit(milestone)">
                                 <PencilSquareIcon class="h-4 w-4" />
                             </UiActionButton>
-                            <UiActionButton title="Delete" size="sm" @click="toDelete = chapter">
+                            <UiActionButton title="Delete" size="sm" @click="toDelete = milestone">
                                 <TrashIcon class="h-4 w-4" />
                             </UiActionButton>
                         </div>
@@ -198,8 +198,8 @@ function performDelete() {
             </template>
         </UiTable>
 
-        <UiModal v-model="formOpen" :title="editing ? 'Edit chapter' : 'New chapter'">
-            <form id="chapter-form" class="flex flex-col gap-4" @submit.prevent="submit">
+        <UiModal v-model="formOpen" :title="editing ? 'Edit milestone' : 'New milestone'">
+            <form id="milestone-form" class="flex flex-col gap-4" @submit.prevent="submit">
                 <UiInput v-model="form.name" label="Name" required :error="form.errors.name" />
                 <UiInput v-model="form.description" label="Description" :error="form.errors.description" />
                 <UiSelect
@@ -240,14 +240,14 @@ function performDelete() {
             <template #footer>
                 <div class="flex justify-end gap-2">
                     <UiButton variant="outline" @click="formOpen = false">Cancel</UiButton>
-                    <UiButton type="submit" form="chapter-form" :loading="form.processing">Submit</UiButton>
+                    <UiButton type="submit" form="milestone-form" :loading="form.processing">Submit</UiButton>
                 </div>
             </template>
         </UiModal>
 
         <UiConfirmationModal
             :model-value="!!toDelete"
-            title="Remove chapter?"
+            title="Remove milestone?"
             :message="
                 toDelete
                     ? `“${toDelete.name}” leaves the catalogue. Children already provisioned keep their own copy.`

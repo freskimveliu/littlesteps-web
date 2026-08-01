@@ -13,10 +13,10 @@ use App\Http\Controllers\Admin\Categories\DestroyCategoryController;
 use App\Http\Controllers\Admin\Categories\IndexCategoriesController;
 use App\Http\Controllers\Admin\Categories\StoreCategoryController;
 use App\Http\Controllers\Admin\Categories\UpdateCategoryController;
-use App\Http\Controllers\Admin\Chapters\DestroyChapterController;
-use App\Http\Controllers\Admin\Chapters\IndexChaptersController;
-use App\Http\Controllers\Admin\Chapters\StoreChapterController;
-use App\Http\Controllers\Admin\Chapters\UpdateChapterController;
+use App\Http\Controllers\Admin\Milestones\DestroyMilestoneController;
+use App\Http\Controllers\Admin\Milestones\IndexMilestonesController;
+use App\Http\Controllers\Admin\Milestones\StoreMilestoneController;
+use App\Http\Controllers\Admin\Milestones\UpdateMilestoneController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\Families\IndexChildrenController;
 use App\Http\Controllers\Admin\Families\IndexGiftsController;
@@ -56,10 +56,10 @@ Route::prefix('admin')->group(function () {
     Route::middleware(['auth', EnsureUserIsAdmin::class])->group(function () {
         Route::get('/', DashboardController::class)->name('admin.dashboard');
 
-        Route::get('chapters', IndexChaptersController::class)->name('admin.chapters');
-        Route::post('chapters', StoreChapterController::class);
-        Route::put('chapters/{chapter}', UpdateChapterController::class);
-        Route::delete('chapters/{chapter}', DestroyChapterController::class);
+        Route::get('milestones', IndexMilestonesController::class)->name('admin.milestones');
+        Route::post('milestones', StoreMilestoneController::class);
+        Route::put('milestones/{milestone}', UpdateMilestoneController::class);
+        Route::delete('milestones/{milestone}', DestroyMilestoneController::class);
 
         Route::get('steps', IndexStepsController::class)->name('admin.steps');
         Route::post('steps', StoreStepController::class);

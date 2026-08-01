@@ -17,7 +17,7 @@ enum AchievementMetric: string
     case Months = 'months';
     case Streak = 'streak';
     case OnTimeSteps = 'on_time_steps';
-    case Chapters = 'chapters';
+    case Milestones = 'milestones';
     case Photos = 'photos';
     case Categories = 'categories';
 }

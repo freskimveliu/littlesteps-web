@@ -26,7 +26,7 @@ class Metrics
             AchievementMetric::Months->value => $this->months($child),
             AchievementMetric::Streak->value => $this->streak($child),
             AchievementMetric::OnTimeSteps->value => $this->onTimeSteps($child),
-            AchievementMetric::Chapters->value => $this->chapters($child),
+            AchievementMetric::Milestones->value => $this->milestones($child),
             AchievementMetric::Photos->value => $this->photos($child),
             AchievementMetric::Categories->value => $this->categories($child),
         ];
@@ -100,7 +100,7 @@ class Metrics
             ->count();
     }
 
-    public function chapters(Child $child): int
+    public function milestones(Child $child): int
     {
         return $child->milestones()->whereNotNull('completed_at')->count();
     }

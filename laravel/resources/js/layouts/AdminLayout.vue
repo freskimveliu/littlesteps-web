@@ -43,7 +43,7 @@ const groups: { title: string | null; items: NavItem[] }[] = [
     {
         title: 'Catalogue',
         items: [
-            { label: 'Chapters', href: '/admin/chapters', icon: BookOpenIcon },
+            { label: 'Milestones', href: '/admin/milestones', icon: BookOpenIcon },
             { label: 'Steps', href: '/admin/steps', icon: FlagIcon },
             { label: 'Categories', href: '/admin/categories', icon: TagIcon },
             { label: 'Badges', href: '/admin/badges', icon: TrophyIcon },
@@ -91,7 +91,7 @@ function logout() {
 <template>
     <div class="flex min-h-screen">
         <aside
-            class="relative flex flex-shrink-0 flex-col bg-secondary text-white transition-[width] duration-200 ease-out"
+            class="sticky top-0 flex h-screen flex-shrink-0 flex-col bg-secondary text-white transition-[width] duration-200 ease-out"
             :class="collapsed ? 'w-[74px]' : 'w-[228px]'"
         >
             <!-- a soft wash of the brand colour so the rail is not flat navy -->
@@ -116,7 +116,7 @@ function logout() {
                 <ChevronLeftIcon class="h-3.5 w-3.5 transition-transform" :class="collapsed ? 'rotate-180' : ''" />
             </button>
 
-            <nav class="relative flex-1 px-3">
+            <nav class="relative flex-1 overflow-y-auto px-3">
                 <div v-for="(group, i) in groups" :key="i" class="mb-4">
                     <p
                         v-if="group.title && !collapsed"
@@ -150,7 +150,7 @@ function logout() {
                 </div>
             </nav>
 
-            <div class="relative border-t border-white/10 px-3 py-4">
+            <div class="relative flex-shrink-0 border-t border-white/10 px-3 py-4">
                 <div class="flex items-center gap-3" :class="collapsed ? 'justify-center' : 'px-2'">
                     <div
                         class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-primary text-label font-bold"

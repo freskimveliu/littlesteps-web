@@ -48,14 +48,14 @@ interface Step {
 
 const props = defineProps<{
     steps: { data: Step[]; current_page: number; last_page: number; total: number; links: unknown[] };
-    filters: { search: string | null; sort: string | null; order: string | null; chapter: number | null };
-    chapters: { id: number; name: string }[];
+    filters: { search: string | null; sort: string | null; order: string | null; milestone: number | null };
+    milestones: { id: number; name: string }[];
     categories: { id: number; name: string; color: string }[];
     icons: string[];
     propertyKeys: string[];
 }>();
 
-const chapterFilter = ref<string>(props.filters.chapter ? String(props.filters.chapter) : '');
+const milestoneFilter = ref<string>(props.filters.milestone ? String(props.filters.milestone) : '');
 
 const { search, searching, sortKey, sortOrder, toggleSort, visit } = useIndexFilters({
     url: '/admin/steps',
@@ -64,8 +64,8 @@ const { search, searching, sortKey, sortOrder, toggleSort, visit } = useIndexFil
     sortOrder: props.filters.order as 'asc' | 'desc' | null,
 });
 
-function applyChapter() {
-    visit({ chapter: chapterFilter.value || undefined });
+function applyMilestone() {
+    visit({ milestone: milestoneFilter.value || undefined });
 }
 
 const formOpen = ref(false);
@@ -73,7 +73,7 @@ const editing = ref<Step | null>(null);
 const toDelete = ref<Step | null>(null);
 
 const form = useForm({
-    template_milestone_id: props.chapters[0]?.id ?? 0,
+    template_milestone_id: props.milestones[0]?.id ?? 0,
     category_id: props.categories[0]?.id ?? 0,
     name: '',
     description: '',
@@ -88,7 +88,7 @@ const form = useForm({
 function startCreate() {
     editing.value = null;
     form.defaults({
-        template_milestone_id: Number(chapterFilter.value) || props.chapters[0]?.id || 0,
+        template_milestone_id: Number(milestoneFilter.value) || props.milestones[0]?.id || 0,
         category_id: props.categories[0]?.id ?? 0,
         name: '',
         description: '',
@@ -155,13 +155,13 @@ function performDelete() {
                 <UiSpinner v-if="searching" size="xs" tone="primary" class="mr-2" />
                 <div class="w-52">
                     <UiSelect
-                        v-model="chapterFilter"
-                        placeholder="All chapters"
+                        v-model="milestoneFilter"
+                        placeholder="All milestones"
                         :options="[
-                            { value: '', label: 'All chapters' },
-                            ...chapters.map((c) => ({ value: String(c.id), label: c.name })),
+                            { value: '', label: 'All milestones' },
+                            ...milestones.map((c) => ({ value: String(c.id), label: c.name })),
                         ]"
-                        @update:model-value="applyChapter"
+                        @update:model-value="applyMilestone"
                     />
                 </div>
                 <UiSearchInput v-model="search" placeholder="Search steps…" />
@@ -175,7 +175,7 @@ function performDelete() {
                 <UiSortableTableHeader sort-key="name" :active-key="sortKey" :active-order="sortOrder" @sort="toggleSort">
                     Name
                 </UiSortableTableHeader>
-                <UiTableHeader>Chapter</UiTableHeader>
+                <UiTableHeader>Milestone</UiTableHeader>
                 <UiTableHeader>Category</UiTableHeader>
                 <UiTableHeader>Asks for</UiTableHeader>
                 <UiSortableTableHeader
@@ -243,14 +243,14 @@ function performDelete() {
                         <UiButton
                             variant="outline"
                             :disabled="steps.current_page === 1"
-                            @click="visit({ page: steps.current_page - 1, chapter: chapterFilter || undefined })"
+                            @click="visit({ page: steps.current_page - 1, milestone: milestoneFilter || undefined })"
                         >
                             Previous
                         </UiButton>
                         <UiButton
                             variant="outline"
                             :disabled="steps.current_page === steps.last_page"
-                            @click="visit({ page: steps.current_page + 1, chapter: chapterFilter || undefined })"
+                            @click="visit({ page: steps.current_page + 1, milestone: milestoneFilter || undefined })"
                         >
                             Next
                         </UiButton>
@@ -270,10 +270,10 @@ function performDelete() {
                 <div class="grid grid-cols-2 gap-3">
                     <UiSelect
                         v-model="form.template_milestone_id"
-                        label="Chapter"
+                        label="Milestone"
                         required
                         :error="form.errors.template_milestone_id"
-                        :options="chapters.map((c) => ({ value: c.id, label: c.name }))"
+                        :options="milestones.map((c) => ({ value: c.id, label: c.name }))"
                     />
                     <UiSelect
                         v-model="form.category_id"

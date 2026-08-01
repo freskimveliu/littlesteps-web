@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Http\Controllers\Admin\Chapters;
+namespace App\Http\Controllers\Admin\Milestones;
 
 use App\Enums\Icon;
 use App\Http\Controllers\Controller;
@@ -12,19 +12,19 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
-class IndexChaptersController extends Controller
+class IndexMilestonesController extends Controller
 {
     public function __invoke(Request $request): Response
     {
-        $chapters = IndexQuery::apply(
+        $milestones = IndexQuery::apply(
             TemplateMilestone::query()->withCount('steps'),
             $request,
             searchable: ['name', 'description'],
             sortable: ['name', 'months_from', 'xp', 'sort_order', 'steps_count'],
         )->get();
 
-        return Inertia::render('Admin/Chapters/Index', [
-            'chapters' => $chapters,
+        return Inertia::render('Admin/Milestones/Index', [
+            'milestones' => $milestones,
             'filters' => IndexQuery::filters($request),
             'icons' => array_column(Icon::cases(), 'value'),
         ]);

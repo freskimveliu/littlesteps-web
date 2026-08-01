@@ -94,7 +94,7 @@ class CatalogueSeeder extends Seeder
         }
 
         $this->command?->info(
-            'Chapters: '.TemplateMilestone::count().
+            'Milestones: '.TemplateMilestone::count().
             ' · Steps: '.TemplateStep::count().
             ' · Properties: '.TemplateStepProperty::count()
         );

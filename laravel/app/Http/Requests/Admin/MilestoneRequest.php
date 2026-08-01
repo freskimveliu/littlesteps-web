@@ -8,7 +8,7 @@ use App\Enums\Icon;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class ChapterRequest extends FormRequest
+class MilestoneRequest extends FormRequest
 {
     /** @return array<string, mixed> */
     public function rules(): array

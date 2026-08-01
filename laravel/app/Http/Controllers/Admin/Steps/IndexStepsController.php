@@ -21,12 +21,12 @@ class IndexStepsController extends Controller
     {
         $query = TemplateStep::query()->with(['milestone:id,name', 'category:id,name,icon,color', 'properties']);
 
-        if ($chapter = $request->integer('chapter')) {
-            $query->where('template_milestone_id', $chapter);
+        if ($milestone = $request->integer('milestone')) {
+            $query->where('template_milestone_id', $milestone);
         }
 
-        // sort_order restarts at 10 inside every chapter, so on its own it
-        // interleaves the chapters into nonsense. Group by chapter first.
+        // sort_order restarts at 10 inside every milestone, so on its own it
+        // interleaves the milestones into nonsense. Group by milestone first.
         if (! $request->filled('sort')) {
             $query->orderBy('template_milestone_id');
         }
@@ -40,8 +40,8 @@ class IndexStepsController extends Controller
 
         return Inertia::render('Admin/Steps/Index', [
             'steps' => $steps,
-            'filters' => [...IndexQuery::filters($request), 'chapter' => $request->integer('chapter') ?: null],
-            'chapters' => TemplateMilestone::orderBy('sort_order')->get(['id', 'name']),
+            'filters' => [...IndexQuery::filters($request), 'milestone' => $request->integer('milestone') ?: null],
+            'milestones' => TemplateMilestone::orderBy('sort_order')->get(['id', 'name']),
             'categories' => Category::orderBy('sort_order')->get(['id', 'name', 'icon', 'color']),
             'icons' => array_column(Icon::cases(), 'value'),
             'propertyKeys' => array_column(PropertyKey::cases(), 'value'),
