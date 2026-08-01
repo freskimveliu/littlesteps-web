@@ -3,6 +3,8 @@ docker/
 data/
 docker-compose*.yml
 bin/
+# Server-side deployment config — scp'd to the host, never baked into the image
+deploy/
 
 # Git
 .git/

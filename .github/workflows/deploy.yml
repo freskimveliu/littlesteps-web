@@ -1,0 +1,224 @@
+name: Build, Test & Deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+  APP_URL: https://littlesteps.freskimveliu.dev
+
+# Two deploys racing on the same box would fight over the same containers and
+# the same migration lock. Queue them instead.
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  # ===========================================================================
+  # Job 1: Tests
+  #
+  # phpunit.xml pins DB_CONNECTION=mysql and DB_DATABASE=testing, so SQLite is
+  # not an option — a real database service is required.
+  #
+  # This is MySQL 8.4 to match the dev stack, while production is vault's
+  # MariaDB 10.11. That divergence is deliberate and checked: the only json()
+  # columns are Spatie's media table and the app makes no whereJsonContains /
+  # whereJsonLength / fullText calls. See DEPLOYMENT.md.
+  # ===========================================================================
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: testing
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pdo_mysql, gd, bcmath, exif, zip, pcntl, intl, opcache, redis
+          coverage: none
+
+      - name: Cache Composer packages
+        uses: actions/cache@v4
+        with:
+          path: laravel/vendor
+          key: composer-${{ hashFiles('laravel/composer.lock') }}
+          restore-keys: composer-
+
+      - name: Install Composer dependencies
+        working-directory: laravel
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Prepare environment
+        working-directory: laravel
+        run: |
+          cp .env.example .env
+          sed -i 's/^DB_HOST=.*/DB_HOST=127.0.0.1/' .env
+          sed -i 's/^DB_USERNAME=.*/DB_USERNAME=root/' .env
+          sed -i 's/^DB_PASSWORD=.*/DB_PASSWORD=root/' .env
+          sed -i 's/^CACHE_STORE=.*/CACHE_STORE=array/' .env
+          sed -i 's/^SESSION_DRIVER=.*/SESSION_DRIVER=array/' .env
+          sed -i 's/^QUEUE_CONNECTION=.*/QUEUE_CONNECTION=sync/' .env
+          php artisan key:generate
+
+      # PHPStan is deliberately not a gate. `composer phpstan` reports ~300
+      # errors at level 6 today, 194 of them Pest higher-order syntax in tests/
+      # that PHPStan cannot resolve. None of it is new and none of it is about
+      # deployment. Add the step back once it runs clean.
+      - name: Run tests
+        working-directory: laravel
+        run: php artisan test --stop-on-failure
+
+  # ===========================================================================
+  # Job 2: Build the production image and push it to GHCR
+  #
+  # The build happens here, never on the server: `npm run build` needs more
+  # memory than the t3.small has free.
+  # ===========================================================================
+  build:
+    name: Build & Push Docker Image
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.event_name == 'push'
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to the GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract image metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=sha,prefix=
+            type=raw,value=${{ github.ref_name }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          target: production
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main
+          cache-to: type=inline
+
+  # ===========================================================================
+  # Job 3: Tell the server to pull it
+  # ===========================================================================
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    permissions:
+      contents: read
+      packages: read
+
+    environment:
+      name: production
+      url: https://littlesteps.freskimveliu.dev
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
+
+      # Authenticate the server to GHCR with this run's own token rather than a
+      # long-lived PAT stored on the box. It expires when the job ends, so there
+      # is no standing credential to leak or rotate.
+      #
+      # The token goes over stdin, not argv — an argument would be visible in
+      # the server's process list for the life of the command.
+      - name: Authenticate the server to GHCR
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | ssh -i ~/.ssh/deploy_key \
+            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
+            "docker login ghcr.io -u ${{ github.actor }} --password-stdin"
+
+      # The server copy is refreshed from the repo on every deploy, so the
+      # compose file, the PHP overrides and deploy.sh cannot drift from what is
+      # committed here. laravel/.env is NOT touched — it holds the secrets and
+      # lives only on the server.
+      - name: Sync deployment files to the server
+        run: |
+          scp -i ~/.ssh/deploy_key \
+            deploy/docker-compose.server.yml \
+            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/littlesteps/docker-compose.yml"
+          scp -i ~/.ssh/deploy_key \
+            deploy/deploy.sh \
+            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/littlesteps/deploy.sh"
+          scp -i ~/.ssh/deploy_key \
+            deploy/php/zz-server.ini deploy/php/zz-server.conf \
+            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/littlesteps/php/"
+          ssh -i ~/.ssh/deploy_key \
+            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
+            "chmod +x /opt/littlesteps/deploy.sh"
+
+      - name: Run the deploy
+        run: |
+          ssh -i ~/.ssh/deploy_key \
+            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
+            "/opt/littlesteps/deploy.sh ${{ github.ref_name }}"
+
+      # deploy.sh already waits for the container healthcheck. This checks the
+      # same thing from outside, so it also covers DNS and the Caddy route.
+      - name: Health check
+        run: |
+          for i in {1..15}; do
+            echo "=== Attempt $i/15 ==="
+            CODE=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 10 "${APP_URL}/up")
+            echo "Status: $CODE"
+            if [ "$CODE" = "200" ]; then
+              echo "Application is healthy."
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "Health check failed after 15 attempts."
+          exit 1

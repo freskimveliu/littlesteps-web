@@ -1,0 +1,91 @@
+# Little Steps — production stack for the shared "vault" server.
+#
+# This is NOT ../docker-compose.production.yml. That file is the self-contained
+# stack: it brings its own MySQL 8.4, its own Redis and expects Traefik. It is
+# still the right choice on a box of our own.
+#
+# This file runs at /opt/littlesteps on the existing vault server and reuses
+# what already runs there — Caddy for TLS and routing, vault_database
+# (MariaDB 10.11) for data, vault_redis for cache/sessions/queue. The box is a
+# t3.small: 2 GB total, ~730 MB free with vault's nine containers up. A second
+# MySQL would want ~400 MB of that on its own, so sharing is arithmetic rather
+# than taste.
+#
+# Only three containers are ours. They join `vault_network` (created by the
+# vault stack) so Caddy can reach `littlesteps_app` and we can reach
+# `vault_database` / `vault_redis`.
+#
+# Deployed to /opt/littlesteps/docker-compose.yml by deploy/deploy.sh. Do not
+# edit it on the server — the next deploy overwrites it.
+services:
+  app:
+    image: "ghcr.io/freskimveliu/littlesteps-web:${DOCKER_IMAGE_TAG:-main}"
+    container_name: littlesteps_app
+    restart: unless-stopped
+    env_file: laravel/.env
+    volumes:
+      - ./laravel/storage:/var/www/storage
+      # Memory overrides for this box — see php/README.md. The image ships
+      # memory_limit=1024M and php-fpm's default pm.max_children=5, which on a
+      # 2 GB shared box is enough for one bad request to OOM-kill MariaDB.
+      - ./php/zz-server.ini:/usr/local/etc/php/conf.d/zz-server.ini:ro
+      - ./php/zz-server.conf:/usr/local/etc/php-fpm.d/zz-server.conf:ro
+    networks:
+      - vault_network
+    # A ceiling, not a reservation. If the app does run away, the cgroup kills
+    # this container and the restart policy brings it back — far better than
+    # the host OOM killer choosing vault_database.
+    mem_limit: 768m
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/up"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  # Nothing is queued yet — there is no ShouldQueue job in the app and all five
+  # media conversions are nonQueued(), so this worker idles at ~60 MB. It is
+  # here because queues are coming: when the first job lands, it ships without
+  # a deploy change.
+  queue:
+    image: "ghcr.io/freskimveliu/littlesteps-web:${DOCKER_IMAGE_TAG:-main}"
+    container_name: littlesteps_queue
+    restart: unless-stopped
+    command: ["php", "artisan", "queue:work", "--tries=3", "--timeout=300", "--max-time=3600"]
+    env_file: laravel/.env
+    volumes:
+      - ./laravel/storage:/var/www/storage
+      - ./php/zz-server.ini:/usr/local/etc/php/conf.d/zz-server.ini:ro
+    networks:
+      - vault_network
+    depends_on:
+      - app
+    mem_limit: 320m
+    # The image healthcheck curls nginx, which does not run in this container.
+    # The restart policy covers the worker exiting, so no check is needed.
+    healthcheck:
+      disable: true
+
+  # Same story: routes/console.php schedules nothing yet.
+  scheduler:
+    image: "ghcr.io/freskimveliu/littlesteps-web:${DOCKER_IMAGE_TAG:-main}"
+    container_name: littlesteps_scheduler
+    restart: unless-stopped
+    command: ["sh", "-c", "while true; do php artisan schedule:run --no-interaction; sleep 60; done"]
+    env_file: laravel/.env
+    volumes:
+      - ./laravel/storage:/var/www/storage
+      - ./php/zz-server.ini:/usr/local/etc/php/conf.d/zz-server.ini:ro
+    networks:
+      - vault_network
+    depends_on:
+      - app
+    mem_limit: 192m
+    healthcheck:
+      disable: true
+
+networks:
+  # Owned by the vault stack (/opt/vault/docker-compose.yml). We only attach.
+  vault_network:
+    name: vault_network
+    external: true

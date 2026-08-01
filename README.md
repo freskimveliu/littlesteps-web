@@ -18,9 +18,15 @@ Laravel + Inertia + Vue + Tailwind, running on Docker behind Traefik with local 
 .
 ├── Dockerfile                      # multi-stage: base → development / builder → production
 ├── docker-compose.yml              # dev stack
-├── docker-compose.production.yml   # server stack
+├── docker-compose.production.yml   # self-contained server stack (own MySQL + Traefik)
+├── DEPLOYMENT.md                   # how the live deployment actually works
 ├── .env                            # single source of truth (laravel/.env symlinks to it)
 ├── bin/docker-exec                 # command proxy into the containers
+├── deploy/                         # the live deployment: shared vault server
+│   ├── docker-compose.server.yml   # app + queue + scheduler on vault_network
+│   ├── deploy.sh                   # pull → migrate → up -d, run on the server
+│   ├── .env.server.example         # template for /opt/littlesteps/laravel/.env
+│   └── php/                        # memory overrides for that 2 GB box
 ├── docker/
 │   ├── nginx/                      # dev webserver image + vhost
 │   └── mysql/init/                 # creates the `testing` database
@@ -118,6 +124,22 @@ Frontend type-checking:
 - Ziggy is installed, so `route()` is available in Vue components.
 
 ## Deploying
+
+There are two deployment stories, and picking the wrong file is the easiest
+mistake to make here.
+
+**The live deployment is [`DEPLOYMENT.md`](DEPLOYMENT.md)** — Little Steps runs
+at <https://littlesteps.freskimveliu.dev> as a second app on the shared *vault*
+server, behind that box's Caddy and sharing its MariaDB and Redis. It has its
+own compose file in `deploy/`, and deploys happen on push to `main` via
+`.github/workflows/deploy.yml`. Nothing below applies to it.
+
+**Everything below describes `docker-compose.production.yml`** — the
+self-contained stack, which brings its own MySQL, its own Redis and expects
+Traefik. It is the right choice on a dedicated box, and unused today only
+because the vault box has no memory to spare for a second database.
+
+### The self-contained stack
 
 The shared proxy must be running on the server first — see
 `../proxy/README.md`. It gets certificates from Let's Encrypt automatically, so
