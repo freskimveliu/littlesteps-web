@@ -1,13 +1,12 @@
 #!/bin/bash
 # =============================================================================
-# Little Steps — apply the server configuration
+# Little Steps — apply configuration to the existing server
 # =============================================================================
-# Idempotent. Run it for the first install and again after any change to
-# deploy/docker-compose.server.yml, the playbook, or deploy/ansible/.env.
+# Idempotent. Run it after any change to deploy/docker-compose.server.yml, the
+# playbook, or deploy/ansible/.env. Does not create a server — that is setup.sh.
 #
-# Usage:
 #   ./apply.sh                 # uses SERVER_IP from .env
-#   ./apply.sh 3.121.93.121    # or pass the IP explicitly
+#   ./apply.sh 18.184.22.10    # or pass the IP explicitly
 # =============================================================================
 
 set -e
@@ -30,18 +29,17 @@ set -a
 source "$SCRIPT_DIR/.env"
 set +a
 
-SERVER_IP="${1:-$SERVER_IP}"
+SERVER_IP="${1:-${SERVER_IP:-}}"
 if [ -z "$SERVER_IP" ]; then
     echo -e "${RED}Error: no server IP${NC}"
-    echo "Set SERVER_IP in .env or pass it: ./apply.sh 3.121.93.121"
+    echo "Set SERVER_IP in .env (setup.sh prints it), or pass it: ./apply.sh <IP>"
     exit 1
 fi
 
 SSH_KEY="${SSH_KEY:-$SCRIPT_DIR/ssh_key}"
 if [ ! -f "$SSH_KEY" ]; then
     echo -e "${RED}Error: SSH key not found at $SSH_KEY${NC}"
-    echo "Symlink the one the vault repo already uses:"
-    echo "  ln -s ../../../vault/ansible/ssh_key $SCRIPT_DIR/ssh_key"
+    echo "setup.sh generates it. If this server was made elsewhere, point SSH_KEY at its key."
     exit 1
 fi
 chmod 600 "$SSH_KEY" 2>/dev/null || true

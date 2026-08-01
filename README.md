@@ -18,13 +18,13 @@ Laravel + Inertia + Vue + Tailwind, running on Docker behind Traefik with local 
 .
 ├── Dockerfile                      # multi-stage: base → development / builder → production
 ├── docker-compose.yml              # dev stack
-├── docker-compose.production.yml   # standalone server stack (own MySQL/Redis, Traefik)
+├── docker-compose.production.yml   # server stack, built locally
 ├── DEPLOYMENT.md                   # how the app is published
 ├── .env                            # single source of truth (laravel/.env symlinks to it)
 ├── bin/docker-exec                 # command proxy into the containers
-├── deploy/                         # publishing to the shared server
-│   ├── docker-compose.server.yml   # what actually runs in production
-│   └── ansible/                    # one idempotent playbook + apply.sh
+├── deploy/                         # the production deployment
+│   ├── docker-compose.server.yml   # what actually runs, pulling the CI image
+│   └── ansible/                    # provisioning + config, setup.sh / apply.sh
 ├── docker/
 │   ├── nginx/                      # dev webserver image + vhost
 │   └── mysql/init/                 # creates the `testing` database
@@ -114,15 +114,13 @@ Frontend type-checking:
 
 ## Deploying
 
-The app is published to the shared server that already runs Vault, at
-**https://littlesteps.freskimveliu.dev** — see **[DEPLOYMENT.md](DEPLOYMENT.md)**
-for the full runbook. In short: push to `main`, and GitHub Actions tests it,
-builds the image to GHCR and calls a webhook that swaps the container. The
-deployment lives in `deploy/` (a compose file for that server, and Ansible).
+The app runs on its own EC2 instance at **https://littlesteps.freskimveliu.dev**
+— see **[DEPLOYMENT.md](DEPLOYMENT.md)** for the full runbook. In short: push to
+`main`, and GitHub Actions tests it, builds the image to GHCR and calls a
+webhook that swaps the container. `deploy/ansible/setup.sh` provisions the
+server; `deploy/ansible/apply.sh` applies every later change.
 
-Everything below describes the *other* option — the self-contained stack in
-`docker-compose.production.yml`, which brings its own MySQL, Redis and Traefik
-and is what you would run on a server of your own.
+Everything below describes deploying the stack by hand, without that pipeline.
 
 The shared proxy must be running on the server first — see
 `../proxy/README.md`. It gets certificates from Let's Encrypt automatically, so

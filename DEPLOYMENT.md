@@ -1,95 +1,68 @@
 # Publishing Little Steps
 
-Little Steps is published to the existing server that already runs Vault — the
-EC2 box at `3.121.93.121` (`eu-central-1`, Ubuntu 24.04). It does not get its
-own server, its own database, or its own reverse proxy. It reuses what is there
-and adds three containers of its own.
+Little Steps runs on its own EC2 instance — its own database, its own Redis,
+nothing shared with any other project. Routing and TLS come from the shared
+proxy in `../proxy`, deployed alongside it, exactly as in local development.
 
 Public URL: **https://littlesteps.freskimveliu.dev**
 
-> This is not `docker-compose.production.yml`. That file is the self-contained
-> stack — its own MySQL, its own Redis, Traefik out front — and it is what you
-> would use on a server of your own. On the shared box the file that counts is
-> `deploy/docker-compose.server.yml`.
+Deploys are push-to-`main`: GitHub Actions runs the tests, builds the image to
+GHCR, and calls a signed webhook that swaps the container on the server.
 
 ---
 
 ## What runs where
 
 ```
-                      internet
-                          │
-                    :443 Caddy  (vault stack, terminates TLS, Let's Encrypt)
-                    ╱             ╲
-   vault.freskimveliu.dev     littlesteps.freskimveliu.dev
-            │                          │
-       vault_app                 littlesteps_app        ← nginx + php-fpm, port 80
-                                 littlesteps_queue      ← queue:work
-                                 littlesteps_scheduler  ← schedule:run every 60s
-                          ╲            │            ╱
-                        vault_database (MariaDB 10.11)   ← database `littlesteps`
-                        vault_redis    (Redis 7)         ← DB 2 (default) + 3 (cache)
+                    internet
+                        │
+                  :80/:443  Traefik            /opt/proxy   (from ../proxy)
+                        │                       Let's Encrypt, HTTP-01
+                        │  proxy network
+                  littlesteps_app               /opt/littlesteps
+                        │                       nginx + php-fpm, port 80
+                        │  internal network
+        ┌───────────────┼───────────────┐
+   littlesteps_     littlesteps_    littlesteps_queue
+     database          redis        littlesteps_scheduler
+    MySQL 8.4         Redis 8
 ```
 
-Everything sits on the `vault_network` Docker network, which is why Caddy can
-reach `littlesteps_app` and the app can reach `vault_database` by name.
+The `internal` network has no route in from outside — MySQL and Redis publish
+no ports. Only the app is on the `proxy` network, and only because Traefik
+needs to reach it.
 
 | Thing | Value |
 | --- | --- |
-| Server directory | `/opt/littlesteps` |
+| Server directory | `/opt/littlesteps` (and `/opt/proxy` for Traefik) |
 | Image | `ghcr.io/freskimveliu/littlesteps-web:main` |
-| Database | `littlesteps` on the vault MariaDB, user `littlesteps` |
-| Redis | vault Redis, DB **2** (sessions/queue) and **3** (cache), prefix `littlesteps-database-` |
-| Uploads | `/opt/littlesteps/laravel/storage` (bind mount, survives deploys) |
-| Deploy webhook | `https://littlesteps.freskimveliu.dev/webhook/deploy` → host port **9001** |
-| Caddy site block | vault repo, `ansible/docker/caddy/Caddyfile.j2` |
+| Instance | `t3.small` (2 vCPU / 2 GB) + a 2 GB swapfile, 20 GB gp3, `eu-central-1` |
+| Database | MySQL 8.4, `/opt/littlesteps/data/mysql` |
+| Uploads | `/opt/littlesteps/laravel/storage` |
+| Deploy webhook | `https://littlesteps.freskimveliu.dev/webhook/deploy` → port 9000, Docker-only |
+| Open ports | 22, 80, 443. Everything else denied by UFW |
 
-### Why it shares the database
-
-The box is a `t3.small` — 2 vCPU, **2 GB of RAM** — and the vault stack already
-runs nine containers on it. A second MySQL plus a second Redis would have added
-roughly 500 MB and pushed it over. Sharing costs isolation: a MariaDB problem
-takes down both apps, and the two apps' data sits in one data directory. If
-Little Steps grows, the clean fix is a bigger instance (`t3.medium`, ~2× the
-EC2 cost) and its own `database`/`redis` containers — the compose file in the
-repo root already describes exactly that stack.
-
-Two consequences worth knowing:
-
-- **MariaDB, not MySQL 8.4.** `DB_CONNECTION=mariadb` in production while dev
-  and CI run MySQL 8.4. The schema uses nothing MySQL-specific (the only
-  interesting columns are the media library's `json` ones, which MariaDB
-  stores as `LONGTEXT` with a `JSON_VALID` check), so this is safe — but it
-  is a difference between environments. Keep it in mind for anything that
-  reaches for raw SQL.
-- **The playbook adds a 2 GB swapfile** with `vm.swappiness=10`, so the box has
-  headroom rather than an OOM killer. Watch memory at
-  https://metrics.vault.freskimveliu.dev after the first deploy.
+`t3.small` is deliberate: the stack fits in 2 GB with the swapfile, and the
+instance can be resized later without touching anything in this repo. If PHP
+requests start swapping, move to `t3.medium` — stop the instance, change the
+type, start it. The Elastic IP survives, so DNS does not change.
 
 ---
 
 ## Before the first publish
 
-You need, once:
-
-1. **A DNS A record** — `littlesteps.freskimveliu.dev` → `3.121.93.121`.
-   Caddy requests the certificate the first time the name is hit, so DNS has to
-   resolve before the site will answer on HTTPS.
-
-2. **Ansible and its collections**, locally:
+1. **Ansible and its collections:**
 
    ```bash
    brew install ansible
    ansible-galaxy collection install -r deploy/ansible/requirements.yml
    ```
 
-3. **The SSH key for the server.** The vault repo already has it — link it:
+2. **The proxy repo** must sit next to this one (`../proxy`). The playbook
+   copies its production Traefik config to the server; it is not vendored here,
+   so the two stay in step.
 
-   ```bash
-   ln -s ../../../vault/ansible/ssh_key deploy/ansible/ssh_key
-   ```
-
-4. **Secrets.** Copy the template and fill every value:
+3. **Secrets.** Copy the template and fill it in:
 
    ```bash
    cp deploy/ansible/.env.example deploy/ansible/.env
@@ -97,96 +70,71 @@ You need, once:
 
    | Variable | Where it comes from |
    | --- | --- |
+   | `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` | an IAM user allowed to create EC2 instances — only used by `setup.sh` |
    | `APP_KEY` | `./bin/docker-exec artisan key:generate --show` — a **fresh** key, never the dev one |
-   | `VAULT_DB_ROOT_PASSWORD` | `DB_PASSWORD` in the vault repo's `ansible/.env` (that stack uses it as the MariaDB root password) |
-   | `LITTLESTEPS_DB_PASSWORD` | new: `openssl rand -base64 24` |
-   | `VAULT_REDIS_PASSWORD` | `REDIS_PASSWORD` in the vault repo's `ansible/.env` |
+   | `DB_PASSWORD`, `DB_ROOT_PASSWORD`, `REDIS_PASSWORD` | new: `openssl rand -base64 24` each |
    | `GITHUB_TOKEN` | a token with `read:packages`, so the server can pull from GHCR |
    | `DEPLOY_WEBHOOK_SECRET` | new: `openssl rand -hex 32` — the same value goes into GitHub |
 
-   `deploy/ansible/.env` and `ssh_key` are gitignored. They are the only
-   secrets on your machine; nothing sensitive is committed.
+   `deploy/ansible/.env`, `ssh_key` and `ssh_key.pub` are gitignored.
 
-5. **The GitHub repository secret.** In
+4. **The GitHub repository secret.** In
    `github.com/freskimveliu/littlesteps-web` → Settings → Secrets and variables
-   → Actions, add `DEPLOY_WEBHOOK_SECRET` with the same value as above.
+   → Actions, add `DEPLOY_WEBHOOK_SECRET` with the same value as above. Or:
+
+   ```bash
+   echo -n '<the value>' | gh secret set DEPLOY_WEBHOOK_SECRET --repo freskimveliu/littlesteps-web
+   ```
 
 ---
 
 ## First publish
 
-Do these in order. Steps 1 and 2 can be done in either order, but the image
-must exist in GHCR before step 4 runs, and Caddy must know the hostname before
-the site answers.
-
 ### 1. Build the first image
 
 ```bash
-git add .github deploy DEPLOYMENT.md
-git commit -m "Add deployment to the shared server"
 git push origin main
 ```
 
 The workflow runs the test suite, then pushes
 `ghcr.io/freskimveliu/littlesteps-web:main` (and a tag for the commit SHA).
 
-PHPStan is *not* a gate. `composer phpstan` reports around 300 errors at level
-6 today — 194 of them Pest higher-order syntax in `tests/` that PHPStan cannot
-resolve, the rest in `app/`, `config/` and `database/`. None of that is new,
-and none of it is about deployment; the step is commented out in the workflow
-and should go back in once it runs clean.
+**The `deploy` job fails on this first run** — there is no server yet. Expected;
+the image push is what matters.
 
-**The `deploy` job will fail on this first run** — the webhook does not exist on
-the server yet. That is expected. Everything up to and including the image push
-is what matters here.
+PHPStan is *not* a gate. `composer phpstan` reports around 300 errors at level 6
+today — 194 of them Pest higher-order syntax in `tests/` that PHPStan cannot
+resolve, the rest across `app/`, `config/` and `database/`. None of it is new.
+The step is commented out in the workflow and should go back in once it runs
+clean.
 
-### 2. Teach Caddy about the hostname
-
-The site block lives in the vault repo (Caddy belongs to that stack) and is
-already written — it just needs to be applied:
-
-```bash
-cd ../vault
-git add ansible/ && git commit -m "Route littlesteps.freskimveliu.dev" && git push
-cd ansible
-./update.sh 3.121.93.121
-```
-
-This re-renders `/opt/vault/docker/caddy/Caddyfile` with the Little Steps site
-and reloads Caddy. Caddy is happy to hold a route whose upstream does not exist
-yet — until step 4 the site simply returns 502.
-
-If the vault repo's `ansible/.env` predates this change it does not matter:
-`LITTLESTEPS_DOMAIN` defaults to `littlesteps.freskimveliu.dev` in the
-playbook. Set it to an empty string there if you ever want the block gone.
-
-### 3. Configure the server
+### 2. Provision the server and deploy
 
 ```bash
 cd deploy/ansible
-./apply.sh
+./setup.sh
 ```
 
-This is the whole install, and it is idempotent — run it again any time. It:
+This creates the key pair, security group, instance and Elastic IP, then
+configures everything: Docker, UFW, Fail2ban, the swapfile, the Traefik stack
+in `/opt/proxy`, and Little Steps in `/opt/littlesteps` — ending with `migrate
+--force` and the containers up.
 
-- creates `/opt/littlesteps` and the persistent `laravel/storage` tree,
-- adds the swapfile,
-- creates the `littlesteps` database and user in the vault MariaDB,
-- writes `laravel/.env`, `docker-compose.yml`, `scripts/deploy.sh` and the
-  webhook server,
-- installs and starts `littlesteps-deploy-webhook.service` on port 9001,
-- allows that port from the Docker network only (UFW) and adds a Fail2ban jail
-  for the new access log,
-- logs in to GHCR, pulls the image, runs `migrate --force`, starts the
-  containers and waits for the health check to pass.
+It prints the Elastic IP and pauses for nothing, so do both of these as soon as
+it appears:
 
-The catalogue is seeded by a migration (`import_catalogue`), so there is no
-separate seeding step.
+- **Point DNS at it** — `littlesteps.freskimveliu.dev` → the new IP. Traefik
+  requests the certificate over HTTP-01, so HTTPS only works once the name
+  resolves to this server.
+- **Put `SERVER_IP=<that IP>` in `deploy/ansible/.env`** so every later run uses
+  `./apply.sh` against the existing box instead of building another one.
 
-### 4. Create the first admin user
+The catalogue is seeded by a migration (`import_catalogue`) — no separate step.
+
+### 3. Create the first admin user
 
 ```bash
-ssh ubuntu@3.121.93.121
+ssh -i deploy/ansible/ssh_key ubuntu@<IP>
 cd /opt/littlesteps
 docker compose exec app php artisan tinker --execute="
   \App\Models\User::create([
@@ -197,27 +145,18 @@ docker compose exec app php artisan tinker --execute="
 "
 ```
 
-The `password` attribute is cast to `hashed`, so pass it in plain — it is
-hashed on save. Admin sign-in refuses any account without `is_admin`.
+The `password` attribute is cast to `hashed`, so pass it in plain. Admin sign-in
+refuses any account without `is_admin`.
 
-### 5. Verify
+### 4. Verify
 
 ```bash
 curl -sI https://littlesteps.freskimveliu.dev/up      # 200, valid certificate
-open https://littlesteps.freskimveliu.dev/admin       # sign in as the admin user
+open https://littlesteps.freskimveliu.dev/admin
 ```
 
-Then re-run the failed `deploy` job in GitHub Actions (or push any commit) to
-confirm the webhook path works end to end.
-
-### 6. Add it to the monitoring you already have
-
-- **Uptime Kuma** — https://status.vault.freskimveliu.dev → add an HTTP monitor
-  for `https://littlesteps.freskimveliu.dev/up`.
-- **Dozzle** — https://logs.vault.freskimveliu.dev already lists the three new
-  containers; nothing to configure.
-- **Netdata** — https://metrics.vault.freskimveliu.dev; watch memory for the
-  first few days.
+Then re-run the failed `deploy` job in GitHub Actions to confirm the webhook
+path works end to end.
 
 ---
 
@@ -227,18 +166,30 @@ confirm the webhook path works end to end.
 git push origin main
 ```
 
-That is the whole thing. The workflow tests, builds, pushes, and calls the
-webhook; `deploy.sh` on the server pulls the new image, runs migrations, swaps
-the app container, waits for it to report healthy, and only then restarts the
-workers. If the new container never becomes healthy, the script stops and the
-workflow's health check fails — the old workers stay on the old image.
+Actions tests, builds, pushes, and calls the webhook. On the server,
+`deploy.sh` pulls the new image, runs migrations, swaps the app container,
+waits for it to report healthy, and only then restarts the workers. If the new
+container never becomes healthy the script stops and the workflow fails — the
+old workers keep running the old image.
 
 Pull requests run the tests but do not build or deploy.
+
+### Server or config changes
+
+Anything in `deploy/` — the compose file, `laravel/.env`, the playbook:
+
+```bash
+cd deploy/ansible && ./apply.sh
+```
+
+Never edit files on the server; the next run overwrites them. Note that
+`docker compose restart` does not reload `env_file` — use
+`docker compose up -d --no-deps app`.
 
 ### Deploying by hand
 
 ```bash
-ssh ubuntu@3.121.93.121
+ssh -i deploy/ansible/ssh_key ubuntu@<IP>
 /opt/littlesteps/scripts/deploy.sh
 ```
 
@@ -247,13 +198,12 @@ ssh ubuntu@3.121.93.121
 Every build is also tagged with its commit SHA:
 
 ```bash
-ssh ubuntu@3.121.93.121
 cd /opt/littlesteps
 vim .env                       # DOCKER_IMAGE_TAG=<the good SHA>
 docker compose up -d --no-deps app
 ```
 
-Set the same `DOCKER_IMAGE_TAG` in `deploy/ansible/.env` if you plan to re-run
+Set the same `DOCKER_IMAGE_TAG` in `deploy/ansible/.env` if you will run
 `apply.sh` before shipping the fix forward — otherwise it puts `main` back.
 
 Rolling back does **not** undo migrations. If a migration is the problem, write
@@ -263,31 +213,25 @@ a forward fix.
 
 ## Day to day
 
-All of these run from `/opt/littlesteps` on the server:
+From `/opt/littlesteps` on the server:
 
 ```bash
 docker compose ps                              # what is running
 docker compose logs app --tail=50 -f           # app logs
 docker compose exec app php artisan <command>  # artisan
 docker compose exec app bash                   # shell in the container
+docker compose exec database mysql -ulittlesteps -p littlesteps
 
-sudo journalctl -u littlesteps-deploy-webhook -f   # deploy webhook, live
+docker compose -f /opt/proxy/docker-compose.yml logs -f   # Traefik, certificates
+
+sudo journalctl -u littlesteps-deploy-webhook -f
 sudo tail -f /var/log/littlesteps-deploy-webhook.log
-
-docker exec -it vault_database mariadb -ulittlesteps -p littlesteps   # SQL shell
 ```
 
-Reclaiming memory, if the box gets tight — nothing is queued or scheduled yet,
-so both workers are idle and a deploy will leave them stopped once you do this:
-
-```bash
-docker compose stop queue scheduler
-```
-
-Configuration changes (`laravel/.env`, the compose file) go through
-`deploy/ansible/apply.sh` from your machine — **never edit files on the server**,
-they are overwritten on the next run. Note that `docker compose restart` does
-not reload `env_file`; use `docker compose up -d --no-deps app`.
+Nothing is queued or scheduled yet — every media conversion is `nonQueued()`,
+no job implements `ShouldQueue`, and `routes/console.php` is empty. Both worker
+containers idle at roughly 60 MB each, and `docker compose stop queue scheduler`
+survives deploys if you want that memory back.
 
 ---
 
@@ -297,19 +241,19 @@ State that cannot be rebuilt:
 
 | What | Where |
 | --- | --- |
-| Database (both apps) | `/opt/vault/data/mysql` |
-| Little Steps uploads | `/opt/littlesteps/laravel/storage/app/public` |
-| TLS certificates | `/opt/vault/caddy_data` |
+| Database | `/opt/littlesteps/data/mysql` |
+| Uploads | `/opt/littlesteps/laravel/storage/app/public` |
+| TLS certificates | the `letsencrypt` volume of the proxy stack (`acme.json`) |
 
-A database-only dump:
+A database dump:
 
 ```bash
-docker exec vault_database mariadb-dump -uroot -p<root-pw> \
-  --databases littlesteps | gzip > littlesteps-$(date +%F).sql.gz
+docker compose exec -T database mysqldump -uroot -p<root-pw> littlesteps \
+  | gzip > littlesteps-$(date +%F).sql.gz
 ```
 
-There is no automated backup on this server yet — for either app. Worth fixing
-before real families are using it.
+There is no automated backup yet. Worth fixing before real families are using
+it — an EBS snapshot schedule is the least effort.
 
 ---
 
@@ -319,20 +263,21 @@ before real families are using it.
   so `git pull` on the server does nothing. A change ships only once CI has
   built and pushed a new image.
 - **`.env` files, plural.** `/opt/littlesteps/laravel/.env` is the app's
-  configuration. `/opt/littlesteps/.env` is Compose's — it holds only
-  `DOCKER_IMAGE_TAG`. Compose does not read the one in `laravel/`.
-- **Caddy is not ours.** Anything about routing, TLS or the webhook path is in
-  the vault repo. Change it there, apply with that repo's `./update.sh`.
-- **Port 9000 is vault's webhook.** Ours is 9001. Both are closed to the
-  internet — UFW only allows them from `172.16.0.0/12`, i.e. from Caddy.
+  configuration. `/opt/littlesteps/.env` is Compose's — image tag, hostname and
+  the database and Redis passwords. Compose does not read the one in `laravel/`.
+- **The certificate needs DNS first.** Traefik uses the HTTP-01 challenge, so
+  the hostname must resolve to the server before HTTPS works. Until then the
+  site answers on HTTP or not at all.
 - **Migrations run on every deploy**, before the new container starts. Write
   destructive migrations carefully.
 - **`TRUSTED_PROXIES=*`** is set, and `bootstrap/app.php` already calls
-  `trustProxies(at: '*')`. Without it Laravel would generate `http://` URLs
-  behind Caddy.
-- **Mail is not configured.** `MAIL_MAILER=log`, so password resets and any
-  other mail go to the log and nowhere else. Set real SMTP credentials in the
-  playbook's `.env` block when that matters.
+  `trustProxies(at: '*')`. Without it Laravel generates `http://` URLs behind
+  Traefik.
+- **Mail is not configured.** `MAIL_MAILER=log`, so password resets go to the
+  log and nowhere else. Add real SMTP credentials to the playbook's `.env` block
+  when that matters.
+- **`setup.sh` creates a server every time it runs.** Use `apply.sh` for
+  everything after the first time; it refuses to provision.
 
 ---
 
@@ -342,7 +287,10 @@ before real families are using it.
   uses `https://api.littlesteps.app/api` for release builds and
   `http://localhost:3000/api` in development. Point it at
   `https://littlesteps.freskimveliu.dev/api` — or, if `littlesteps.app` is
-  yours, add that hostname to the Caddy site block (Caddy will issue a
-  certificate for both) and leave the app alone.
+  yours, add a second `Host()` rule to the app's Traefik labels (Traefik will
+  get a certificate for both) and leave the app alone.
 - **No automated backups**, as above.
+- **No monitoring.** The vault box has Uptime Kuma, Netdata and Dozzle; this one
+  has nothing. The cheapest useful start is an external uptime check against
+  `/up`.
 - **No staging environment.** `main` goes straight to production.

@@ -1,16 +1,12 @@
-# Little Steps — production stack for the shared server (the "vault" box).
+# Little Steps — the production stack, on its own server.
 #
-# This is NOT ../docker-compose.production.yml. That file is the self-contained
-# stack: it brings its own MySQL, its own Redis and expects Traefik. This one
-# runs on the existing server at /opt/littlesteps and reuses what already runs
-# there — Caddy for TLS and routing, and the vault MariaDB and Redis for data.
+# Its own MySQL, its own Redis, its own box. Routing and TLS come from the
+# shared proxy in ../proxy, deployed to /opt/proxy on the same server — the
+# same arrangement as local development, so there is one pattern to remember.
+# The app image comes from GHCR, built by CI.
 #
-# Only three containers are ours: the app, a queue worker and the scheduler.
-# They join `vault_network` (created by the vault stack) so Caddy can reach
-# `littlesteps_app` and the app can reach `vault_database` / `vault_redis`.
-#
-# Ansible copies this file to /opt/littlesteps/docker-compose.yml — see
-# deploy/ansible/apply.sh. Do not edit it on the server; it gets overwritten.
+# Ansible copies this to /opt/littlesteps/docker-compose.yml and writes the .env
+# beside it. Do not edit it on the server — it is overwritten on the next run.
 services:
   app:
     image: "ghcr.io/freskimveliu/littlesteps-web:${DOCKER_IMAGE_TAG:-main}"
@@ -20,7 +16,23 @@ services:
     volumes:
       - ./laravel/storage:/var/www/storage
     networks:
-      - vault_network
+      - internal
+      - proxy
+    depends_on:
+      database:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
+      - "traefik.http.routers.littlesteps.rule=Host(`${APP_HOST:?APP_HOST must be set}`)"
+      - "traefik.http.routers.littlesteps.entrypoints=websecure"
+      - "traefik.http.routers.littlesteps.tls=true"
+      - "traefik.http.routers.littlesteps.tls.certresolver=le"
+      - "traefik.http.routers.littlesteps.middlewares=security-headers@file"
+      - "traefik.http.services.littlesteps.loadbalancer.server.port=80"
+      - "traefik.http.services.littlesteps.loadbalancer.serversTransport=longTimeout@file"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/up"]
       interval: 10s
@@ -28,10 +40,47 @@ services:
       retries: 3
       start_period: 30s
 
+  database:
+    image: mysql:8.4
+    container_name: littlesteps_database
+    restart: unless-stopped
+    command: --mysql-native-password=OFF
+    # No published ports — reachable only on the internal network.
+    environment:
+      - "MYSQL_DATABASE=${DB_DATABASE}"
+      - "MYSQL_USER=${DB_USERNAME}"
+      - "MYSQL_PASSWORD=${DB_PASSWORD:?DB_PASSWORD must be set}"
+      - "MYSQL_ROOT_PASSWORD=${DB_ROOT_PASSWORD:?DB_ROOT_PASSWORD must be set}"
+    volumes:
+      - ./data/mysql:/var/lib/mysql
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p${DB_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 60s
+
+  redis:
+    image: redis:8-alpine
+    container_name: littlesteps_redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass "${REDIS_PASSWORD:?REDIS_PASSWORD must be set}"
+    volumes:
+      - ./data/redis:/data
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
   # Nothing is queued today (every media conversion is nonQueued() and no job
-  # implements ShouldQueue), so this worker idles at ~60 MB. It is here so the
-  # first queued job works without a deploy change. On a 2 GB box you can stop
-  # it — `docker compose stop queue` — and deploys will leave it stopped.
+  # implements ShouldQueue), so this worker idles. It is here so the first
+  # queued job works without a deploy change; `docker compose stop queue`
+  # survives deploys if you want the memory back.
   queue:
     image: "ghcr.io/freskimveliu/littlesteps-web:${DOCKER_IMAGE_TAG:-main}"
     container_name: littlesteps_queue
@@ -41,15 +90,17 @@ services:
     volumes:
       - ./laravel/storage:/var/www/storage
     networks:
-      - vault_network
+      - internal
     depends_on:
-      - app
+      database:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     # The image healthcheck curls nginx, which does not run in this container.
-    # The restart policy covers the worker exiting, so no check is needed.
     healthcheck:
       disable: true
 
-  # Same story: routes/console.php schedules nothing yet. Stoppable too.
+  # Same story: routes/console.php schedules nothing yet.
   scheduler:
     image: "ghcr.io/freskimveliu/littlesteps-web:${DOCKER_IMAGE_TAG:-main}"
     container_name: littlesteps_scheduler
@@ -59,14 +110,22 @@ services:
     volumes:
       - ./laravel/storage:/var/www/storage
     networks:
-      - vault_network
+      - internal
     depends_on:
-      - app
+      database:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     healthcheck:
       disable: true
 
 networks:
-  # Owned by the vault stack (/opt/vault/docker-compose.yml). We only attach.
-  vault_network:
-    name: vault_network
+  # Owned by the proxy stack at /opt/proxy. Traefik watches Docker and picks up
+  # the labels above as soon as this container joins.
+  proxy:
+    name: proxy
     external: true
+  # Database and Redis live here, with no route in from outside.
+  internal:
+    name: littlesteps_internal
+    driver: bridge

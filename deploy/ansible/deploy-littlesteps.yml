@@ -1,55 +1,49 @@
 ---
 # =============================================================================
-# Little Steps — install / update on the shared vault server
+# Little Steps — configure the server and run the stack
 # =============================================================================
-# Idempotent: run it for the first install and again for every config change.
-# It does NOT create a server — the vault stack already provisioned this one.
+# Idempotent. This is both the first-run configuration and the way every later
+# change is applied. It assumes a fresh Ubuntu 24.04 box (create-and-setup-ec2.yml
+# makes one) and installs everything it needs.
 #
-#   ./apply.sh
+#   ./apply.sh              # against SERVER_IP from .env
+#   ./setup.sh              # provision a new instance, then run this
 #
 # What it does:
-#   - creates /opt/littlesteps and the persistent storage directory
-#   - adds a swapfile (the box is a t3.small with 2 GB of RAM)
-#   - creates the `littlesteps` database and user inside the vault MariaDB
-#   - writes laravel/.env, docker-compose.yml, deploy.sh and the webhook server
-#   - installs a systemd unit for the webhook on WEBHOOK_PORT (9001)
-#   - opens that port to the Docker network only, and adds a Fail2ban jail
-#   - pulls the image, migrates, and starts the containers
-#
-# Caddy is NOT configured here — it belongs to the vault stack. The site block
-# for this app lives in the vault repo's ansible/docker/caddy/Caddyfile.j2 and
-# is applied with the vault repo's ./update.sh. See DEPLOYMENT.md.
+#   - installs Docker, UFW and Fail2ban, and adds a swapfile
+#   - deploys the shared proxy from ../proxy to /opt/proxy (Traefik, Let's Encrypt)
+#   - writes /opt/littlesteps: laravel/.env, docker-compose.yml, deploy.sh
+#   - installs a deploy webhook on port 9000, reachable only from Docker
+#   - pulls the image from GHCR, migrates, and starts the stack
 # =============================================================================
 
-- name: "Deploy Little Steps to the shared server"
-  hosts: all
+- name: "Configure the server and deploy Little Steps"
+  hosts: littlesteps
   become: true
   gather_facts: true
 
   vars:
     app_dir: /opt/littlesteps
-    vault_dir: /opt/vault
-    domain: "{{ lookup('env', 'LITTLESTEPS_DOMAIN') | default('littlesteps.freskimveliu.dev', true) }}"
-    docker_image: "ghcr.io/freskimveliu/littlesteps-web"
-    image_tag: "{{ lookup('env', 'DOCKER_IMAGE_TAG') | default('main', true) }}"
+    proxy_dir: /opt/proxy
+    proxy_src: "{{ playbook_dir }}/../../../proxy"
 
+    domain: "{{ lookup('env', 'LITTLESTEPS_DOMAIN') | default('littlesteps.freskimveliu.dev', true) }}"
+    acme_email: "{{ lookup('env', 'ACME_EMAIL') | default('freskim.veliu@gmail.com', true) }}"
+
+    image_tag: "{{ lookup('env', 'DOCKER_IMAGE_TAG') | default('main', true) }}"
     app_key: "{{ lookup('env', 'APP_KEY') }}"
 
-    db_name: littlesteps
-    db_user: littlesteps
-    db_password: "{{ lookup('env', 'LITTLESTEPS_DB_PASSWORD') }}"
-    vault_db_root_password: "{{ lookup('env', 'VAULT_DB_ROOT_PASSWORD') }}"
-
-    redis_password: "{{ lookup('env', 'VAULT_REDIS_PASSWORD') }}"
-    # Vault uses Redis databases 0 (default) and 1 (cache). We take 2 and 3.
-    redis_db: "2"
-    redis_cache_db: "3"
+    db_database: littlesteps
+    db_username: littlesteps
+    db_password: "{{ lookup('env', 'DB_PASSWORD') }}"
+    db_root_password: "{{ lookup('env', 'DB_ROOT_PASSWORD') }}"
+    redis_password: "{{ lookup('env', 'REDIS_PASSWORD') }}"
 
     github_token: "{{ lookup('env', 'GITHUB_TOKEN') }}"
     github_username: "{{ lookup('env', 'GITHUB_USERNAME') | default('freskimveliu', true) }}"
 
     deploy_webhook_secret: "{{ lookup('env', 'DEPLOY_WEBHOOK_SECRET') }}"
-    webhook_port: "{{ lookup('env', 'WEBHOOK_PORT') | default('9001', true) }}"
+    webhook_port: "{{ lookup('env', 'WEBHOOK_PORT') | default('9000', true) }}"
 
     create_swapfile: "{{ (lookup('env', 'CREATE_SWAPFILE') | default('true', true)) | bool }}"
 
@@ -63,37 +57,116 @@
           - app_key | length > 0
           - app_key is match('^base64:')
           - db_password | length > 0
-          - vault_db_root_password | length > 0
+          - db_root_password | length > 0
           - redis_password | length > 0
           - github_token | length > 0
           - deploy_webhook_secret | length > 0
         fail_msg: >-
-          One or more values are missing from deploy/ansible/.env.
-          APP_KEY must be a fresh `base64:...` key (artisan key:generate --show),
-          and the vault DB/Redis passwords must match the vault repo's ansible/.env.
+          One or more values are missing from deploy/ansible/.env. APP_KEY must
+          be a fresh `base64:...` key (artisan key:generate --show), and the
+          database, Redis, GitHub and webhook values must all be filled in.
         quiet: true
 
-    - name: Check that the vault stack is present
+    - name: Check that the proxy repo is next to this one
       ansible.builtin.stat:
-        path: "{{ vault_dir }}/docker-compose.yml"
-      register: vault_stack
+        path: "{{ proxy_src }}/docker-compose.production.yml"
+      delegate_to: localhost
+      become: false
+      register: proxy_repo
 
-    - name: Fail if the vault stack is missing
+    - name: Fail if the proxy repo is missing
       ansible.builtin.fail:
         msg: >-
-          {{ vault_dir }}/docker-compose.yml not found. This playbook attaches to
-          the vault stack (its network, MariaDB, Redis and Caddy) and cannot run
-          without it.
-      when: not vault_stack.stat.exists
-
-    - name: Check that the vault database container is running
-      ansible.builtin.command: docker inspect -f '{{ "{{" }}.State.Running{{ "}}" }}' vault_database
-      register: vault_db_running
-      changed_when: false
-      failed_when: vault_db_running.rc != 0 or vault_db_running.stdout | trim != 'true'
+          {{ proxy_src }} does not look like the proxy repo — expected
+          docker-compose.production.yml in it. Traefik and the certificates come
+          from there; clone it next to this repo and run again.
+      when: not proxy_repo.stat.exists
 
     # -------------------------------------------------------------------------
-    # Swap — a t3.small has 2 GB of RAM and now runs twelve containers
+    # Base system
+    # -------------------------------------------------------------------------
+    - name: Update the apt cache
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Install base packages
+      ansible.builtin.apt:
+        name:
+          - ca-certificates
+          - curl
+          - gnupg
+          - git
+          - jq
+          - unzip
+          - ufw
+          - fail2ban
+          - python3
+        state: present
+
+    - name: Add the Docker GPG key
+      ansible.builtin.apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: Add the Docker apt repository
+      ansible.builtin.apt_repository:
+        repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+        state: present
+        update_cache: true
+
+    - name: Install Docker
+      ansible.builtin.apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-buildx-plugin
+          - docker-compose-plugin
+        state: present
+
+    - name: Start and enable Docker
+      ansible.builtin.service:
+        name: docker
+        state: started
+        enabled: true
+
+    - name: Let the ubuntu user run docker
+      ansible.builtin.user:
+        name: ubuntu
+        groups: docker
+        append: true
+
+    # -------------------------------------------------------------------------
+    # Firewall — only SSH, HTTP and HTTPS from the internet
+    # -------------------------------------------------------------------------
+    - name: UFW — allow SSH, HTTP and HTTPS
+      community.general.ufw:
+        rule: allow
+        port: "{{ item }}"
+        proto: tcp
+      loop: ['22', '80', '443']
+
+    - name: UFW — allow the deploy webhook from the Docker network only
+      community.general.ufw:
+        rule: allow
+        port: "{{ webhook_port }}"
+        from_ip: "172.16.0.0/12"
+        comment: "Deploy webhook, Docker network only"
+
+    - name: UFW — enable with a default deny
+      community.general.ufw:
+        state: enabled
+        policy: deny
+
+    - name: Enable Fail2ban (its default sshd jail)
+      ansible.builtin.service:
+        name: fail2ban
+        state: started
+        enabled: true
+
+    # -------------------------------------------------------------------------
+    # Swap — MySQL, Redis, PHP-FPM and Traefik on a 2 GB instance
     # -------------------------------------------------------------------------
     - name: Check for an existing swapfile
       ansible.builtin.stat:
@@ -140,7 +213,55 @@
             reload: true
 
     # -------------------------------------------------------------------------
-    # Directories
+    # The shared proxy — Traefik, from ../proxy
+    # -------------------------------------------------------------------------
+    - name: Create the proxy directory
+      ansible.builtin.file:
+        path: "{{ proxy_dir }}"
+        state: directory
+        owner: ubuntu
+        group: ubuntu
+        mode: '0755'
+
+    - name: Copy the proxy stack
+      ansible.builtin.copy:
+        src: "{{ proxy_src }}/{{ item.src }}"
+        dest: "{{ proxy_dir }}/{{ item.dest }}"
+        owner: ubuntu
+        group: ubuntu
+        mode: '0644'
+      loop:
+        - { src: docker-compose.production.yml, dest: docker-compose.yml }
+        - { src: traefik.production.yaml, dest: traefik.production.yaml }
+        - { src: dynamic_conf.production.yaml, dest: dynamic_conf.production.yaml }
+      register: proxy_files
+
+    - name: Write the proxy environment file
+      ansible.builtin.copy:
+        dest: "{{ proxy_dir }}/.env"
+        owner: ubuntu
+        group: ubuntu
+        mode: '0644'
+        content: |
+          # Address Let's Encrypt sends expiry warnings to.
+          ACME_EMAIL={{ acme_email }}
+      register: proxy_env
+
+    - name: Create the proxy Docker network
+      ansible.builtin.command: docker network create proxy
+      register: proxy_network
+      changed_when: proxy_network.rc == 0
+      failed_when: proxy_network.rc != 0 and 'already exists' not in proxy_network.stderr
+
+    - name: Start the proxy
+      ansible.builtin.command: docker compose up -d
+      args:
+        chdir: "{{ proxy_dir }}"
+      register: proxy_up
+      changed_when: "'Started' in proxy_up.stderr or 'Created' in proxy_up.stderr"
+
+    # -------------------------------------------------------------------------
+    # Application directories
     # -------------------------------------------------------------------------
     - name: Create the application directory structure
       ansible.builtin.file:
@@ -152,6 +273,8 @@
       loop:
         - "{{ app_dir }}"
         - "{{ app_dir }}/scripts"
+        - "{{ app_dir }}/data/mysql"
+        - "{{ app_dir }}/data/redis"
         - "{{ app_dir }}/laravel/storage/logs"
         - "{{ app_dir }}/laravel/storage/framework/cache/data"
         - "{{ app_dir }}/laravel/storage/framework/sessions"
@@ -159,30 +282,7 @@
         - "{{ app_dir }}/laravel/storage/app/public"
 
     # -------------------------------------------------------------------------
-    # Database — our own database and user inside the vault MariaDB
-    # -------------------------------------------------------------------------
-    - name: Create the database and user in the vault MariaDB
-      ansible.builtin.command:
-        argv:
-          - docker
-          - exec
-          - vault_database
-          - mariadb
-          - -uroot
-          - "-p{{ vault_db_root_password }}"
-          - -e
-          - >-
-            CREATE DATABASE IF NOT EXISTS `{{ db_name }}`
-              CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-            CREATE USER IF NOT EXISTS '{{ db_user }}'@'%' IDENTIFIED BY '{{ db_password }}';
-            ALTER USER '{{ db_user }}'@'%' IDENTIFIED BY '{{ db_password }}';
-            GRANT ALL PRIVILEGES ON `{{ db_name }}`.* TO '{{ db_user }}'@'%';
-            FLUSH PRIVILEGES;
-      no_log: true
-      changed_when: true
-
-    # -------------------------------------------------------------------------
-    # Application configuration
+    # Configuration
     # -------------------------------------------------------------------------
     - name: Write laravel/.env
       ansible.builtin.copy:
@@ -205,7 +305,7 @@
 
           BCRYPT_ROUNDS=12
 
-          # Caddy terminates TLS and forwards plain HTTP.
+          # Traefik terminates TLS and forwards plain HTTP.
           TRUSTED_PROXIES=*
 
           LOG_CHANNEL=stack
@@ -213,12 +313,11 @@
           LOG_DEPRECATIONS_CHANNEL=null
           LOG_LEVEL=error
 
-          # The shared MariaDB from the vault stack.
-          DB_CONNECTION=mariadb
-          DB_HOST=vault_database
+          DB_CONNECTION=mysql
+          DB_HOST=database
           DB_PORT=3306
-          DB_DATABASE={{ db_name }}
-          DB_USERNAME={{ db_user }}
+          DB_DATABASE={{ db_database }}
+          DB_USERNAME={{ db_username }}
           DB_PASSWORD={{ db_password }}
 
           SESSION_DRIVER=redis
@@ -232,15 +331,10 @@
           QUEUE_CONNECTION=redis
           CACHE_STORE=redis
 
-          # The shared Redis from the vault stack, on our own database indexes
-          # so nothing collides with vault's keys, cache or queues.
           REDIS_CLIENT=phpredis
-          REDIS_HOST=vault_redis
+          REDIS_HOST=redis
           REDIS_PORT=6379
           REDIS_PASSWORD={{ redis_password }}
-          REDIS_DB={{ redis_db }}
-          REDIS_CACHE_DB={{ redis_cache_db }}
-          REDIS_PREFIX=littlesteps-database-
 
           MAIL_MAILER=log
           MAIL_FROM_ADDRESS="hello@{{ domain }}"
@@ -248,19 +342,28 @@
       no_log: true
 
     # Compose reads its variables from the .env next to the compose file, not
-    # from laravel/.env. This is the one that decides which image tag runs —
-    # change it to a commit SHA to roll back.
+    # from laravel/.env. DOCKER_IMAGE_TAG here is what decides which build runs.
     - name: Write the compose environment file
       ansible.builtin.copy:
         dest: "{{ app_dir }}/.env"
         owner: ubuntu
         group: ubuntu
-        mode: '0644'
+        mode: '0600'
         content: |
-          # Which image tag the stack runs. `main` is the newest build of the
-          # main branch; set a commit SHA here to pin or roll back, then run:
+          # Which image tag runs. `main` is the newest build of the main branch;
+          # set a commit SHA to pin or roll back, then:
           #   docker compose up -d --no-deps app
           DOCKER_IMAGE_TAG={{ image_tag }}
+
+          APP_HOST={{ domain }}
+
+          DB_DATABASE={{ db_database }}
+          DB_USERNAME={{ db_username }}
+          DB_PASSWORD={{ db_password }}
+          DB_ROOT_PASSWORD={{ db_root_password }}
+
+          REDIS_PASSWORD={{ redis_password }}
+      no_log: true
 
     - name: Write docker-compose.yml
       ansible.builtin.copy:
@@ -287,8 +390,8 @@
 
           echo "$(date): Starting deployment..."
 
-          # Only restart the workers that were running — so `docker compose stop
-          # queue` survives a deploy on this memory-tight box.
+          # Only restart the workers that were running, so a deliberate
+          # `docker compose stop queue` survives a deploy.
           WORKERS=$(docker compose ps --services --status running 2>/dev/null \
               | grep -E '^(queue|scheduler)$' | tr '\n' ' ')
 
@@ -342,8 +445,8 @@
           Deployment webhook for Little Steps.
 
           Listens on WEBHOOK_PORT and runs deploy.sh for an HMAC-signed POST to
-          /deploy. Caddy is the only thing that can reach it (UFW restricts the
-          port to the Docker network).
+          /deploy. Traefik is the only thing that can reach it — UFW restricts
+          the port to the Docker network.
           """
           import http.server
           import hmac
@@ -412,8 +515,7 @@
                       self.wfile.write(str(e).encode())
 
               def verify_signature(self, payload, signature):
-                  # Unlike the vault webhook, an unset secret rejects everything
-                  # rather than allowing everything.
+                  # No secret means reject everything, not allow everything.
                   if not WEBHOOK_SECRET or not signature:
                       return False
                   expected = 'sha256=' + hmac.new(
@@ -465,44 +567,6 @@
         daemon_reload: true
         enabled: true
 
-    - name: UFW — allow the webhook port from the Docker network only
-      community.general.ufw:
-        rule: allow
-        port: "{{ webhook_port }}"
-        from_ip: "172.16.0.0/12"
-        comment: "Little Steps webhook, Docker network only"
-
-    # -------------------------------------------------------------------------
-    # Fail2ban — same filter the vault site uses, pointed at our access log
-    # -------------------------------------------------------------------------
-    - name: Configure a Fail2ban jail for the Little Steps access log
-      ansible.builtin.copy:
-        dest: /etc/fail2ban/jail.d/caddy-littlesteps.conf
-        mode: '0644'
-        content: |
-          [caddy-littlesteps]
-          enabled  = true
-          filter   = caddy-badrequest
-          logpath  = {{ vault_dir }}/logs/caddy/littlesteps.log
-          maxretry = 5
-          bantime  = 3600
-          findtime = 600
-      register: fail2ban_jail
-
-    - name: Ensure the access log exists so Fail2ban can start
-      ansible.builtin.file:
-        path: "{{ vault_dir }}/logs/caddy/littlesteps.log"
-        state: touch
-        mode: '0644'
-        access_time: preserve
-        modification_time: preserve
-
-    - name: Restart Fail2ban if the jail changed
-      ansible.builtin.service:
-        name: fail2ban
-        state: restarted
-      when: fail2ban_jail.changed
-
     # -------------------------------------------------------------------------
     # Bring it up
     # -------------------------------------------------------------------------
@@ -519,8 +583,14 @@
       no_log: true
       changed_when: true
 
-    - name: Pull the application image
+    - name: Pull the images
       ansible.builtin.command: docker compose pull
+      args:
+        chdir: "{{ app_dir }}"
+      changed_when: true
+
+    - name: Start the database and Redis
+      ansible.builtin.command: docker compose up -d database redis
       args:
         chdir: "{{ app_dir }}"
       changed_when: true
@@ -532,7 +602,7 @@
       register: migrate
       changed_when: "'Nothing to migrate' not in migrate.stdout"
 
-    - name: Start the containers
+    - name: Start the rest of the stack
       ansible.builtin.command: docker compose up -d
       args:
         chdir: "{{ app_dir }}"
@@ -547,7 +617,7 @@
       changed_when: false
 
     - name: Show container status
-      ansible.builtin.command: docker ps --filter "name=littlesteps" --format "table {{ '{{' }}.Names{{ '}}' }}\t{{ '{{' }}.Status{{ '}}' }}"
+      ansible.builtin.command: docker ps --format "table {{ '{{' }}.Names{{ '}}' }}\t{{ '{{' }}.Status{{ '}}' }}"
       register: docker_status
       changed_when: false
 
@@ -564,6 +634,6 @@
           - "Health    : https://{{ domain }}/up"
           - "Directory : {{ app_dir }}"
           - ""
-          - "If https://{{ domain }} does not answer, Caddy does not know about"
-          - "it yet — run ./update.sh in the vault repo's ansible directory."
+          - "If HTTPS fails, check that {{ domain }} resolves to this server —"
+          - "Traefik gets the certificate over HTTP-01 on the first request."
           - "============================================"

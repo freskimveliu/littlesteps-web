@@ -1,0 +1,152 @@
+---
+# =============================================================================
+# Little Steps — provision an EC2 instance, then deploy onto it
+# =============================================================================
+# Creates a dedicated server for this app: key pair, security group, Ubuntu
+# 24.04 instance and an Elastic IP, then hands off to deploy-littlesteps.yml
+# for everything else.
+#
+#   ./setup.sh
+#
+# Run once. Afterwards put the printed IP in .env as SERVER_IP and use
+# ./apply.sh, which skips provisioning entirely.
+# =============================================================================
+
+- name: "Phase 1: create the EC2 instance"
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  vars:
+    aws_region: "{{ lookup('env', 'AWS_REGION') | default('eu-central-1', true) }}"
+    instance_type: "{{ lookup('env', 'INSTANCE_TYPE') | default('t3.small', true) }}"
+    volume_size: "{{ lookup('env', 'VOLUME_SIZE') | default('20', true) | int }}"
+    server_name: "littlesteps-{{ lookup('pipe', 'date +%Y%m%d-%H%M%S') }}"
+    ssh_key_name: littlesteps-ansible-key
+    ssh_key_path: "{{ playbook_dir }}/ssh_key"
+    domain: "{{ lookup('env', 'LITTLESTEPS_DOMAIN') | default('littlesteps.freskimveliu.dev', true) }}"
+
+  tasks:
+    - name: Check the required environment variables
+      ansible.builtin.fail:
+        msg: "Required value '{{ item }}' is not set in deploy/ansible/.env"
+      when: lookup('env', item) | length == 0
+      loop:
+        - AWS_ACCESS_KEY_ID
+        - AWS_SECRET_ACCESS_KEY
+        - APP_KEY
+        - DB_PASSWORD
+        - DB_ROOT_PASSWORD
+        - REDIS_PASSWORD
+        - GITHUB_TOKEN
+        - DEPLOY_WEBHOOK_SECRET
+
+    - name: Generate an SSH keypair for this server
+      community.crypto.openssh_keypair:
+        path: "{{ ssh_key_path }}"
+        type: ed25519
+        force: false
+
+    - name: Upload the public key to EC2
+      amazon.aws.ec2_key:
+        name: "{{ ssh_key_name }}"
+        key_material: "{{ lookup('file', ssh_key_path + '.pub') }}"
+        region: "{{ aws_region }}"
+
+    - name: Create the security group
+      amazon.aws.ec2_security_group:
+        name: littlesteps-sg
+        description: "Little Steps application security group"
+        region: "{{ aws_region }}"
+        rules:
+          - proto: tcp
+            ports: [22]
+            cidr_ip: 0.0.0.0/0
+            rule_desc: "SSH"
+          - proto: tcp
+            ports: [80]
+            cidr_ip: 0.0.0.0/0
+            rule_desc: "HTTP — also the Let's Encrypt HTTP-01 challenge"
+          - proto: tcp
+            ports: [443]
+            cidr_ip: 0.0.0.0/0
+            rule_desc: "HTTPS"
+        rules_egress:
+          - proto: all
+            cidr_ip: 0.0.0.0/0
+      register: security_group
+
+    - name: Find the newest Ubuntu 24.04 LTS AMI
+      amazon.aws.ec2_ami_info:
+        region: "{{ aws_region }}"
+        owners:
+          - "099720109477"
+        filters:
+          name: "ubuntu/images/hvm-ssd-gp3/ubuntu-noble-24.04-amd64-server-*"
+          state: available
+      register: ubuntu_ami
+
+    - name: Launch the instance
+      amazon.aws.ec2_instance:
+        name: "{{ server_name }}"
+        key_name: "{{ ssh_key_name }}"
+        instance_type: "{{ instance_type }}"
+        image_id: "{{ (ubuntu_ami.images | sort(attribute='creation_date'))[-1].image_id }}"
+        region: "{{ aws_region }}"
+        security_groups:
+          - "{{ security_group.group_id }}"
+        volumes:
+          - device_name: /dev/sda1
+            ebs:
+              volume_size: "{{ volume_size }}"
+              volume_type: gp3
+              delete_on_termination: true
+        wait: true
+        tags:
+          Name: "{{ server_name }}"
+          Project: littlesteps
+      register: ec2
+
+    - name: Allocate and associate an Elastic IP
+      # Without this the public IP changes on every stop/start, and the DNS
+      # record would need updating each time.
+      amazon.aws.ec2_eip:
+        region: "{{ aws_region }}"
+        device_id: "{{ ec2.instances[0].instance_id }}"
+        in_vpc: true
+      register: elastic_ip
+
+    - name: Wait for SSH
+      ansible.builtin.wait_for:
+        host: "{{ elastic_ip.public_ip }}"
+        port: 22
+        delay: 30
+        timeout: 300
+        state: started
+
+    - name: Add the instance to the inventory for the next play
+      ansible.builtin.add_host:
+        name: "{{ elastic_ip.public_ip }}"
+        groups: littlesteps
+        ansible_ssh_private_key_file: "{{ ssh_key_path }}"
+        ansible_user: ubuntu
+
+    - name: Server created
+      ansible.builtin.debug:
+        msg:
+          - "============================================"
+          - "Instance ready."
+          - "  Name : {{ server_name }}"
+          - "  Type : {{ instance_type }} ({{ volume_size }} GB gp3)"
+          - "  IP   : {{ elastic_ip.public_ip }}"
+          - "============================================"
+          - "DO THIS NOW, in another window:"
+          - "  1. Point {{ domain }} at {{ elastic_ip.public_ip }}"
+          - "  2. Put SERVER_IP={{ elastic_ip.public_ip }} in deploy/ansible/.env"
+          - ""
+          - "Traefik requests the certificate over HTTP-01, so the name must"
+          - "resolve here before HTTPS works. The deploy continues meanwhile."
+          - "============================================"
+
+- name: Configure and deploy
+  ansible.builtin.import_playbook: deploy-littlesteps.yml
