@@ -30,6 +30,7 @@ use App\Http\Controllers\Api\V1\Entries\IndexEntriesController;
 use App\Http\Controllers\Api\V1\Entries\StoreEntryController;
 use App\Http\Controllers\Api\V1\Entries\UpdateEntryController;
 use App\Http\Controllers\Api\V1\Media\DestroyEntryMediaController;
+use App\Http\Controllers\Api\V1\Media\ShowMediaController;
 use App\Http\Controllers\Api\V1\Media\StoreUserPhotoController;
 use App\Http\Controllers\Api\V1\Milestones\DestroyMilestoneController;
 use App\Http\Controllers\Api\V1\Milestones\HideMilestoneController;
@@ -42,8 +43,19 @@ use App\Http\Controllers\Api\V1\Progress\ShowProgressController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
-    Route::post('auth/guest', GuestController::class);
-    Route::post('auth/login', LoginController::class);
+    // The only two doors with no token behind them, so the only two that a
+    // stranger can lean on. Capped harder than the rest.
+    Route::middleware('throttle:auth')->group(function () {
+        Route::post('auth/guest', GuestController::class);
+        Route::post('auth/login', LoginController::class);
+    });
+
+    // An <Image> tag cannot carry a token, so the uuid in the path is the key.
+    // It only ever leaves the server inside a payload the caller was allowed
+    // to see, and what it leads to is a signed link that goes stale.
+    Route::get('media/{uuid}/{conversion?}', ShowMediaController::class)
+        ->whereIn('conversion', ['thumb', 'display'])
+        ->name('media.show');
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('auth/register', RegisterController::class);

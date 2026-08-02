@@ -6,6 +6,7 @@ namespace App\Models;
 
 use App\Enums\Language;
 use App\Models\Concerns\HasSettings;
+use App\Support\MediaUrl;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -59,12 +60,16 @@ class User extends Authenticatable implements HasMedia
 
     public function photoUrl(): ?string
     {
-        return $this->getFirstMediaUrl(self::PHOTO) ?: null;
+        $photo = $this->getFirstMedia(self::PHOTO);
+
+        return $photo ? MediaUrl::for($photo) : null;
     }
 
     public function photoThumbUrl(): ?string
     {
-        return $this->getFirstMediaUrl(self::PHOTO, 'thumb') ?: null;
+        $photo = $this->getFirstMedia(self::PHOTO);
+
+        return $photo ? MediaUrl::for($photo, 'thumb') : null;
     }
 
     public function isRegistered(): bool

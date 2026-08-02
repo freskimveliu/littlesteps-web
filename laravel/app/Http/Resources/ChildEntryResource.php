@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Resources;
 
 use App\Models\ChildEntry;
+use App\Support\MediaUrl;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
@@ -31,9 +32,9 @@ class ChildEntryResource extends JsonResource
                 'id' => $media->id,
                 'type' => $media->type,
                 'mimeType' => $media->mime_type,
-                'url' => $media->getUrl(),
-                'thumb' => $media->hasGeneratedConversion('thumb') ? $media->getUrl('thumb') : null,
-                'display' => $media->hasGeneratedConversion('display') ? $media->getUrl('display') : null,
+                'url' => MediaUrl::for($media),
+                'thumb' => $media->hasGeneratedConversion('thumb') ? MediaUrl::for($media, 'thumb') : null,
+                'display' => $media->hasGeneratedConversion('display') ? MediaUrl::for($media, 'display') : null,
             ])->values(),
             'createdAt' => $this->created_at?->toIso8601String(),
         ];

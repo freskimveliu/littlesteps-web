@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Resources;
 
 use App\Models\ChildReward;
+use App\Support\MediaUrl;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -23,8 +24,8 @@ class RewardResource extends JsonResource
             'isClaimable' => $this->status->isClaimable(),
             'content' => $this->content,
             'artwork' => $artwork ? [
-                'url' => $artwork->getUrl(),
-                'thumb' => $artwork->getUrl('thumb'),
+                'url' => MediaUrl::for($artwork),
+                'thumb' => MediaUrl::for($artwork, 'thumb'),
             ] : null,
             'trophy' => new EarnedTrophyResource($this->whenLoaded('childTrophy')),
             'claimedAt' => $this->claimed_at?->toIso8601String(),

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\Gender;
+use App\Support\MediaUrl;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -119,11 +120,15 @@ class Child extends Model implements HasMedia
 
     public function photoUrl(): ?string
     {
-        return $this->getFirstMediaUrl(self::PHOTO) ?: null;
+        $photo = $this->getFirstMedia(self::PHOTO);
+
+        return $photo ? MediaUrl::for($photo) : null;
     }
 
     public function photoThumbUrl(): ?string
     {
-        return $this->getFirstMediaUrl(self::PHOTO, 'thumb') ?: null;
+        $photo = $this->getFirstMedia(self::PHOTO);
+
+        return $photo ? MediaUrl::for($photo, 'thumb') : null;
     }
 }

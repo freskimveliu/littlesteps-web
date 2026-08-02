@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Admin\Families;
 use App\Http\Controllers\Controller;
 use App\Models\ChildEntry;
 use App\Support\Admin\ChildSummary;
+use App\Support\MediaUrl;
 use App\Support\Progress\Metrics;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -45,9 +46,9 @@ class ShowChildMemoriesController extends Controller
                     'name' => $media->file_name,
                     'mime' => $media->mime_type,
                     'size' => $media->size,
-                    'thumb' => $media->hasGeneratedConversion('thumb') ? $media->getUrl('thumb') : $media->getUrl(),
-                    'display' => $media->hasGeneratedConversion('display') ? $media->getUrl('display') : $media->getUrl(),
-                    'original' => $media->getUrl(),
+                    'thumb' => MediaUrl::for($media, 'thumb'),
+                    'display' => MediaUrl::for($media, 'display'),
+                    'original' => MediaUrl::for($media),
                 ])->values(),
                 'properties' => $entry->properties->map(fn ($p) => [
                     'label' => $p->name ?? ucfirst($p->key->value),
