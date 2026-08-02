@@ -55,7 +55,9 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::middleware('guest')->group(function () {
         Route::get('login', ShowLoginController::class)->name('login');
-        Route::post('login', LoginController::class)->name('login.store');
+        Route::post('login', LoginController::class)
+            ->middleware('throttle:auth')
+            ->name('login.store');
     });
 
     // Signing out only needs a session, not the admin gate — otherwise someone

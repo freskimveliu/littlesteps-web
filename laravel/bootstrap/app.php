@@ -22,6 +22,10 @@ return Application::configure(basePath: dirname(__DIR__))
         // Traefik terminates TLS, so trust its forwarded proto/host headers.
         $middleware->trustProxies(at: '*');
 
+        // Every api/* route is capped by the 'api' limiter in AppServiceProvider.
+        // The two unauthenticated ones ask for 'auth' on top, in routes/api.php.
+        $middleware->throttleApi();
+
         $middleware->web(append: [
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
