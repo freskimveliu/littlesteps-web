@@ -4,10 +4,47 @@ declare(strict_types=1);
 
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use Inertia\Testing\AssertableInertia;
 
 beforeEach(function () {
     test()->withoutVite();
     test()->actingAs(User::factory()->create(['is_admin' => true, 'name' => 'The first admin']));
+});
+
+it('gives every tab of an account its own page, each carrying the shared header', function (string $suffix, string $component) {
+    [$parent] = family();
+
+    $this->actingAs(User::where('is_admin', true)->firstOrFail())
+        ->get("/admin/users/{$parent->id}{$suffix}")
+        ->assertOk()
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->component($component)
+            ->where('user.name', $parent->name)
+            ->where('user.children_count', 1)
+            ->has('user.written')
+            ->has('user.photos')
+            ->etc()
+        );
+})->with([
+    'overview' => ['', 'Admin/Users/Show'],
+    'children' => ['/children', 'Admin/Users/Children'],
+    'profile' => ['/profile', 'Admin/Users/Profile'],
+]);
+
+it('hands the children page the cards it draws', function () {
+    [$parent, $child] = family();
+
+    $this->actingAs(User::where('is_admin', true)->firstOrFail())
+        ->get("/admin/users/{$parent->id}/children")
+        ->assertOk()
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->component('Admin/Users/Children')
+            ->has('children', 1)
+            ->where('children.0.name', $child->name)
+            ->where('children.0.is_owner', true)
+            ->has('chapterCount')
+            ->etc()
+        );
 });
 
 it('creates an account from the console with its password already hashed', function () {

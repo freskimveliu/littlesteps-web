@@ -5,8 +5,10 @@ declare(strict_types=1);
 use App\Enums\AppSettingKey;
 use App\Enums\Mood;
 use App\Models\AppSetting;
+use App\Models\Child;
+use Illuminate\Testing\TestResponse;
 
-function freeMemory(App\Models\Child $child, array $overrides = []): Illuminate\Testing\TestResponse
+function freeMemory(Child $child, array $overrides = []): TestResponse
 {
     return test()->postJson("/api/v1/children/{$child->id}/entries", [
         'description' => 'She laughed at the cat.',
@@ -17,7 +19,7 @@ function freeMemory(App\Models\Child $child, array $overrides = []): Illuminate\
 }
 
 /** Every memory has to carry a mood and either words or a photo. */
-function milestoneMemory(App\Models\Child $child, int $milestoneId, array $overrides = []): Illuminate\Testing\TestResponse
+function milestoneMemory(Child $child, int $milestoneId, array $overrides = []): TestResponse
 {
     return test()->postJson("/api/v1/children/{$child->id}/entries", [
         'child_milestone_id' => $milestoneId,

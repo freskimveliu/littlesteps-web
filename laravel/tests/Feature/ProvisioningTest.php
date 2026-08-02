@@ -2,9 +2,16 @@
 
 declare(strict_types=1);
 
+use App\Actions\Children\CreateChild;
+use App\Data\ChildData;
+use App\Enums\Gender;
+use App\Enums\MemberRole;
+use App\Enums\Relation;
 use App\Models\ChildChapter;
 use App\Models\ChildMilestone;
 use App\Models\ChildMilestoneProperty;
+use App\Models\Milestone;
+use App\Models\User;
 
 it('copies the whole catalogue onto a new child', function () {
     [, $child] = family();
@@ -20,7 +27,7 @@ it('copies the words rather than joining them, so an admin edit cannot rewrite a
     $milestone = $child->milestones()->where('name', 'Birth Day')->first();
     $milestone->milestone_id and $milestone->templateStep = null;
 
-    App\Models\Milestone::where('name', 'Birth Day')->update(['name' => 'Renamed by admin']);
+    Milestone::where('name', 'Birth Day')->update(['name' => 'Renamed by admin']);
 
     expect($child->milestones()->find($milestone->id)->name)->toBe('Birth Day')
         ->and($milestone->milestone_id)->not->toBeNull();
@@ -28,9 +35,9 @@ it('copies the words rather than joining them, so an admin edit cannot rewrite a
 
 it('provisions each child its own copy', function () {
     [$user, $first] = family();
-    $second = app(App\Actions\Children\CreateChild::class)->handle($user, new App\Data\ChildData(
+    $second = app(CreateChild::class)->handle($user, new ChildData(
         name: 'Ari', birthday: now()->subMonths(2)->toDateString(),
-        gender: App\Enums\Gender::Boy, relation: App\Enums\Relation::Mother,
+        gender: Gender::Boy, relation: Relation::Mother,
     ));
 
     expect(ChildChapter::count())->toBe(16)
@@ -43,7 +50,7 @@ it('makes the creator an editor of their own child', function () {
 
     expect($child->memberships()->count())->toBe(1)
         ->and($child->memberships->first()->user_id)->toBe($user->id)
-        ->and($child->memberships->first()->role)->toBe(App\Enums\MemberRole::Editor);
+        ->and($child->memberships->first()->role)->toBe(MemberRole::Editor);
 });
 
 it('returns the map with the flags the app must not compute itself', function () {
@@ -70,13 +77,13 @@ it('locks milestones the child is not old enough for', function () {
 it('refuses to show a child to someone outside the family', function () {
     [, $child] = family();
 
-    $this->actingAs(App\Models\User::factory()->create(), 'sanctum')
+    $this->actingAs(User::factory()->create(), 'sanctum')
         ->getJson("/api/v1/children/{$child->id}")
         ->assertForbidden();
 });
 
 it('returns the created child with a level, not a null xp', function () {
-    $user = App\Models\User::factory()->create();
+    $user = User::factory()->create();
 
     $this->actingAs($user, 'sanctum')
         ->postJson('/api/v1/children', [

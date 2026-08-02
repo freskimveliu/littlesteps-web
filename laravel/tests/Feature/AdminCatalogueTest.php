@@ -14,20 +14,6 @@ beforeEach(function () {
     console();
 });
 
-/**
- * Sign in at the console. Called again after family(), which switches the
- * acting guard to the app's token and would otherwise leave us at the door.
- */
-function console(): User
-{
-    $admin = User::query()->where('is_admin', true)->first()
-        ?? User::factory()->create(['is_admin' => true]);
-
-    test()->actingAs($admin);
-
-    return $admin;
-}
-
 function chapterPayload(array $overrides = []): array
 {
     return [

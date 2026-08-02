@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1\Entries;
 
+use App\Actions\Progress\EvaluateTrophies;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\UpdateEntryRequest;
 use App\Http\Resources\ChildEntryResource;
@@ -19,8 +20,12 @@ use Illuminate\Support\Facades\DB;
  */
 class UpdateEntryController extends Controller
 {
-    public function __invoke(UpdateEntryRequest $request, Child $child, ChildEntry $entry): JsonResponse
-    {
+    public function __invoke(
+        UpdateEntryRequest $request,
+        Child $child,
+        ChildEntry $entry,
+        EvaluateTrophies $trophies,
+    ): JsonResponse {
         $this->authorize('contribute', $child);
         abort_unless($entry->child_id === $child->id, 404);
 
@@ -42,6 +47,11 @@ class UpdateEntryController extends Controller
                 $entry->addMedia($file)->toMediaCollection(ChildEntry::MEDIA);
             }
         });
+
+        // An edit can add the photo, or move the date into the window, that finally
+        // carries a rule over the line. Nothing celebrates it — the Awards screen
+        // simply has it unlocked next time it is read.
+        $trophies->handle($child);
 
         return ApiResponse::success(
             new ChildEntryResource($entry->fresh()->load(['milestone', 'properties', 'media'])->bindMediaOwner()),

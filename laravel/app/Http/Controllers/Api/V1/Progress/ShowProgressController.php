@@ -28,15 +28,20 @@ class ShowProgressController extends Controller
         $counts = $metrics->for($child);
         $held = $child->trophies()->pluck('unlocked_at', 'trophy_id');
 
-        $trophies = Trophy::query()
+        $catalogue = Trophy::query()
             ->active()
             ->orderBy('sort_order')
-            ->get()
-            ->map(fn (Trophy $trophy) => new TrophyResource(
-                $trophy,
-                $counts[$trophy->metric->value] ?? 0,
-                $held->has($trophy->id),
-            ));
+            ->get();
+
+        // Counted against the catalogue on screen, not against every row the child
+        // holds — retiring a trophy someone already earned must not read as 33 of 32.
+        $unlocked = $catalogue->filter(fn (Trophy $trophy) => $held->has($trophy->id));
+
+        $trophies = $catalogue->map(fn (Trophy $trophy) => new TrophyResource(
+            $trophy,
+            $counts[$trophy->metric->value] ?? 0,
+            $held->has($trophy->id),
+        ));
 
         $user = $request->user();
 
@@ -46,7 +51,7 @@ class ShowProgressController extends Controller
             'levelCount' => LevelLadder::total(),
             'metrics' => $counts,
             'trophies' => $trophies,
-            'trophiesUnlocked' => $held->count(),
+            'trophiesUnlocked' => $unlocked->count(),
             'trophiesTotal' => $trophies->count(),
             'limits' => [
                 'freeEntriesLeft' => $limits->freeEntriesLeft($child, $user),

@@ -7,6 +7,7 @@ use App\Enums\Mood;
 use App\Models\AppSetting;
 use App\Models\Child;
 use App\Models\ChildChapter;
+use App\Models\Trophy;
 use App\Support\Limits;
 
 /** Fill every visible milestone in a chapter, bypassing the daily cap. */
@@ -49,7 +50,7 @@ it('awards the chapter xp and stamps who finished it', function () {
 
     // More than the chapter's own XP: finishing the first chapter also earns
     // the First Chapter trophy, which pays its own on top.
-    $trophyXp = App\Models\Trophy::where('name', 'First Chapter')->value('xp');
+    $trophyXp = Trophy::where('name', 'First Chapter')->value('xp');
 
     expect($chapter->completed_at)->not->toBeNull()
         ->and($chapter->completed_by_user_id)->toBe($user->id)
@@ -101,4 +102,3 @@ it('refuses to complete the same chapter twice', function () {
     $this->postJson("/api/v1/children/{$child->id}/chapters/{$chapter->id}/complete")
         ->assertJsonValidationErrorFor('chapter');
 });
-

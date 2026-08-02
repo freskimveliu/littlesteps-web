@@ -64,14 +64,25 @@ it('shows an admin every family on the service', function () {
         );
 });
 
-it('shows an admin one child without letting them edit it', function () {
+it('gives every part of one child its own page, without letting an admin edit it', function (string $suffix, string $component) {
     [, $child] = family();
 
     $this->actingAs(User::factory()->create(['is_admin' => true]))
-        ->get("/admin/children/{$child->id}")
+        ->get("/admin/children/{$child->id}{$suffix}")
         ->assertOk()
-        ->assertInertia(fn (AssertableInertia $page) => $page->component('Admin/Children/Show'));
-});
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->component($component)
+            ->where('summary.child.name', $child->name)
+            ->has('summary.metrics')
+            ->etc()
+        );
+})->with([
+    'journey' => ['', 'Admin/Children/Show/Journey'],
+    'memories' => ['/memories', 'Admin/Children/Show/Memories'],
+    'trophies' => ['/trophies', 'Admin/Children/Show/Trophies'],
+    'gifts' => ['/gifts', 'Admin/Children/Show/Gifts'],
+    'family' => ['/family', 'Admin/Children/Show/Family'],
+]);
 
 it('hands the admin the whole of a memory, photos and all', function () {
     Storage::fake('public');
@@ -85,10 +96,10 @@ it('hands the admin the whole of a memory, photos and all', function () {
     ])->assertCreated();
 
     $this->actingAs(User::factory()->create(['is_admin' => true]))
-        ->get("/admin/children/{$child->id}")
+        ->get("/admin/children/{$child->id}/memories")
         ->assertOk()
         ->assertInertia(fn (AssertableInertia $page) => $page
-            ->component('Admin/Children/Show')
+            ->component('Admin/Children/Show/Memories')
             ->has('entries.0.media', 1)
             ->where('entries.0.description', 'She laughed at the cat.')
             ->where('entries.0.author.name', $parent->name)

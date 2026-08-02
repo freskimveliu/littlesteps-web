@@ -41,6 +41,20 @@ function family(int $ageMonths = 6): array
     return [$user, $child];
 }
 
+/**
+ * Sign in at the console. Called again after family(), which switches the
+ * acting guard to the app's token and would otherwise leave us at the door.
+ */
+function console(): User
+{
+    $admin = User::query()->where('is_admin', true)->first()
+        ?? User::factory()->create(['is_admin' => true]);
+
+    test()->actingAs($admin);
+
+    return $admin;
+}
+
 function viewer(Child $child): User
 {
     $user = User::factory()->create();

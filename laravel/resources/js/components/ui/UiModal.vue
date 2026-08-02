@@ -25,13 +25,40 @@ function onKeydown(event: KeyboardEvent) {
 }
 
 /**
- * The page scrolls on documentElement, not body — locking body alone let the
- * table keep scrolling behind an open modal.
+ * The page scrolls on documentElement, so `overflow: hidden` alone collapsed the
+ * scrollport and threw the reader back to the top of a long table. Pinning the
+ * body at its current offset freezes the page where it stands, and the offset is
+ * handed back on close. The right-hand padding fills the gap the vanished
+ * scrollbar leaves, so the page does not shift sideways either.
  */
-function lockScroll(locked: boolean) {
-    if (typeof document === 'undefined') return;
-    document.documentElement.style.overflow = locked ? 'hidden' : '';
-    document.body.style.overflow = locked ? 'hidden' : '';
+let locked = false;
+let offset = 0;
+
+function lockScroll(next: boolean) {
+    if (typeof document === 'undefined' || next === locked) return;
+    locked = next;
+
+    const { style } = document.body;
+
+    if (next) {
+        offset = window.scrollY;
+        const gutter = window.innerWidth - document.documentElement.clientWidth;
+
+        style.position = 'fixed';
+        style.top = `-${offset}px`;
+        style.left = '0';
+        style.right = '0';
+        if (gutter > 0) style.paddingRight = `${gutter}px`;
+
+        return;
+    }
+
+    style.position = '';
+    style.top = '';
+    style.left = '';
+    style.right = '';
+    style.paddingRight = '';
+    window.scrollTo(0, offset);
 }
 
 watch(

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Admin\Families;
 
+use App\Enums\Gender;
 use App\Http\Controllers\Controller;
 use App\Models\Child;
 use App\Support\Admin\IndexQuery;
@@ -33,6 +34,7 @@ class IndexChildrenController extends Controller
             'age_months' => $child->ageInMonths(),
             'gender' => $child->gender,
             'xp' => $child->xp,
+            'photo' => $child->photoThumbUrl(),
             'level' => LevelLadder::for($child->xp)['level'],
             'level_name' => LevelLadder::for($child->xp)['name'],
             'entries_count' => $child->entries_count,
@@ -44,6 +46,7 @@ class IndexChildrenController extends Controller
         return Inertia::render('Admin/Children/Index', [
             'children' => $children,
             'filters' => IndexQuery::filters($request),
+            'genders' => array_column(Gender::cases(), 'value'),
         ]);
     }
 }
