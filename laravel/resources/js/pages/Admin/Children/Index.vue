@@ -36,6 +36,7 @@ interface ChildRow {
     entries_count: number;
     trophies_count: number;
     chapters_done_count: number;
+    created_at: string | null;
     creator: { id: number; name: string; email: string | null } | null;
 }
 
@@ -163,6 +164,15 @@ function whatGoes(child: ChildRow): string {
                     Trophies
                 </UiSortableTableHeader>
                 <UiTableHeader align="right">Chapters</UiTableHeader>
+                <UiSortableTableHeader
+                    sort-key="created_at"
+                    align="right"
+                    :active-key="sortKey"
+                    :active-order="sortOrder"
+                    @sort="toggleSort"
+                >
+                    Added
+                </UiSortableTableHeader>
                 <UiTableHeader align="right" />
             </template>
 
@@ -201,6 +211,9 @@ function whatGoes(child: ChildRow): string {
                     <UiTableCell align="right">{{ child.entries_count }}</UiTableCell>
                     <UiTableCell align="right">{{ child.trophies_count }}</UiTableCell>
                     <UiTableCell align="right">{{ child.chapters_done_count }} / 8</UiTableCell>
+                    <UiTableCell align="right" cell-class="text-slate-500">
+                        {{ formatDate(child.created_at) }}
+                    </UiTableCell>
                     <UiTableCell align="right">
                         <div class="flex items-center justify-end gap-2">
                             <UiActionButton title="Open" size="sm" :to="`/admin/children/${child.id}`">

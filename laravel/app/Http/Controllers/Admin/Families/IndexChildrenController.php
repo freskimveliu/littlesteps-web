@@ -39,6 +39,7 @@ class IndexChildrenController extends Controller
             'entries_count' => $child->entries_count,
             'trophies_count' => $child->trophies_count,
             'chapters_done_count' => $child->chapters_done_count,
+            'created_at' => $child->created_at?->toIso8601String(),
             'creator' => $child->creator?->only(['id', 'name', 'email']),
         ]);
 

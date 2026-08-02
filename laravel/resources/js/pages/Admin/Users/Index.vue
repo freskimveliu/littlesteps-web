@@ -32,6 +32,7 @@ interface Row {
     current_streak: number;
     longest_streak: number;
     last_entry_date: string | null;
+    created_at: string | null;
     deleted_at: string | null;
     owned_children_count: number;
     children_count: number;
@@ -144,6 +145,15 @@ function submit() {
                 >
                     Last memory
                 </UiSortableTableHeader>
+                <UiSortableTableHeader
+                    sort-key="created_at"
+                    align="right"
+                    :active-key="sortKey"
+                    :active-order="sortOrder"
+                    @sort="toggleSort"
+                >
+                    Joined
+                </UiSortableTableHeader>
                 <UiTableHeader align="right" />
             </template>
 
@@ -171,6 +181,9 @@ function submit() {
                     <UiTableCell align="right">{{ user.current_streak }}</UiTableCell>
                     <UiTableCell align="right" cell-class="text-slate-500">
                         {{ formatDate(user.last_entry_date) }}
+                    </UiTableCell>
+                    <UiTableCell align="right" cell-class="text-slate-500">
+                        {{ formatDate(user.created_at) }}
                     </UiTableCell>
                     <UiTableCell align="right">
                         <div class="flex items-center justify-end">
