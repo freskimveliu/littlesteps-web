@@ -46,21 +46,28 @@ class ChildEntry extends Model implements HasMedia
             ->acceptsMimeTypes(self::ACCEPTS);
     }
 
+    /**
+     * Queued, unlike the single-photo collections elsewhere. A memory can carry
+     * several full-size photos at once, and resizing them all before answering is
+     * what a parent was waiting through on the Saving button.
+     *
+     * Nothing downstream needs them to exist yet: ChildEntryResource sends null
+     * for a conversion that has not been generated, and the app falls back to the
+     * original until it has.
+     */
     public function registerMediaConversions(?Media $media = null): void
     {
         $this->addMediaConversion('thumb')
             ->fit(Fit::Crop, 320, 320)
             ->format('webp')
             ->quality(80)
-            ->optimize()
-            ->nonQueued();
+            ->optimize();
 
         $this->addMediaConversion('display')
             ->fit(Fit::Max, 1600, 1600)
             ->format('webp')
             ->quality(82)
-            ->optimize()
-            ->nonQueued();
+            ->optimize();
     }
 
     public function getAttribute($key)
