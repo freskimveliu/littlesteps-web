@@ -12,7 +12,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 /**
- * A milestone can only be deleted while it is still empty.
+ * A milestone can only be deleted while it is still empty — guided or not.
  *
  * Once a memory exists the XP has been taken and a daily slot has been spent;
  * allowing a delete then would hand both back. A parent who wants a recorded
@@ -28,9 +28,7 @@ class DestroyMilestoneController extends Controller
         abort_unless(
             $milestone->isDeletable(),
             403,
-            $milestone->isRecorded()
-                ? 'This milestone already holds a memory. Hide it instead.'
-                : 'This milestone is part of the guided journey.',
+            'This milestone already holds a memory. Hide it instead.',
         );
 
         $milestone->delete();

@@ -35,12 +35,34 @@ it('refuses to delete a milestone once it holds a memory, so the xp cannot be re
     $this->deleteJson("/api/v1/children/{$child->id}/milestones/{$milestone}")->assertForbidden();
 });
 
-it('never lets a guided milestone be deleted or renamed', function () {
+it('never lets a guided milestone be renamed', function () {
     [, $child] = family();
     $milestone = $child->milestones()->where('name', 'Birth Day')->first();
 
-    $this->deleteJson("/api/v1/children/{$child->id}/milestones/{$milestone->id}")->assertForbidden();
     $this->patchJson("/api/v1/children/{$child->id}/milestones/{$milestone->id}", ['name' => 'Nope'])->assertForbidden();
+});
+
+it('lets a guided milestone that will never happen be deleted while it is empty', function () {
+    [, $child] = family();
+    $milestone = $child->milestones()->where('name', 'Birth Day')->first();
+
+    expect($milestone->is_editable)->toBeFalse();
+
+    $this->deleteJson("/api/v1/children/{$child->id}/milestones/{$milestone->id}")->assertNoContent();
+
+    expect($child->milestones()->whereKey($milestone->id)->exists())->toBeFalse();
+});
+
+it('refuses to delete a guided milestone once it holds a memory', function () {
+    [, $child] = family(ageMonths: 12);
+    $milestone = $child->milestones()->where('name', 'Birth Day')->first();
+
+    $this->postJson("/api/v1/children/{$child->id}/entries", [
+        'child_milestone_id' => $milestone->id, 'date' => now()->toDateString(),
+        'description' => 'Day one.', 'mood' => Mood::Tender->value,
+    ])->assertCreated();
+
+    $this->deleteJson("/api/v1/children/{$child->id}/milestones/{$milestone->id}")->assertForbidden();
 });
 
 it('keeps a memory attached to a milestone forever, but allows editing it', function () {

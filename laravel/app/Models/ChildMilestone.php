@@ -73,10 +73,15 @@ class ChildMilestone extends Model
     /**
      * A milestone is only deletable while it is still empty. Once an entry exists the
      * XP has been taken, and deleting would hand back a free daily slot too.
+     *
+     * A guided milestone is no exception: not every child has siblings or a
+     * christening, and a map cannot be finished while it carries a node that will
+     * never happen. It cannot be renamed or moved — that is what is_editable
+     * guards — but it can be taken off this child's map for good.
      */
     public function isDeletable(): bool
     {
-        return $this->is_editable && ! $this->isRecorded();
+        return ! $this->isRecorded();
     }
 
     /** @param Builder<$this> $query */
