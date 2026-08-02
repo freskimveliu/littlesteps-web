@@ -8,8 +8,9 @@ enum Relation: string
 {
     case Mother = 'mother';
     case Father = 'father';
+    case Brother = 'brother';
+    case Sister = 'sister';
     case Grandparent = 'grandparent';
     case AuntUncle = 'aunt-uncle';
-    case Sibling = 'sibling';
     case Other = 'other';
 }
