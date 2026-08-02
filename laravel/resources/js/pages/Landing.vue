@@ -91,7 +91,7 @@ const FEATURES: { icon: IconName; title: string; body: string; tone?: 'wide' }[]
     {
         icon: 'people',
         title: 'One app, every child',
-        body: 'Each child gets their own map, their own XP, their own trophies, and the app quietly re-themes itself around whoever you are looking at.',
+        body: 'Each child gets their own map, their own XP and their own trophies, and switching between them takes a tap.',
     },
     {
         icon: 'trending-up',
@@ -99,14 +99,14 @@ const FEATURES: { icon: IconName; title: string; body: string; tone?: 'wide' }[]
         body: 'Log a weight or a height inside a milestone and the chart on the home screen fills in behind it. No spreadsheet, no separate app.',
     },
     {
-        icon: 'cloud-offline-outline',
-        title: 'Works with no signal',
-        body: 'A memory is saved to your phone the second you write it, then synced to your private account whenever there is a connection to sync over.',
+        icon: 'shield-checkmark-outline',
+        title: 'Safe even if the phone is not',
+        body: 'Every memory and photo is kept in your own private account rather than on the handset alone. Add an email and the whole map follows you to the next phone.',
     },
     {
         icon: 'color-wand',
         title: 'Bend the map to your family',
-        body: 'Rename a milestone, move it to another chapter, add one of your own, or skip what will never apply. The guided parts stay guided; the rest is yours.',
+        body: 'Rename anything, move a milestone to another chapter, add one of your own, or skip what will never apply. The guided map is a starting point, not a cage.',
     },
     {
         icon: 'image',
@@ -116,7 +116,7 @@ const FEATURES: { icon: IconName; title: string; body: string; tone?: 'wide' }[]
     {
         icon: 'notifications-outline',
         title: 'Nudges, never nagging',
-        body: 'Chapter reminders, a daily quest, a streak alert at bedtime. Each one is a switch you own, and off is a perfectly good setting.',
+        body: 'Milestone reminders, a daily quest, a streak alert at bedtime. Each one is a switch you own, and off is a perfectly good setting.',
     },
 ];
 </script>
@@ -674,7 +674,7 @@ const FEATURES: { icon: IconName; title: string; body: string; tone?: 'wide' }[]
                     </FaqItem>
                     <FaqItem question="Can I track more than one child?">
                         Yes, and they never share a page. Each child gets their own map, their own memories, their own XP
-                        and trophies, and the app re-themes itself around whoever is active.
+                        and trophies, and switching between them takes a tap.
                     </FaqItem>
                     <FaqItem question="Why only one free memory a day?">
                         Because a journal you can dump into is a journal you abandon. One a day keeps it precious and
@@ -682,9 +682,8 @@ const FEATURES: { icon: IconName; title: string; body: string; tone?: 'wide' }[]
                         day is never cut short.
                     </FaqItem>
                     <FaqItem question="Where do my photos and stories live?">
-                        On your phone first, so the app works in a car park with no signal, and synced to your own private
-                        account so a lost phone is not a lost childhood. Nothing is public, and nothing is shared unless
-                        you tap share.
+                        In your own private account, so a lost phone is not a lost childhood. Nothing is public, and
+                        nothing is shared unless you tap share.
                     </FaqItem>
                     <FaqItem question="Does it cost anything?">
                         Starting costs nothing: add a child, follow the map, capture a memory a day. If a paid tier
