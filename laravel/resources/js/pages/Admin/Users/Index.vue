@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
+import EyeIcon from '@heroicons/vue/24/outline/esm/EyeIcon.js';
 import PlusIcon from '@heroicons/vue/24/outline/esm/PlusIcon.js';
 import AdminLayout from '../../../layouts/AdminLayout.vue';
 import UiPageHeader from '../../../components/ui/UiPageHeader.vue';
@@ -14,6 +15,7 @@ import UiButton from '../../../components/ui/UiButton.vue';
 import UiSpinner from '../../../components/ui/UiSpinner.vue';
 import UiBadge from '../../../components/ui/UiBadge.vue';
 import UiPagination from '../../../components/ui/UiPagination.vue';
+import UiActionButton from '../../../components/ui/UiActionButton.vue';
 import UiFilterPopover from '../../../components/ui/UiFilterPopover.vue';
 import UiSelect from '../../../components/ui/UiSelect.vue';
 import UiModal from '../../../components/ui/UiModal.vue';
@@ -171,7 +173,11 @@ function submit() {
                         {{ formatDate(user.last_entry_date) }}
                     </UiTableCell>
                     <UiTableCell align="right">
-                        <UiButton variant="outline" :to="`/admin/users/${user.id}`">Open</UiButton>
+                        <div class="flex items-center justify-end">
+                            <UiActionButton title="Open" size="sm" :to="`/admin/users/${user.id}`">
+                                <EyeIcon class="h-4 w-4" />
+                            </UiActionButton>
+                        </div>
                     </UiTableCell>
                 </UiTableRow>
             </template>

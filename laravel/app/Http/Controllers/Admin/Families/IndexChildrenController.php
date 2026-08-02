@@ -35,7 +35,6 @@ class IndexChildrenController extends Controller
             'gender' => $child->gender,
             'xp' => $child->xp,
             'photo' => $child->photoThumbUrl(),
-            'level' => LevelLadder::for($child->xp)['level'],
             'level_name' => LevelLadder::for($child->xp)['name'],
             'entries_count' => $child->entries_count,
             'trophies_count' => $child->trophies_count,

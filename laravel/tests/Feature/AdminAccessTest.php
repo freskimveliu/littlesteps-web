@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Enums\Mood;
+use App\Models\Level;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -60,7 +61,7 @@ it('shows an admin every family on the service', function () {
             ->component('Admin/Children/Index')
             ->has('children.data', 1)
             ->where('children.data.0.name', $child->name)
-            ->where('children.data.0.level', 1)
+            ->where('children.data.0.level_name', Level::query()->orderBy('min_xp')->firstOrFail()->name)
         );
 });
 

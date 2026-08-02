@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
+import EyeIcon from '@heroicons/vue/24/outline/esm/EyeIcon.js';
 import PencilSquareIcon from '@heroicons/vue/24/outline/esm/PencilSquareIcon.js';
 import TrashIcon from '@heroicons/vue/24/outline/esm/TrashIcon.js';
 import AdminLayout from '../../../layouts/AdminLayout.vue';
@@ -13,7 +14,6 @@ import UiSortableTableHeader from '../../../components/ui/UiSortableTableHeader.
 import UiSearchInput from '../../../components/ui/UiSearchInput.vue';
 import UiButton from '../../../components/ui/UiButton.vue';
 import UiSpinner from '../../../components/ui/UiSpinner.vue';
-import UiBadge from '../../../components/ui/UiBadge.vue';
 import UiAvatar from '../../../components/ui/UiAvatar.vue';
 import UiPagination from '../../../components/ui/UiPagination.vue';
 import UiActionButton from '../../../components/ui/UiActionButton.vue';
@@ -32,7 +32,6 @@ interface ChildRow {
     gender: string;
     xp: number;
     photo: string | null;
-    level: number;
     level_name: string;
     entries_count: number;
     trophies_count: number;
@@ -196,15 +195,17 @@ function whatGoes(child: ChildRow): string {
                     </UiTableCell>
                     <UiTableCell align="right" cell-class="text-slate-500">{{ age(child.age_months) }}</UiTableCell>
                     <UiTableCell align="right">
-                        <UiBadge tone="primary">{{ child.level }}</UiBadge>
-                        <span class="ml-1 text-slate-400">{{ child.xp }} XP</span>
+                        <span class="text-slate-700">{{ child.level_name }}</span>
+                        <p class="text-label text-slate-400">{{ child.xp }} XP</p>
                     </UiTableCell>
                     <UiTableCell align="right">{{ child.entries_count }}</UiTableCell>
                     <UiTableCell align="right">{{ child.trophies_count }}</UiTableCell>
                     <UiTableCell align="right">{{ child.chapters_done_count }} / 8</UiTableCell>
                     <UiTableCell align="right">
                         <div class="flex items-center justify-end gap-2">
-                            <UiButton variant="outline" :to="`/admin/children/${child.id}`">Open</UiButton>
+                            <UiActionButton title="Open" size="sm" :to="`/admin/children/${child.id}`">
+                                <EyeIcon class="h-4 w-4" />
+                            </UiActionButton>
                             <UiActionButton title="Edit" size="sm" @click="startEdit(child)">
                                 <PencilSquareIcon class="h-4 w-4" />
                             </UiActionButton>
