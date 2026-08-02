@@ -9,6 +9,7 @@ use App\Http\Requests\Api\V1\UpdateChildRequest;
 use App\Http\Resources\ChildResource;
 use App\Http\Responses\ApiResponse;
 use App\Models\Child;
+use App\Support\SmallerOriginal;
 use Illuminate\Http\JsonResponse;
 
 class UpdateChildController extends Controller
@@ -20,7 +21,7 @@ class UpdateChildController extends Controller
         $child->update($request->safe()->except('photo'));
 
         if ($request->hasFile('photo')) {
-            $child->addMediaFromRequest('photo')->toMediaCollection(Child::PHOTO);
+            $child->addMedia(SmallerOriginal::of($request->file('photo')))->toMediaCollection(Child::PHOTO);
         }
 
         return ApiResponse::success(

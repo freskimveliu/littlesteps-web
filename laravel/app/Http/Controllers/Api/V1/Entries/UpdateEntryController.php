@@ -11,6 +11,7 @@ use App\Http\Resources\ChildEntryResource;
 use App\Http\Responses\ApiResponse;
 use App\Models\Child;
 use App\Models\ChildEntry;
+use App\Support\SmallerOriginal;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 
@@ -44,7 +45,7 @@ class UpdateEntryController extends Controller
             }
 
             foreach ($request->file('media') ?? [] as $file) {
-                $entry->addMedia($file)->toMediaCollection(ChildEntry::MEDIA);
+                $entry->addMedia(SmallerOriginal::of($file))->toMediaCollection(ChildEntry::MEDIA);
             }
         });
 

@@ -13,6 +13,7 @@ use App\Models\ChildMilestone;
 use App\Models\ChildTrophy;
 use App\Models\User;
 use App\Support\Limits;
+use App\Support\SmallerOriginal;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -44,7 +45,7 @@ class RecordEntry
             }
 
             foreach ($data->media as $file) {
-                $entry->addMedia($file)->toMediaCollection(ChildEntry::MEDIA);
+                $entry->addMedia(SmallerOriginal::of($file))->toMediaCollection(ChildEntry::MEDIA);
             }
 
             return $entry;

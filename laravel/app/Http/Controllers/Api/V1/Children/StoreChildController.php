@@ -11,6 +11,7 @@ use App\Http\Requests\Api\V1\StoreChildRequest;
 use App\Http\Resources\ChildResource;
 use App\Http\Responses\ApiResponse;
 use App\Models\Child;
+use App\Support\SmallerOriginal;
 use Illuminate\Http\JsonResponse;
 
 class StoreChildController extends Controller
@@ -20,7 +21,7 @@ class StoreChildController extends Controller
         $child = $create->handle($request->user(), ChildData::fromRequest($request));
 
         if ($request->hasFile('photo')) {
-            $child->addMediaFromRequest('photo')->toMediaCollection(Child::PHOTO);
+            $child->addMedia(SmallerOriginal::of($request->file('photo')))->toMediaCollection(Child::PHOTO);
         }
 
         return ApiResponse::success(

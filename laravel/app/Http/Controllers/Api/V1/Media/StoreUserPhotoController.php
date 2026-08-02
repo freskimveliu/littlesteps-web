@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\UserResource;
 use App\Http\Responses\ApiResponse;
 use App\Models\User;
+use App\Support\SmallerOriginal;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -18,7 +19,7 @@ class StoreUserPhotoController extends Controller
         $request->validate(['photo' => ['required', 'image', 'max:20480']]);
 
         $user = $request->user();
-        $user->addMediaFromRequest('photo')->toMediaCollection(User::PHOTO);
+        $user->addMedia(SmallerOriginal::of($request->file('photo')))->toMediaCollection(User::PHOTO);
 
         return ApiResponse::success(new UserResource($user->fresh()->load('settings')), 'Photo updated.');
     }
