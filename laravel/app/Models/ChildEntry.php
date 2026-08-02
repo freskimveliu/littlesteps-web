@@ -127,6 +127,12 @@ class ChildEntry extends Model implements HasMedia
         return $this->belongsTo(ChildMilestone::class, 'child_milestone_id');
     }
 
+    /** @return BelongsTo<User, $this> */
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by_user_id');
+    }
+
     /** @return HasMany<ChildEntryProperty, $this> */
     public function properties(): HasMany
     {

@@ -6,11 +6,15 @@ namespace App\Http\Controllers\Admin\Families;
 
 use App\Http\Controllers\Controller;
 use App\Models\Child;
+use App\Models\ChildEntry;
+use App\Models\ChildTrophy;
 use App\Models\Trophy;
 use App\Support\Progress\LevelLadder;
 use App\Support\Progress\Metrics;
+use Illuminate\Support\Collection;
 use Inertia\Inertia;
 use Inertia\Response;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 /**
  * The whole of one child's journey on a single page — what support needs when
@@ -36,25 +40,43 @@ class ShowChildController extends Controller
         $counts = $metrics->for($record);
 
         $entries = $record->entries()
-            ->with(['milestone:id,name', 'properties', 'media'])
+            ->with([
+                'milestone:id,name,child_chapter_id',
+                'milestone.chapter:id,name',
+                'creator:id,name,email',
+                'properties',
+                'media',
+            ])
             ->orderByDesc('date')
             ->orderByDesc('id')
             ->limit(50)
             ->get()
-            ->map(fn ($entry) => [
+            ->each->bindMediaOwner()
+            ->map(fn (ChildEntry $entry) => [
                 'id' => $entry->id,
                 'milestone' => $entry->milestone?->name,
+                'chapter' => $entry->milestone?->chapter?->name,
                 'description' => $entry->description,
                 'date' => $entry->date->toDateString(),
                 'mood' => $entry->mood,
                 'is_free' => $entry->isFree(),
-                'media' => $entry->mediaCount(),
+                'author' => $entry->creator?->only(['id', 'name', 'email']),
+                'media' => $entry->getMedia(ChildEntry::MEDIA)->map(fn (Media $media) => [
+                    'id' => $media->id,
+                    'name' => $media->file_name,
+                    'mime' => $media->mime_type,
+                    'size' => $media->size,
+                    'thumb' => $media->hasGeneratedConversion('thumb') ? $media->getUrl('thumb') : $media->getUrl(),
+                    'display' => $media->hasGeneratedConversion('display') ? $media->getUrl('display') : $media->getUrl(),
+                    'original' => $media->getUrl(),
+                ])->values(),
                 'properties' => $entry->properties->map(fn ($p) => [
                     'label' => $p->name ?? ucfirst($p->key->value),
                     'value' => $p->value,
                     'unit' => $p->key->unit(),
                 ]),
                 'created_at' => $entry->created_at?->toIso8601String(),
+                'updated_at' => $entry->updated_at?->toIso8601String(),
             ]);
 
         $held = $record->trophies->keyBy('trophy_id');
@@ -122,8 +144,8 @@ class ShowChildController extends Controller
      * the only record of what the trophy said at the time.
      *
      * @param  array<string, int>  $counts
-     * @param  \Illuminate\Support\Collection<int|null, \App\Models\ChildTrophy>  $held
-     * @return \Illuminate\Support\Collection<int, array<string, mixed>>
+     * @param  Collection<int|null, ChildTrophy>  $held
+     * @return Collection<int, array<string, mixed>>
      */
     private function trophies(array $counts, $held)
     {

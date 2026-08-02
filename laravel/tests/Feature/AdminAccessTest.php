@@ -2,7 +2,10 @@
 
 declare(strict_types=1);
 
+use App\Enums\Mood;
 use App\Models\User;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia;
 
 beforeEach(fn () => test()->withoutVite());
@@ -68,6 +71,32 @@ it('shows an admin one child without letting them edit it', function () {
         ->get("/admin/children/{$child->id}")
         ->assertOk()
         ->assertInertia(fn (AssertableInertia $page) => $page->component('Admin/Children/Show'));
+});
+
+it('hands the admin the whole of a memory, photos and all', function () {
+    Storage::fake('public');
+    [$parent, $child] = family();
+
+    $this->postJson("/api/v1/children/{$child->id}/entries", [
+        'description' => 'She laughed at the cat.',
+        'date' => now()->toDateString(),
+        'mood' => Mood::Joyful->value,
+        'media' => [UploadedFile::fake()->image('first-smile.jpg')],
+    ])->assertCreated();
+
+    $this->actingAs(User::factory()->create(['is_admin' => true]))
+        ->get("/admin/children/{$child->id}")
+        ->assertOk()
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->component('Admin/Children/Show')
+            ->has('entries.0.media', 1)
+            ->where('entries.0.description', 'She laughed at the cat.')
+            ->where('entries.0.author.name', $parent->name)
+            ->has('entries.0.media.0.thumb')
+            ->has('entries.0.media.0.display')
+            ->has('entries.0.media.0.original')
+            ->etc()
+        );
 });
 
 it('lets somebody who is not an admin sign out without hitting the gate', function () {
