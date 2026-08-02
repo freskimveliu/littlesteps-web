@@ -93,11 +93,11 @@ it('only counts a milestone as on time when it was caught at the right age', fun
         'created_by_user_id' => $child->created_by_user_id,
     ]);
 
-    expect(app(Metrics::class)->onTimeSteps($child))->toBe(0);
+    expect(app(Metrics::class)->onTimeMilestones($child))->toBe(0);
 
     $entry->update(['date' => $child->birthday->copy()->addMonths(1)->addDays(3)->toDateString()]);
 
-    expect(app(Metrics::class)->onTimeSteps($child->fresh()))->toBe(1);
+    expect(app(Metrics::class)->onTimeMilestones($child->fresh()))->toBe(1);
 });
 
 it('unlocks a trophy and awards its xp once the rule passes', function () {

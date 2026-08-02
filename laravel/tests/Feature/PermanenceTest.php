@@ -35,11 +35,20 @@ it('refuses to delete a milestone once it holds a memory, so the xp cannot be re
     $this->deleteJson("/api/v1/children/{$child->id}/milestones/{$milestone}")->assertForbidden();
 });
 
-it('never lets a guided milestone be renamed', function () {
-    [, $child] = family();
+it('lets a guided milestone be renamed and moved — the map is the parent\'s', function () {
+    [, $child] = family(ageMonths: 6);
     $milestone = $child->milestones()->where('name', 'Birth Day')->first();
 
-    $this->patchJson("/api/v1/children/{$child->id}/milestones/{$milestone->id}", ['name' => 'Nope'])->assertForbidden();
+    $this->patchJson("/api/v1/children/{$child->id}/milestones/{$milestone->id}", ['name' => 'The day we met'])
+        ->assertOk()
+        ->assertJsonPath('data.name', 'The day we met')
+        ->assertJsonPath('data.abilities.rename', true);
+
+    $elsewhere = $child->chapters()->where('id', '!=', $milestone->child_chapter_id)->first();
+
+    $this->patchJson("/api/v1/children/{$child->id}/milestones/{$milestone->id}", [
+        'child_chapter_id' => $elsewhere->id,
+    ])->assertOk()->assertJsonPath('data.chapterId', $elsewhere->id);
 });
 
 it('lets a guided milestone that will never happen be deleted while it is empty', function () {

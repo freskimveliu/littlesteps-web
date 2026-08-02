@@ -18,7 +18,7 @@ class ChildMilestoneResource extends JsonResource
 
         return [
             'id' => $this->id,
-            'milestoneId' => $this->child_chapter_id,
+            'chapterId' => $this->child_chapter_id,
             'name' => $this->name,
             'icon' => $this->icon?->value ?? $this->whenLoaded('category', fn () => $this->category?->icon->value),
             'monthsFrom' => $this->months_from,
@@ -29,7 +29,7 @@ class ChildMilestoneResource extends JsonResource
             'isHidden' => $this->is_hidden,
             'isLocked' => $child ? $this->isLockedFor($child) : false,
             'isRecorded' => $this->isRecorded(),
-            'isDeletable' => $this->isDeletable(),
+            'abilities' => $this->abilities(),
             'properties' => ChildMilestonePropertyResource::collection($this->whenLoaded('properties')),
             'entry' => new ChildEntryResource($this->whenLoaded('entry')),
         ];

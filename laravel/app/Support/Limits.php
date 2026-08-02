@@ -40,7 +40,7 @@ class Limits
         return max(0, AppSetting::number(AppSettingKey::DailyMilestoneEntries) - $used);
     }
 
-    public function canAddCustomStep(ChildChapter $chapter): bool
+    public function canAddCustomMilestone(ChildChapter $chapter): bool
     {
         $custom = $chapter->milestones()->where('is_editable', true)->count();
 
@@ -52,7 +52,7 @@ class Limits
      * and only if there are enough of them, which is what stops a parent hiding
      * a chapter down to two milestones, filling both, and collecting the gift.
      */
-    public function canCompleteMilestone(ChildChapter $chapter): bool
+    public function canCompleteChapter(ChildChapter $chapter): bool
     {
         if ($chapter->completed_at !== null) {
             return false;

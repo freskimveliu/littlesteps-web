@@ -37,7 +37,7 @@ const HOW: { icon: IconName; title: string; body: string }[] = [
     },
 ];
 
-const MILESTONES: { name: string; age: string; blurb: string; stage: string; color: string; icon: IconName }[] = [
+const CHAPTERS: { name: string; age: string; blurb: string; stage: string; color: string; icon: IconName }[] = [
     { name: 'The First Hello', age: '0–3 months', blurb: 'Those first blurry, sleepless, wonderful weeks', stage: 'Newborn', color: '#FFB5C2', icon: 'happy' },
     { name: 'Waking to the World', age: '3–6 months', blurb: 'Laughs, rolls, and the first real look around', stage: 'Explorer', color: '#FFCBA4', icon: 'search' },
     { name: 'On the Move', age: '6–12 months', blurb: 'Sitting, crawling, and suddenly nowhere is safe', stage: 'Adventurer', color: '#FFE5A0', icon: 'sunny' },
@@ -268,8 +268,8 @@ const FEATURES: { icon: IconName; title: string; body: string; tone?: 'wide' }[]
 
                 <div class="mt-14 grid gap-6 md:grid-cols-3">
                     <div
-                        v-for="(milestone, i) in HOW"
-                        :key="milestone.title"
+                        v-for="(item, i) in HOW"
+                        :key="item.title"
                         class="reveal group relative overflow-hidden rounded-[2rem] bg-white p-8 shadow-sm shadow-primary/5 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-primary/15"
                         :style="`--reveal-delay: ${i * 110}ms`"
                     >
@@ -277,10 +277,10 @@ const FEATURES: { icon: IconName; title: string; body: string; tone?: 'wide' }[]
                             {{ i + 1 }}
                         </span>
                         <span class="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary transition-colors duration-300 group-hover:bg-primary group-hover:text-white">
-                            <Ion :name="milestone.icon" :size="26" />
+                            <Ion :name="item.icon" :size="26" />
                         </span>
-                        <h3 class="relative mt-6 font-display text-2xl font-extrabold text-ink">{{ milestone.title }}</h3>
-                        <p class="relative mt-3 leading-relaxed text-ink/55">{{ milestone.body }}</p>
+                        <h3 class="relative mt-6 font-display text-2xl font-extrabold text-ink">{{ item.title }}</h3>
+                        <p class="relative mt-3 leading-relaxed text-ink/55">{{ item.body }}</p>
                     </div>
                 </div>
             </div>
@@ -500,7 +500,7 @@ const FEATURES: { icon: IconName; title: string; body: string; tone?: 'wide' }[]
 
                 <div class="mt-16 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
                     <article
-                        v-for="(chapter, i) in MILESTONES"
+                        v-for="(chapter, i) in CHAPTERS"
                         :key="chapter.name"
                         class="reveal group relative overflow-hidden rounded-[2rem] bg-white p-6 shadow-sm shadow-primary/5 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-primary/15"
                         :style="`--reveal-delay: ${(i % 4) * 90}ms`"

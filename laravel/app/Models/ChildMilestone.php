@@ -76,12 +76,41 @@ class ChildMilestone extends Model
      *
      * A guided milestone is no exception: not every child has siblings or a
      * christening, and a map cannot be finished while it carries a node that will
-     * never happen. It cannot be renamed or moved — that is what is_editable
-     * guards — but it can be taken off this child's map for good.
+     * never happen.
      */
     public function isDeletable(): bool
     {
         return ! $this->isRecorded();
+    }
+
+    /**
+     * Everything a parent may do to this milestone, decided here so the app never
+     * has to know the rules — it renders the buttons this says it can.
+     *
+     * `reorder` is permission, not position: whether a neighbour exists to swap
+     * with is a question about the list the app is already holding.
+     *
+     * The map is the parent's, guided or not — a name that does not match the child
+     * is worse than no name. is_editable records where the row came from; it does
+     * not decide what may be done to it.
+     *
+     * @return array<string, bool>
+     */
+    public function abilities(): array
+    {
+        $child = $this->child;
+        $locked = $child ? $this->isLockedFor($child) : false;
+        $recorded = $this->isRecorded();
+
+        return [
+            'rename' => true,
+            'move' => true,
+            'reorder' => true,
+            'delete' => $this->isDeletable(),
+            'skip' => ! $recorded && ! $this->is_hidden,
+            'unskip' => $this->is_hidden,
+            'record' => ! $recorded && ! $locked && ! $this->is_hidden,
+        ];
     }
 
     /** @param Builder<$this> $query */

@@ -60,8 +60,11 @@ it('returns the map with the flags the app must not compute itself', function ()
 
     $first = $response->json('data.0');
 
-    expect($first)->toHaveKeys(['isCompletable', 'isUnlocked', 'stepsTotal', 'stepsRecorded'])
-        ->and($first['milestones'][0])->toHaveKeys(['isLocked', 'isRecorded', 'isDeletable', 'isEditable']);
+    expect($first)->toHaveKeys(['abilities', 'isUnlocked', 'milestonesTotal', 'milestonesRecorded'])
+        ->and($first['abilities'])->toHaveKeys(['rename', 'reorder', 'delete', 'complete', 'addMilestone', 'viewRecap'])
+        ->and($first['milestones'][0])->toHaveKeys(['isLocked', 'isRecorded', 'abilities', 'isEditable'])
+        ->and($first['milestones'][0]['abilities'])
+        ->toHaveKeys(['rename', 'move', 'reorder', 'delete', 'skip', 'unskip', 'record']);
 });
 
 it('locks milestones the child is not old enough for', function () {

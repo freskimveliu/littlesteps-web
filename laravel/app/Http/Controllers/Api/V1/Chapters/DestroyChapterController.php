@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\DB;
 /**
  * A chapter goes while it is still unfinished, and never one holding a memory —
  * deleting cascades to its milestones and their entries, which is the one thing
- * this app must never do quietly. Pass move_steps_to to keep them.
+ * this app must never do quietly. Pass move_milestones_to to keep them.
  */
 class DestroyChapterController extends Controller
 {
@@ -33,11 +33,11 @@ class DestroyChapterController extends Controller
         );
 
         $validated = $request->validate([
-            'move_steps_to' => ['nullable', 'integer'],
+            'move_milestones_to' => ['nullable', 'integer'],
         ]);
 
-        $target = isset($validated['move_steps_to'])
-            ? $child->chapters()->where('id', '!=', $chapter->id)->findOrFail($validated['move_steps_to'])
+        $target = isset($validated['move_milestones_to'])
+            ? $child->chapters()->where('id', '!=', $chapter->id)->findOrFail($validated['move_milestones_to'])
             : null;
 
         if (! $target && $chapter->milestones()->whereHas('entry')->exists()) {

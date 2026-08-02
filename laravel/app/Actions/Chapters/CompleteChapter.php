@@ -28,7 +28,7 @@ class CompleteChapter
     /** @return array{chapter: ChildChapter, xp: int, unlocked: Collection<int, ChildTrophy>} */
     public function handle(ChildChapter $chapter, User $user): array
     {
-        if (! $this->limits->canCompleteMilestone($chapter)) {
+        if (! $this->limits->canCompleteChapter($chapter)) {
             throw ValidationException::withMessages([
                 'chapter' => 'Every milestone in this chapter needs a memory first.',
             ]);

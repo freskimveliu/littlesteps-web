@@ -21,7 +21,6 @@ class UpdateMilestoneController extends Controller
     {
         $this->authorize('contribute', $child);
         abort_unless($milestone->child_id === $child->id, 404);
-        abort_unless($milestone->is_editable, 403, 'This milestone is part of the guided journey.');
 
         $validated = $request->validate([
             'name' => ['sometimes', 'string', 'max:80'],

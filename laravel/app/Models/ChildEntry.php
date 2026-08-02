@@ -106,7 +106,7 @@ class ChildEntry extends Model implements HasMedia
 
     /**
      * A memory has to carry something of the moment — words or an attachment. Mood alone
-     * leaves an empty step ticked off, which is what this rule exists to prevent.
+     * leaves an empty milestone ticked off, which is what this rule exists to prevent.
      */
     public function hasSubstance(): bool
     {

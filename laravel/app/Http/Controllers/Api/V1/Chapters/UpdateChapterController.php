@@ -20,7 +20,6 @@ class UpdateChapterController extends Controller
     {
         $this->authorize('contribute', $child);
         abort_unless($chapter->child_id === $child->id, 404);
-        abort_unless($chapter->is_editable, 403, 'This chapter is part of the guided journey.');
 
         $validated = $request->validate([
             'name' => ['sometimes', 'string', 'max:80'],

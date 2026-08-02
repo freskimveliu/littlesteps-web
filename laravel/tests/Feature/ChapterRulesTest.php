@@ -122,7 +122,7 @@ it('carries the milestones over when a chapter is deleted with somewhere to put 
         'mood' => Mood::Joyful->value,
     ])->assertCreated();
 
-    $this->deleteJson("/api/v1/children/{$child->id}/chapters/{$from}", ['move_steps_to' => $to])
+    $this->deleteJson("/api/v1/children/{$child->id}/chapters/{$from}", ['move_milestones_to' => $to])
         ->assertNoContent();
 
     $this->assertDatabaseMissing('child_chapters', ['id' => $from]);
@@ -136,7 +136,7 @@ it('refuses to move milestones into a chapter belonging to another child', funct
     $from = ownChapter($child)->assertCreated()->json('data.id');
     $stranger = otherChildsChapter($child);
 
-    $this->deleteJson("/api/v1/children/{$child->id}/chapters/{$from}", ['move_steps_to' => $stranger->id])
+    $this->deleteJson("/api/v1/children/{$child->id}/chapters/{$from}", ['move_milestones_to' => $stranger->id])
         ->assertNotFound();
 
     $this->assertDatabaseHas('child_chapters', ['id' => $from]);
@@ -146,7 +146,7 @@ it('refuses to move milestones into the chapter being deleted', function () {
     [, $child] = family();
     $chapter = ownChapter($child)->assertCreated()->json('data.id');
 
-    $this->deleteJson("/api/v1/children/{$child->id}/chapters/{$chapter}", ['move_steps_to' => $chapter])
+    $this->deleteJson("/api/v1/children/{$child->id}/chapters/{$chapter}", ['move_milestones_to' => $chapter])
         ->assertNotFound();
 
     $this->assertDatabaseHas('child_chapters', ['id' => $chapter]);
@@ -195,7 +195,7 @@ it('never leaves a child without a chapter', function () {
 
     $this->getJson("/api/v1/children/{$child->id}/chapters")
         ->assertOk()
-        ->assertJsonPath('data.0.isDeletable', false);
+        ->assertJsonPath('data.0.abilities.delete', false);
 
     $this->deleteJson("/api/v1/children/{$child->id}/chapters/{$last->id}")->assertForbidden();
 });

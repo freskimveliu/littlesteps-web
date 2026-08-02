@@ -27,11 +27,11 @@ it('offers completion only once every visible milestone has a memory', function 
     [, $child] = family(ageMonths: 6);
     $chapter = $child->chapters()->first();
 
-    expect(app(Limits::class)->canCompleteMilestone($chapter))->toBeFalse();
+    expect(app(Limits::class)->canCompleteChapter($chapter))->toBeFalse();
 
     fillChapter($child, $chapter);
 
-    expect(app(Limits::class)->canCompleteMilestone($chapter->fresh()))->toBeTrue();
+    expect(app(Limits::class)->canCompleteChapter($chapter->fresh()))->toBeTrue();
 });
 
 it('awards the chapter xp and stamps who finished it', function () {

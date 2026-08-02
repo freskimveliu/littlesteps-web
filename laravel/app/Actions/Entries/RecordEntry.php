@@ -30,7 +30,7 @@ class RecordEntry
     /** @return array{entry: ChildEntry, xp: int, unlocked: Collection<int, ChildTrophy>} */
     public function handle(Child $child, User $user, EntryData $data): array
     {
-        $milestone = $data->isFree() ? null : $this->milestone($child, $data->childStepId);
+        $milestone = $data->isFree() ? null : $this->milestone($child, $data->childMilestoneId);
 
         $this->guardLimits($child, $user, $data);
 
@@ -62,9 +62,9 @@ class RecordEntry
         ];
     }
 
-    private function milestone(Child $child, int $stepId): ChildMilestone
+    private function milestone(Child $child, int $milestoneId): ChildMilestone
     {
-        $milestone = $child->milestones()->with('entry')->find($stepId);
+        $milestone = $child->milestones()->with('entry')->find($milestoneId);
 
         if (! $milestone) {
             throw ValidationException::withMessages([

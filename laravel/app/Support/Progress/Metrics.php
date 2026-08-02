@@ -33,7 +33,7 @@ class Metrics
             TrophyMetric::Days->value => $days->count(),
             TrophyMetric::Months->value => $this->distinctMonths($days),
             TrophyMetric::Streak->value => $this->longestRunTo($days),
-            TrophyMetric::OnTimeMilestones->value => $this->onTimeSteps($child),
+            TrophyMetric::OnTimeMilestones->value => $this->onTimeMilestones($child),
             TrophyMetric::Chapters->value => $this->chapters($child),
             TrophyMetric::Photos->value => $this->photos($child),
             TrophyMetric::Categories->value => $this->categories($child),
@@ -114,7 +114,7 @@ class Metrics
      * quarter that opens at the milestone's months_from. Backfilling the first smile
      * at age four is still a memory, just not this trophy.
      */
-    public function onTimeSteps(Child $child): int
+    public function onTimeMilestones(Child $child): int
     {
         return ChildEntry::query()
             ->where('child_entries.child_id', $child->id)

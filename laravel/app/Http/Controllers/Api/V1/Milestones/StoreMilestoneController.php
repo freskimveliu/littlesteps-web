@@ -27,7 +27,7 @@ class StoreMilestoneController extends Controller
             ]);
         }
 
-        if (! $limits->canAddCustomStep($chapter)) {
+        if (! $limits->canAddCustomMilestone($chapter)) {
             throw ValidationException::withMessages([
                 'child_chapter_id' => 'This chapter already has as many of your own milestones as it can hold.',
             ]);

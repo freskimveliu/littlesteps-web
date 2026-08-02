@@ -44,7 +44,7 @@ class ProvisionChild
                 ]);
 
                 foreach ($chapter->milestones as $milestone) {
-                    $childStep = ChildMilestone::create([
+                    $childMilestone = ChildMilestone::create([
                         'child_id' => $child->id,
                         'child_chapter_id' => $childChapter->id,
                         'milestone_id' => $milestone->id,
@@ -59,7 +59,7 @@ class ProvisionChild
                     ]);
 
                     foreach ($milestone->properties as $property) {
-                        $childStep->properties()->create([
+                        $childMilestone->properties()->create([
                             'key' => $property->key,
                             'name' => $property->name,
                             'sort_order' => $property->sort_order,

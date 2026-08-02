@@ -89,7 +89,7 @@ it('gives a milestone the parent wrote its own xp and a place at the end', funct
 
     expect($response->json('data.xp'))->toBe(20)
         ->and($response->json('data.isEditable'))->toBeTrue()
-        ->and($response->json('data.isDeletable'))->toBeTrue()
+        ->and($response->json('data.abilities.delete'))->toBeTrue()
         ->and($response->json('data.sortOrder'))->toBe($last + 10);
 });
 

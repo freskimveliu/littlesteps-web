@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\Icon;
+use App\Support\Limits;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -53,6 +54,32 @@ class ChildChapter extends Model
     public function isDeletable(): bool
     {
         return ! $this->isCompleted() && $this->child->chapterCount() > 1;
+    }
+
+    /**
+     * Everything a parent may do to this chapter, decided here so the app never
+     * has to know the rules — it renders the buttons this says it can.
+     *
+     * `reorder` is permission, not position: whether a neighbour exists to swap
+     * with is a question about the list the app is already holding.
+     *
+     * The map is the parent's, guided or not. is_editable records where the row
+     * came from; it does not decide what may be done to it.
+     *
+     * @return array<string, bool>
+     */
+    public function abilities(): array
+    {
+        $limits = app(Limits::class);
+
+        return [
+            'rename' => true,
+            'reorder' => true,
+            'delete' => $this->isDeletable(),
+            'complete' => $limits->canCompleteChapter($this),
+            'addMilestone' => $limits->canAddCustomMilestone($this),
+            'viewRecap' => $this->isCompleted(),
+        ];
     }
 
     public function isUnlockedFor(Child $child): bool

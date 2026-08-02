@@ -16,7 +16,7 @@ readonly class EntryData
      * @param  array<int, UploadedFile>  $media
      */
     public function __construct(
-        public ?int $childStepId,
+        public ?int $childMilestoneId,
         public ?string $description,
         public string $date,
         public ?Mood $mood,
@@ -35,7 +35,7 @@ readonly class EntryData
             ->all();
 
         return new self(
-            childStepId: $request->integer('child_milestone_id') ?: null,
+            childMilestoneId: $request->integer('child_milestone_id') ?: null,
             description: $request->filled('description') ? $request->string('description')->toString() : null,
             date: $request->date('date')?->toDateString() ?? now()->toDateString(),
             mood: $request->filled('mood') ? Mood::from($request->string('mood')->toString()) : null,
@@ -48,7 +48,7 @@ readonly class EntryData
     public function toAttributes(): array
     {
         return [
-            'child_milestone_id' => $this->childStepId,
+            'child_milestone_id' => $this->childMilestoneId,
             'description' => $this->description,
             'date' => $this->date,
             'mood' => $this->mood,
@@ -57,6 +57,6 @@ readonly class EntryData
 
     public function isFree(): bool
     {
-        return $this->childStepId === null;
+        return $this->childMilestoneId === null;
     }
 }

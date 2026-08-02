@@ -29,7 +29,7 @@ it('leaves hidden milestones out of the counts', function () {
 
     $body = $this->getJson("/api/v1/children/{$child->id}/chapters")->assertOk()->json('data');
 
-    expect(collect($body)->firstWhere('id', $chapter->id)['stepsTotal'])->toBe($before - 1);
+    expect(collect($body)->firstWhere('id', $chapter->id)['milestonesTotal'])->toBe($before - 1);
 });
 
 it('restores a hidden milestone', function () {
@@ -132,7 +132,7 @@ it('adds a chapter of the parents own, worth no xp', function () {
         ->assertJsonPath('data.isEditable', true);
 });
 
-it('renames a chapter the parent wrote and refuses one from the catalogue', function () {
+it('renames a chapter whether the parent wrote it or the catalogue did', function () {
     [, $child] = family(ageMonths: 6);
 
     $own = $this->postJson("/api/v1/children/{$child->id}/chapters", ['name' => 'Ours'])
@@ -145,8 +145,10 @@ it('renames a chapter the parent wrote and refuses one from the catalogue', func
 
     $guided = $child->chapters()->where('is_editable', false)->first();
 
-    $this->patchJson("/api/v1/children/{$child->id}/chapters/{$guided->id}", ['name' => 'Nope'])
-        ->assertForbidden();
+    $this->patchJson("/api/v1/children/{$child->id}/chapters/{$guided->id}", ['name' => 'Ours now'])
+        ->assertOk()
+        ->assertJsonPath('data.name', 'Ours now')
+        ->assertJsonPath('data.abilities.rename', true);
 });
 
 it('deletes an empty chapter and refuses one holding a memory', function () {
@@ -179,7 +181,7 @@ it('deletes an empty chapter and refuses one holding a memory', function () {
     $target = $child->chapters()->where('is_editable', false)->first();
 
     $this->deleteJson("/api/v1/children/{$child->id}/chapters/{$chapter->id}", [
-        'move_steps_to' => $target->id,
+        'move_milestones_to' => $target->id,
     ])->assertNoContent();
 
     expect($milestone->fresh()->child_chapter_id)->toBe($target->id);

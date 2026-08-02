@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Http\Resources;
 
 use App\Models\ChildChapter;
-use App\Support\Limits;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -19,7 +18,6 @@ class ChildChapterResource extends JsonResource
         $milestones = $this->whenLoaded('milestones');
         $visible = $this->relationLoaded('milestones') ? $this->milestones->where('is_hidden', false) : collect();
         $recorded = $visible->filter(fn ($milestone) => $milestone->isRecorded());
-        $limits = app(Limits::class);
 
         return [
             'id' => $this->id,
@@ -30,14 +28,12 @@ class ChildChapterResource extends JsonResource
             'xp' => $this->xp,
             'sortOrder' => $this->sort_order,
             'isEditable' => $this->is_editable,
-            'isDeletable' => $this->isDeletable(),
             'isUnlocked' => $child ? $this->isUnlockedFor($child) : true,
             'isCompleted' => $this->isCompleted(),
             'completedAt' => $this->completed_at?->toIso8601String(),
-            'isCompletable' => $limits->canCompleteMilestone($this->resource),
-            'canAddMilestone' => $limits->canAddCustomStep($this->resource),
-            'stepsTotal' => $visible->count(),
-            'stepsRecorded' => $recorded->count(),
+            'abilities' => $this->abilities(),
+            'milestonesTotal' => $visible->count(),
+            'milestonesRecorded' => $recorded->count(),
             'milestones' => ChildMilestoneResource::collection($milestones),
         ];
     }
