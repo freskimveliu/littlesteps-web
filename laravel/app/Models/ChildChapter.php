@@ -44,6 +44,17 @@ class ChildChapter extends Model
         return $this->completed_at !== null;
     }
 
+    /**
+     * A chapter can go while it is still unfinished — a guided one included, since
+     * a parent who found the app at a year old has months of map behind them that
+     * no photo will ever fill. Once it is finished its gift has been given, and
+     * the last chapter always stays: an empty map is not a journey.
+     */
+    public function isDeletable(): bool
+    {
+        return ! $this->isCompleted() && $this->child->chapterCount() > 1;
+    }
+
     public function isUnlockedFor(Child $child): bool
     {
         return $this->months_from === null || $child->ageInMonths() >= $this->months_from;

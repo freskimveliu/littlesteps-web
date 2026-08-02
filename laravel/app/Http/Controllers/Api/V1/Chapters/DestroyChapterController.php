@@ -13,9 +13,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Only a chapter the parent wrote can be deleted, and never one holding a
- * memory — deleting cascades to its milestones and their entries, which is the
- * one thing this app must never do quietly. Pass move_steps_to to keep them.
+ * A chapter goes while it is still unfinished, and never one holding a memory —
+ * deleting cascades to its milestones and their entries, which is the one thing
+ * this app must never do quietly. Pass move_steps_to to keep them.
  */
 class DestroyChapterController extends Controller
 {
@@ -23,7 +23,14 @@ class DestroyChapterController extends Controller
     {
         $this->authorize('contribute', $child);
         abort_unless($chapter->child_id === $child->id, 404);
-        abort_unless($chapter->is_editable, 403, 'This chapter is part of the guided journey.');
+
+        abort_unless(
+            $chapter->isDeletable(),
+            403,
+            $chapter->isCompleted()
+                ? 'This chapter is finished. Its gift has already been given.'
+                : 'A child needs at least one chapter.',
+        );
 
         $validated = $request->validate([
             'move_steps_to' => ['nullable', 'integer'],

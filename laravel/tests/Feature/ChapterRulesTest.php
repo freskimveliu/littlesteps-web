@@ -166,6 +166,40 @@ it('takes the empty milestones with it when a chapter is deleted', function () {
     $this->assertDatabaseMissing('child_milestones', ['id' => $milestone]);
 });
 
+it('lets a guided chapter the child has grown past be deleted', function () {
+    [, $child] = family(ageMonths: 12);
+    $chapter = $child->chapters()->orderBy('sort_order')->first();
+
+    expect($chapter->is_editable)->toBeFalse();
+
+    $this->deleteJson("/api/v1/children/{$child->id}/chapters/{$chapter->id}")->assertNoContent();
+
+    $this->assertDatabaseMissing('child_chapters', ['id' => $chapter->id]);
+    $this->assertDatabaseMissing('child_milestones', ['child_chapter_id' => $chapter->id]);
+});
+
+it('refuses to delete a chapter that has already been finished', function () {
+    [, $child] = family();
+    $chapter = $child->chapters()->orderBy('sort_order')->first();
+    $chapter->forceFill(['completed_at' => now()])->save();
+
+    $this->deleteJson("/api/v1/children/{$child->id}/chapters/{$chapter->id}")->assertForbidden();
+
+    $this->assertDatabaseHas('child_chapters', ['id' => $chapter->id]);
+});
+
+it('never leaves a child without a chapter', function () {
+    [, $child] = family();
+    $last = $child->chapters()->orderBy('sort_order')->first();
+    $child->chapters()->whereKeyNot($last->id)->delete();
+
+    $this->getJson("/api/v1/children/{$child->id}/chapters")
+        ->assertOk()
+        ->assertJsonPath('data.0.isDeletable', false);
+
+    $this->deleteJson("/api/v1/children/{$child->id}/chapters/{$last->id}")->assertForbidden();
+});
+
 it('refuses a reordering that names the same chapter twice', function () {
     [, $child] = family();
     $first = $child->chapters()->orderBy('sort_order')->first();

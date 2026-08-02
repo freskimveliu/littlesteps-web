@@ -94,6 +94,15 @@ class Child extends Model implements HasMedia
         return $this->hasMany(ChildChapter::class);
     }
 
+    /**
+     * Held for the request: every chapter in the map asks whether it is the last
+     * one, and eager loading hands them all the same child instance.
+     */
+    public function chapterCount(): int
+    {
+        return once(fn () => $this->chapters()->count());
+    }
+
     /** @return HasMany<ChildMilestone, $this> */
     public function milestones(): HasMany
     {
