@@ -46,17 +46,7 @@ it('refuses a login for an account that never set a password', function () {
         ->assertJsonValidationErrorFor('email');
 });
 
-it('soft deletes an account and gives it 30 days to come back', function () {
-    [$user, $child] = family();
-
-    $this->deleteJson('/api/v1/auth/me')->assertOk();
-
-    // fresh() bypasses global scopes, so ask through the scoped query instead.
-    expect(User::find($user->id))->toBeNull()
-        ->and(User::withTrashed()->find($user->id))->not->toBeNull()
-        ->and($child->fresh())->not->toBeNull()
-        ->and($user->tokens()->count())->toBe(0);
-});
+// Closing an account, and coming back to it, live in AccountDeletionTest.
 
 it('stores notification preferences as settings', function () {
     $user = User::factory()->create();

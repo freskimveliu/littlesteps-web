@@ -10,10 +10,13 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 /**
- * Soft-deletes the account and starts a 30-day grace period: the login stops
- * working immediately and the children go with it, but nothing is destroyed
- * until a scheduled job clears it. Signing back in inside the window restores
- * everything.
+ * Closes the account: every token is revoked, so the login stops working at
+ * once, and the row is soft-deleted. Nothing is destroyed — signing back in
+ * reopens it, whenever that is. See LoginController.
+ *
+ * The children are deliberately left untouched. They belong to the account
+ * rather than to the deletion, and leaving them where they are is what makes
+ * coming back a reopening rather than a rebuild.
  */
 class DeleteAccountController extends Controller
 {
@@ -23,8 +26,9 @@ class DeleteAccountController extends Controller
         $user->tokens()->delete();
         $user->delete();
 
-        return ApiResponse::success([
-            'recoverableUntil' => now()->addDays(30)->toIso8601String(),
-        ], 'Your account is scheduled for deletion. Sign in within 30 days to undo it.');
+        return ApiResponse::success(
+            null,
+            'Your account is closed. Sign in again any time to reopen it.',
+        );
     }
 }
