@@ -21,9 +21,12 @@ class ChildChapterResource extends JsonResource
         $recorded = $visible->filter(fn ($milestone) => $milestone->isRecorded());
 
         // Each milestone asks its chapter whether it is sealed, and the chapter
-        // is right here — handing it over saves a query per row.
+        // is right here — handing it over saves a query per row. Stripped of its
+        // own relations, or chapter and milestone would point at each other and
+        // anything that later walked the graph would not come back.
         if ($this->relationLoaded('milestones')) {
-            $this->milestones->each(fn (ChildMilestone $milestone) => $milestone->setRelation('chapter', $this->resource));
+            $sealer = $this->resource->withoutRelations();
+            $this->milestones->each(fn (ChildMilestone $milestone) => $milestone->setRelation('chapter', $sealer));
         }
 
         return [

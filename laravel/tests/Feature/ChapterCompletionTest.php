@@ -248,6 +248,19 @@ it('refuses to delete a milestone inside a finished chapter', function () {
         ->assertForbidden();
 });
 
+it('refuses to empty a chapter into a finished one', function () {
+    [, $child] = family(ageMonths: 6);
+    $finished = finishChapter($child, $child->chapters()->first());
+    $doomed = $child->chapters()->where('id', '!=', $finished->id)->first();
+
+    $this->deleteJson("/api/v1/children/{$child->id}/chapters/{$doomed->id}", [
+        'move_milestones_to' => $finished->id,
+    ])->assertForbidden();
+
+    expect($doomed->fresh())->not->toBeNull()
+        ->and($finished->milestones()->whereDoesntHave('entry')->count())->toBe(0);
+});
+
 it('still lets the memories inside a finished chapter be edited', function () {
     [, $child] = family(ageMonths: 6);
     $chapter = finishChapter($child, $child->chapters()->first());

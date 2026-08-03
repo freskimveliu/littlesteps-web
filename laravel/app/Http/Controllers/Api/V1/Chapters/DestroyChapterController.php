@@ -40,6 +40,15 @@ class DestroyChapterController extends Controller
             ? $child->chapters()->where('id', '!=', $chapter->id)->findOrFail($validated['move_milestones_to'])
             : null;
 
+        // The seal the single-milestone move already honours: a finished chapter
+        // counted its milestones when its gift was given, so a whole chapter
+        // emptied into it would leave it complete with empty nodes.
+        abort_if(
+            $target?->isCompleted() ?? false,
+            403,
+            'That chapter is finished and cannot take new milestones.',
+        );
+
         if (! $target && $chapter->milestones()->whereHas('entry')->exists()) {
             abort(403, 'This chapter holds a memory. Move its milestones somewhere else first.');
         }
