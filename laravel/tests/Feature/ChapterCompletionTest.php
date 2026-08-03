@@ -57,6 +57,40 @@ it('awards the chapter xp and stamps who finished it', function () {
         ->and($child->fresh()->xp)->toBe($before + $chapter->xp + $trophyXp);
 });
 
+it('counts a skipped milestone as dealt with, not as missing', function () {
+    [, $child] = family(ageMonths: 6);
+    $chapter = $child->chapters()->first();
+    $minimum = AppSetting::number(AppSettingKey::MinMilestonesToCompleteChapter);
+
+    // Skip only the slack above the minimum, so the skip is the reason this
+    // chapter can close — not a retuned limit, and not an empty map.
+    $spare = $chapter->milestones()->visible()->count() - $minimum;
+    expect($spare)->toBeGreaterThan(0);
+
+    $skip = $chapter->milestones()->visible()->take($spare)->pluck('id');
+    $chapter->milestones()->whereIn('id', $skip)->update(['is_hidden' => true]);
+
+    // Every remaining milestone gets a memory; the skipped ones stay empty.
+    fillChapter($child, $chapter->fresh());
+
+    expect($chapter->fresh()->milestones()->visible()->count())->toBe($minimum);
+
+    $this->postJson("/api/v1/children/{$child->id}/chapters/{$chapter->id}/complete")
+        ->assertOk()
+        ->assertJsonPath('data.chapter.isCompleted', true);
+});
+
+it('refuses completion while one milestone is neither filled nor skipped', function () {
+    [, $child] = family(ageMonths: 6);
+    $chapter = $child->chapters()->first();
+
+    fillChapter($child, $chapter);
+    $chapter->milestones()->visible()->first()->entry()->delete();
+
+    $this->postJson("/api/v1/children/{$child->id}/chapters/{$chapter->id}/complete")
+        ->assertJsonValidationErrorFor('chapter');
+});
+
 it('refuses completion while a milestone is still empty', function () {
     [, $child] = family(ageMonths: 6);
     $chapter = $child->chapters()->first();
