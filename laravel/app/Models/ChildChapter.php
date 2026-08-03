@@ -66,19 +66,25 @@ class ChildChapter extends Model
      * The map is the parent's, guided or not. is_editable records where the row
      * came from; it does not decide what may be done to it.
      *
+     * Finishing is the parent's own act, and it seals what it finished: a recap
+     * card already shared should not go out of date behind their back. Only
+     * `reorder` survives, because where a finished chapter sits among its
+     * siblings is a fact about the journey, not about the keepsake.
+     *
      * @return array<string, bool>
      */
     public function abilities(): array
     {
         $limits = app(Limits::class);
+        $completed = $this->isCompleted();
 
         return [
-            'rename' => true,
+            'rename' => ! $completed,
             'reorder' => true,
             'delete' => $this->isDeletable(),
             'complete' => $limits->canCompleteChapter($this),
-            'addMilestone' => $limits->canAddCustomMilestone($this),
-            'viewRecap' => $this->isCompleted(),
+            'addMilestone' => ! $completed && $limits->canAddCustomMilestone($this),
+            'viewRecap' => $completed,
         ];
     }
 

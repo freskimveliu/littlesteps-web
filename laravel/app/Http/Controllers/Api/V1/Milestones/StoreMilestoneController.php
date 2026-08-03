@@ -27,6 +27,14 @@ class StoreMilestoneController extends Controller
             ]);
         }
 
+        // A finished chapter counted its milestones when its gift was given; one
+        // arriving afterwards would leave it complete with an empty node.
+        if ($chapter->isCompleted()) {
+            throw ValidationException::withMessages([
+                'child_chapter_id' => 'That chapter is finished and cannot take new milestones.',
+            ]);
+        }
+
         if (! $limits->canAddCustomMilestone($chapter)) {
             throw ValidationException::withMessages([
                 'child_chapter_id' => 'This chapter already has as many of your own milestones as it can hold.',
@@ -50,7 +58,7 @@ class StoreMilestoneController extends Controller
         }
 
         return ApiResponse::success(
-            new ChildMilestoneResource($milestone->load(['category', 'properties', 'child'])),
+            new ChildMilestoneResource($milestone->load(['category', 'properties', 'child', 'chapter'])),
             'Milestone added.',
             201,
         );

@@ -102,3 +102,126 @@ it('refuses to complete the same chapter twice', function () {
     $this->postJson("/api/v1/children/{$child->id}/chapters/{$chapter->id}/complete")
         ->assertJsonValidationErrorFor('chapter');
 });
+
+/** Fill a chapter and finish it, the way a parent does. */
+function finishChapter(Child $child, ChildChapter $chapter): ChildChapter
+{
+    fillChapter($child, $chapter);
+    test()->postJson("/api/v1/children/{$child->id}/chapters/{$chapter->id}/complete")->assertOk();
+
+    return $chapter->fresh();
+}
+
+it('stops offering anything but the recap once a chapter is finished', function () {
+    [, $child] = family(ageMonths: 6);
+    $chapter = finishChapter($child, $child->chapters()->first());
+
+    expect($chapter->abilities())->toMatchArray([
+        'rename' => false,
+        'delete' => false,
+        'complete' => false,
+        'addMilestone' => false,
+        'viewRecap' => true,
+    ]);
+});
+
+it('leaves a finished chapter reorderable among its siblings', function () {
+    [, $child] = family(ageMonths: 6);
+    $chapter = finishChapter($child, $child->chapters()->first());
+
+    expect($chapter->abilities()['reorder'])->toBeTrue();
+});
+
+it('seals the milestones inside a finished chapter', function () {
+    [, $child] = family(ageMonths: 6);
+    $chapter = finishChapter($child, $child->chapters()->first());
+
+    $this->getJson("/api/v1/children/{$child->id}/chapters")
+        ->assertOk()
+        ->assertJsonPath('data.0.milestones.0.abilities.rename', false)
+        ->assertJsonPath('data.0.milestones.0.abilities.move', false)
+        ->assertJsonPath('data.0.milestones.0.abilities.reorder', false)
+        ->assertJsonPath('data.0.milestones.0.abilities.delete', false)
+        ->assertJsonPath('data.0.milestones.0.abilities.skip', false)
+        ->assertJsonPath('data.0.milestones.0.abilities.unskip', false);
+});
+
+it('refuses to rename a chapter that has been finished', function () {
+    [, $child] = family(ageMonths: 6);
+    $chapter = finishChapter($child, $child->chapters()->first());
+
+    $this->patchJson("/api/v1/children/{$child->id}/chapters/{$chapter->id}", ['name' => 'Renamed'])
+        ->assertForbidden();
+
+    expect($chapter->fresh()->name)->not->toBe('Renamed');
+});
+
+it('refuses to rename a milestone inside a finished chapter', function () {
+    [, $child] = family(ageMonths: 6);
+    $chapter = finishChapter($child, $child->chapters()->first());
+    $milestone = $chapter->milestones()->first();
+
+    $this->patchJson("/api/v1/children/{$child->id}/milestones/{$milestone->id}", ['name' => 'Renamed'])
+        ->assertForbidden();
+});
+
+it('refuses to add a milestone to a finished chapter', function () {
+    [, $child] = family(ageMonths: 6);
+    $chapter = finishChapter($child, $child->chapters()->first());
+
+    $this->postJson("/api/v1/children/{$child->id}/milestones", [
+        'child_chapter_id' => $chapter->id,
+        'name' => 'One more',
+    ])->assertJsonValidationErrorFor('child_chapter_id');
+});
+
+it('refuses to move a milestone into a finished chapter', function () {
+    [, $child] = family(ageMonths: 6);
+    $finished = finishChapter($child, $child->chapters()->first());
+    $open = $child->chapters()->where('id', '!=', $finished->id)->first();
+    $milestone = $open->milestones()->first();
+
+    $this->patchJson("/api/v1/children/{$child->id}/milestones/{$milestone->id}", [
+        'child_chapter_id' => $finished->id,
+    ])->assertJsonValidationErrorFor('child_chapter_id');
+});
+
+it('refuses to reorder the milestones of a finished chapter', function () {
+    [, $child] = family(ageMonths: 6);
+    $chapter = finishChapter($child, $child->chapters()->first());
+    $ids = $chapter->milestones()->orderBy('sort_order')->pluck('id')->reverse()->values();
+
+    $this->postJson("/api/v1/children/{$child->id}/chapters/{$chapter->id}/reorder", [
+        'milestones' => $ids->all(),
+    ])->assertForbidden();
+});
+
+it('refuses to skip a milestone inside a finished chapter', function () {
+    [, $child] = family(ageMonths: 6);
+    $chapter = finishChapter($child, $child->chapters()->first());
+    $milestone = $chapter->milestones()->first();
+
+    $this->postJson("/api/v1/children/{$child->id}/milestones/{$milestone->id}/hide")
+        ->assertForbidden();
+});
+
+it('refuses to delete a milestone inside a finished chapter', function () {
+    [, $child] = family(ageMonths: 6);
+    $chapter = finishChapter($child, $child->chapters()->first());
+    $milestone = $chapter->milestones()->first();
+
+    $this->deleteJson("/api/v1/children/{$child->id}/milestones/{$milestone->id}")
+        ->assertForbidden();
+});
+
+it('still lets the memories inside a finished chapter be edited', function () {
+    [, $child] = family(ageMonths: 6);
+    $chapter = finishChapter($child, $child->chapters()->first());
+    $entry = $chapter->milestones()->first()->entry;
+
+    $this->patchJson("/api/v1/children/{$child->id}/entries/{$entry->id}", [
+        'description' => 'Remembered it slightly differently.',
+    ])->assertOk();
+
+    expect($entry->fresh()->description)->toBe('Remembered it slightly differently.');
+});

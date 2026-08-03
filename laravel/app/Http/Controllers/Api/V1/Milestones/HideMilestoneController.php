@@ -18,6 +18,7 @@ class HideMilestoneController extends Controller
     {
         $this->authorize('contribute', $child);
         abort_unless($milestone->child_id === $child->id, 404);
+        abort_if($milestone->isSealed(), 403, 'This chapter is finished — its map cannot change.');
 
         $hidden = $request->boolean('hidden', true);
 
@@ -27,7 +28,7 @@ class HideMilestoneController extends Controller
         ]);
 
         return ApiResponse::success(
-            new ChildMilestoneResource($milestone->fresh()->load(['category', 'properties', 'entry', 'child'])),
+            new ChildMilestoneResource($milestone->fresh()->load(['category', 'properties', 'entry', 'child', 'chapter'])),
             $hidden ? 'Milestone hidden.' : 'Milestone restored.',
         );
     }

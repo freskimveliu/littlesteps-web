@@ -25,6 +25,8 @@ class DestroyMilestoneController extends Controller
         $this->authorize('contribute', $child);
         abort_unless($milestone->child_id === $child->id, 404);
 
+        abort_if($milestone->isSealed(), 403, 'This chapter is finished — its map cannot change.');
+
         abort_unless(
             $milestone->isDeletable(),
             403,

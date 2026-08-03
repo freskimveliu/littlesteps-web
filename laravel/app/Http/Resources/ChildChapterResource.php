@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Resources;
 
 use App\Models\ChildChapter;
+use App\Models\ChildMilestone;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -18,6 +19,12 @@ class ChildChapterResource extends JsonResource
         $milestones = $this->whenLoaded('milestones');
         $visible = $this->relationLoaded('milestones') ? $this->milestones->where('is_hidden', false) : collect();
         $recorded = $visible->filter(fn ($milestone) => $milestone->isRecorded());
+
+        // Each milestone asks its chapter whether it is sealed, and the chapter
+        // is right here — handing it over saves a query per row.
+        if ($this->relationLoaded('milestones')) {
+            $this->milestones->each(fn (ChildMilestone $milestone) => $milestone->setRelation('chapter', $this->resource));
+        }
 
         return [
             'id' => $this->id,

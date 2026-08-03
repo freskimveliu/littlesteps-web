@@ -21,6 +21,7 @@ class UpdateMilestoneController extends Controller
     {
         $this->authorize('contribute', $child);
         abort_unless($milestone->child_id === $child->id, 404);
+        abort_if($milestone->isSealed(), 403, 'This chapter is finished — its map cannot change.');
 
         $validated = $request->validate([
             'name' => ['sometimes', 'string', 'max:80'],
@@ -40,12 +41,20 @@ class UpdateMilestoneController extends Controller
                     'child_chapter_id' => 'That chapter has not opened yet.',
                 ]);
             }
+
+            // A finished chapter counted its milestones when its gift was given;
+            // one arriving afterwards would leave it complete with an empty node.
+            if ($chapter->isCompleted()) {
+                throw ValidationException::withMessages([
+                    'child_chapter_id' => 'That chapter is finished and cannot take new milestones.',
+                ]);
+            }
         }
 
         $milestone->update([...$validated, 'updated_by_user_id' => $request->user()->id]);
 
         return ApiResponse::success(
-            new ChildMilestoneResource($milestone->fresh()->load(['category', 'properties', 'entry', 'child'])),
+            new ChildMilestoneResource($milestone->fresh()->load(['category', 'properties', 'entry', 'child', 'chapter'])),
             'Saved.',
         );
     }

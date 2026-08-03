@@ -84,6 +84,17 @@ class ChildMilestone extends Model
     }
 
     /**
+     * A milestone in a finished chapter is part of a keepsake somebody chose to
+     * close, so its shape and its name are fixed with it.
+     */
+    public function isSealed(): bool
+    {
+        return $this->relationLoaded('chapter')
+            ? (bool) $this->chapter?->isCompleted()
+            : $this->chapter()->whereNotNull('completed_at')->exists();
+    }
+
+    /**
      * Everything a parent may do to this milestone, decided here so the app never
      * has to know the rules — it renders the buttons this says it can.
      *
@@ -94,6 +105,10 @@ class ChildMilestone extends Model
      * is worse than no name. is_editable records where the row came from; it does
      * not decide what may be done to it.
      *
+     * A seal leaves `record` alone: a chapter only finishes once every visible
+     * milestone holds a memory, and a milestone memory is permanent, so nothing
+     * inside a finished chapter is ever waiting to be recorded anyway.
+     *
      * @return array<string, bool>
      */
     public function abilities(): array
@@ -101,14 +116,15 @@ class ChildMilestone extends Model
         $child = $this->child;
         $locked = $child ? $this->isLockedFor($child) : false;
         $recorded = $this->isRecorded();
+        $sealed = $this->isSealed();
 
         return [
-            'rename' => true,
-            'move' => true,
-            'reorder' => true,
-            'delete' => $this->isDeletable(),
-            'skip' => ! $recorded && ! $this->is_hidden,
-            'unskip' => $this->is_hidden,
+            'rename' => ! $sealed,
+            'move' => ! $sealed,
+            'reorder' => ! $sealed,
+            'delete' => ! $sealed && $this->isDeletable(),
+            'skip' => ! $sealed && ! $recorded && ! $this->is_hidden,
+            'unskip' => ! $sealed && $this->is_hidden,
             'record' => ! $recorded && ! $locked && ! $this->is_hidden,
         ];
     }

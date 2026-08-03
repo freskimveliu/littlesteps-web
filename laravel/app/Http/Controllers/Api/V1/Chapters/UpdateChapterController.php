@@ -20,6 +20,7 @@ class UpdateChapterController extends Controller
     {
         $this->authorize('contribute', $child);
         abort_unless($chapter->child_id === $child->id, 404);
+        abort_if($chapter->isCompleted(), 403, 'This chapter is finished — its map cannot change.');
 
         $validated = $request->validate([
             'name' => ['sometimes', 'string', 'max:80'],
