@@ -122,6 +122,21 @@ class ChildEntry extends Model implements HasMedia
         return $this->isFree();
     }
 
+    /**
+     * What may be done to this memory, in the same shape a chapter and a milestone
+     * answer in. `$mayWrite` arrives from the resource for the reason given on
+     * ChildChapter::abilities().
+     *
+     * @return array<string, bool>
+     */
+    public function abilities(bool $mayWrite): array
+    {
+        return [
+            'edit' => $mayWrite,
+            'delete' => $mayWrite && $this->isDeletable(),
+        ];
+    }
+
     /** @return BelongsTo<Child, $this> */
     public function child(): BelongsTo
     {
@@ -138,6 +153,12 @@ class ChildEntry extends Model implements HasMedia
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by_user_id');
+    }
+
+    /** Null until somebody edits it, and not always whoever wrote it. @return BelongsTo<User, $this> */
+    public function editor(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'updated_by_user_id');
     }
 
     /** @return HasMany<ChildEntryProperty, $this> */

@@ -10,10 +10,10 @@ use App\Models\ChildChapter;
 use App\Models\Trophy;
 use App\Support\Limits;
 
-/** Fill every visible milestone in a chapter, bypassing the daily cap. */
+/** Fill every milestone in a chapter, bypassing the daily cap. */
 function fillChapter(Child $child, ChildChapter $chapter): void
 {
-    foreach ($chapter->milestones()->visible()->get() as $milestone) {
+    foreach ($chapter->milestones()->get() as $milestone) {
         $child->entries()->create([
             'child_milestone_id' => $milestone->id,
             'date' => now()->toDateString(),
@@ -23,7 +23,7 @@ function fillChapter(Child $child, ChildChapter $chapter): void
     }
 }
 
-it('offers completion only once every visible milestone has a memory', function () {
+it('offers completion only once every milestone has a memory', function () {
     [, $child] = family(ageMonths: 6);
     $chapter = $child->chapters()->first();
 
@@ -57,35 +57,35 @@ it('awards the chapter xp and stamps who finished it', function () {
         ->and($child->fresh()->xp)->toBe($before + $chapter->xp + $trophyXp);
 });
 
-it('counts a skipped milestone as dealt with, not as missing', function () {
+it('counts a deleted milestone as gone, not as missing', function () {
     [, $child] = family(ageMonths: 6);
     $chapter = $child->chapters()->first();
     $minimum = AppSetting::number(AppSettingKey::MinMilestonesToCompleteChapter);
 
-    // Skip only the slack above the minimum, so the skip is the reason this
-    // chapter can close — not a retuned limit, and not an empty map.
-    $spare = $chapter->milestones()->visible()->count() - $minimum;
+    // Take off only the slack above the minimum, so the deletion is the reason
+    // this chapter can close — not a retuned limit, and not an empty map.
+    $spare = $chapter->milestones()->count() - $minimum;
     expect($spare)->toBeGreaterThan(0);
 
-    $skip = $chapter->milestones()->visible()->take($spare)->pluck('id');
-    $chapter->milestones()->whereIn('id', $skip)->update(['is_hidden' => true]);
+    foreach ($chapter->milestones()->take($spare)->pluck('id') as $id) {
+        $this->deleteJson("/api/v1/children/{$child->id}/milestones/{$id}")->assertNoContent();
+    }
 
-    // Every remaining milestone gets a memory; the skipped ones stay empty.
     fillChapter($child, $chapter->fresh());
 
-    expect($chapter->fresh()->milestones()->visible()->count())->toBe($minimum);
+    expect($chapter->fresh()->milestones()->count())->toBe($minimum);
 
     $this->postJson("/api/v1/children/{$child->id}/chapters/{$chapter->id}/complete")
         ->assertOk()
         ->assertJsonPath('data.chapter.isCompleted', true);
 });
 
-it('refuses completion while one milestone is neither filled nor skipped', function () {
+it('refuses completion while one milestone is missing its memory', function () {
     [, $child] = family(ageMonths: 6);
     $chapter = $child->chapters()->first();
 
     fillChapter($child, $chapter);
-    $chapter->milestones()->visible()->first()->entry()->delete();
+    $chapter->milestones()->first()->entry()->delete();
 
     $this->postJson("/api/v1/children/{$child->id}/chapters/{$chapter->id}/complete")
         ->assertJsonValidationErrorFor('chapter');
@@ -99,16 +99,16 @@ it('refuses completion while a milestone is still empty', function () {
         ->assertJsonValidationErrorFor('chapter');
 });
 
-it('will not let a parent hide a chapter down to a handful of milestones and collect the gift', function () {
+it('will not let a parent delete a chapter down to a handful of milestones and collect the gift', function () {
     [, $child] = family(ageMonths: 6);
     $chapter = $child->chapters()->first();
 
-    // Leave two visible, fill them both — under min_milestones_to_complete_chapter.
-    $keep = $chapter->milestones()->visible()->take(2)->pluck('id');
-    $chapter->milestones()->whereNotIn('id', $keep)->update(['is_hidden' => true]);
+    // Leave two standing, fill them both — under min_milestones_to_complete_chapter.
+    $keep = $chapter->milestones()->take(2)->pluck('id');
+    $chapter->milestones()->whereNotIn('id', $keep)->delete();
     fillChapter($child, $chapter->fresh());
 
-    expect($chapter->fresh()->milestones()->visible()->count())->toBe(2);
+    expect($chapter->fresh()->milestones()->count())->toBe(2);
 
     $this->postJson("/api/v1/children/{$child->id}/chapters/{$chapter->id}/complete")
         ->assertJsonValidationErrorFor('chapter');
@@ -118,11 +118,11 @@ it('respects a retuned minimum', function () {
     [, $child] = family(ageMonths: 6);
     $chapter = $child->chapters()->first();
 
-    $keep = $chapter->milestones()->visible()->take(2)->pluck('id');
-    $chapter->milestones()->whereNotIn('id', $keep)->update(['is_hidden' => true]);
+    $keep = $chapter->milestones()->take(2)->pluck('id');
+    $chapter->milestones()->whereNotIn('id', $keep)->delete();
     fillChapter($child, $chapter->fresh());
 
-    AppSetting::where('key', AppSettingKey::MinMilestonesToCompleteChapter->value)->update(['value' => '2']);
+    setting(AppSettingKey::MinMilestonesToCompleteChapter, 2);
 
     $this->postJson("/api/v1/children/{$child->id}/chapters/{$chapter->id}/complete")->assertOk();
 });
@@ -134,7 +134,8 @@ it('refuses to complete the same chapter twice', function () {
 
     $this->postJson("/api/v1/children/{$child->id}/chapters/{$chapter->id}/complete")->assertOk();
     $this->postJson("/api/v1/children/{$child->id}/chapters/{$chapter->id}/complete")
-        ->assertJsonValidationErrorFor('chapter');
+        ->assertForbidden()
+        ->assertJsonPath('message', 'This chapter is already finished.');
 });
 
 /** Fill a chapter and finish it, the way a parent does. */
@@ -150,7 +151,7 @@ it('stops offering anything but the recap once a chapter is finished', function 
     [, $child] = family(ageMonths: 6);
     $chapter = finishChapter($child, $child->chapters()->first());
 
-    expect($chapter->abilities())->toMatchArray([
+    expect($chapter->abilities(mayWrite: true))->toMatchArray([
         'rename' => false,
         'delete' => false,
         'complete' => false,
@@ -159,11 +160,32 @@ it('stops offering anything but the recap once a chapter is finished', function 
     ]);
 });
 
-it('leaves a finished chapter reorderable among its siblings', function () {
-    [, $child] = family(ageMonths: 6);
-    $chapter = finishChapter($child, $child->chapters()->first());
+it('leaves a finished chapter of the parents own reorderable among its siblings', function () {
+    [$user, $child] = family(ageMonths: 6);
 
-    expect($chapter->abilities()['reorder'])->toBeTrue();
+    $own = $child->chapters()->create([
+        'name' => 'Our summer by the sea',
+        'sort_order' => 999,
+        'is_editable' => true,
+        'created_by_user_id' => $user->id,
+    ]);
+
+    $own->milestones()->createMany([
+        ['child_id' => $child->id, 'name' => 'The first swim', 'sort_order' => 10, 'is_editable' => true],
+        ['child_id' => $child->id, 'name' => 'The long drive home', 'sort_order' => 20, 'is_editable' => true],
+    ]);
+
+    setting(AppSettingKey::MinMilestonesToCompleteChapter, 2);
+
+    expect(finishChapter($child, $own->fresh())->abilities(mayWrite: true)['reorder'])->toBeTrue();
+});
+
+it('keeps a guided chapter in its age order, finished or not', function () {
+    [, $child] = family(ageMonths: 6);
+    $guided = $child->chapters()->first();
+
+    expect($guided->abilities(mayWrite: true)['reorder'])->toBeFalse()
+        ->and(finishChapter($child, $guided)->abilities(mayWrite: true)['reorder'])->toBeFalse();
 });
 
 it('seals the milestones inside a finished chapter', function () {
@@ -175,9 +197,7 @@ it('seals the milestones inside a finished chapter', function () {
         ->assertJsonPath('data.0.milestones.0.abilities.rename', false)
         ->assertJsonPath('data.0.milestones.0.abilities.move', false)
         ->assertJsonPath('data.0.milestones.0.abilities.reorder', false)
-        ->assertJsonPath('data.0.milestones.0.abilities.delete', false)
-        ->assertJsonPath('data.0.milestones.0.abilities.skip', false)
-        ->assertJsonPath('data.0.milestones.0.abilities.unskip', false);
+        ->assertJsonPath('data.0.milestones.0.abilities.delete', false);
 });
 
 it('refuses to rename a chapter that has been finished', function () {
@@ -228,15 +248,6 @@ it('refuses to reorder the milestones of a finished chapter', function () {
     $this->postJson("/api/v1/children/{$child->id}/chapters/{$chapter->id}/reorder", [
         'milestones' => $ids->all(),
     ])->assertForbidden();
-});
-
-it('refuses to skip a milestone inside a finished chapter', function () {
-    [, $child] = family(ageMonths: 6);
-    $chapter = finishChapter($child, $child->chapters()->first());
-    $milestone = $chapter->milestones()->first();
-
-    $this->postJson("/api/v1/children/{$child->id}/milestones/{$milestone->id}/hide")
-        ->assertForbidden();
 });
 
 it('refuses to delete a milestone inside a finished chapter', function () {

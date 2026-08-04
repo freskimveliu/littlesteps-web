@@ -30,10 +30,10 @@ class ChildResource extends JsonResource
                 'url' => $this->photoUrl(),
                 'thumb' => $this->photoThumbUrl(),
             ] : null,
+            // State describes the row; abilities grant an action. Same split as a
+            // chapter and a milestone.
             'isOwner' => $user?->id === $this->created_by_user_id,
-            'isEditable' => $user?->can('update', $this->resource) ?? false,
-            'isDeletable' => $user?->can('delete', $this->resource) ?? false,
-            'canContribute' => $user?->can('contribute', $this->resource) ?? false,
+            'abilities' => $this->abilities($user),
             'members' => ChildMemberResource::collection($this->whenLoaded('memberships')),
         ];
     }

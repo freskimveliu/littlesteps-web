@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Resources;
 
+use App\Http\Resources\Concerns\KnowsWhoIsAsking;
 use App\Models\ChildChapter;
 use App\Models\ChildMilestone;
 use Illuminate\Http\Request;
@@ -12,13 +13,15 @@ use Illuminate\Http\Resources\Json\JsonResource;
 /** @mixin ChildChapter */
 class ChildChapterResource extends JsonResource
 {
+    use KnowsWhoIsAsking;
+
     /** @return array<string, mixed> */
     public function toArray(Request $request): array
     {
         $child = $this->child;
         $milestones = $this->whenLoaded('milestones');
-        $visible = $this->relationLoaded('milestones') ? $this->milestones->where('is_hidden', false) : collect();
-        $recorded = $visible->filter(fn ($milestone) => $milestone->isRecorded());
+        $all = $this->relationLoaded('milestones') ? $this->milestones : collect();
+        $recorded = $all->filter(fn (ChildMilestone $milestone) => $milestone->isRecorded());
 
         // Each milestone asks its chapter whether it is sealed, and the chapter
         // is right here — handing it over saves a query per row. Stripped of its
@@ -41,8 +44,8 @@ class ChildChapterResource extends JsonResource
             'isUnlocked' => $child ? $this->isUnlockedFor($child) : true,
             'isCompleted' => $this->isCompleted(),
             'completedAt' => $this->completed_at?->toIso8601String(),
-            'abilities' => $this->abilities(),
-            'milestonesTotal' => $visible->count(),
+            'abilities' => $this->abilities($this->mayWrite($request)),
+            'milestonesTotal' => $all->count(),
             'milestonesRecorded' => $recorded->count(),
             'milestones' => ChildMilestoneResource::collection($milestones),
         ];

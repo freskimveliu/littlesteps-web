@@ -4,42 +4,19 @@ declare(strict_types=1);
 
 use App\Enums\Mood;
 
-it('returns hidden chapters and milestones so a parent can change their mind', function () {
-    [, $child] = family(ageMonths: 6);
-    $chapter = $child->chapters()->first();
-    $milestone = $chapter->milestones()->first();
-
-    $this->postJson("/api/v1/children/{$child->id}/milestones/{$milestone->id}/hide")->assertOk();
-
-    $body = $this->getJson("/api/v1/children/{$child->id}/chapters")->assertOk()->json('data');
-    $returned = collect($body)->firstWhere('id', $chapter->id);
-    $hidden = collect($returned['milestones'])->firstWhere('id', $milestone->id);
-
-    expect($hidden)->not->toBeNull()
-        ->and($hidden['isHidden'])->toBeTrue();
-});
-
-it('leaves hidden milestones out of the counts', function () {
+it('takes a deleted milestone off the map and out of the counts', function () {
     [, $child] = family(ageMonths: 6);
     $chapter = $child->chapters()->first();
     $before = $chapter->milestones()->count();
+    $milestone = $chapter->milestones()->first();
 
-    $this->postJson("/api/v1/children/{$child->id}/milestones/{$chapter->milestones()->first()->id}/hide")
-        ->assertOk();
+    $this->deleteJson("/api/v1/children/{$child->id}/milestones/{$milestone->id}")->assertNoContent();
 
-    $body = $this->getJson("/api/v1/children/{$child->id}/chapters")->assertOk()->json('data');
+    $returned = collect($this->getJson("/api/v1/children/{$child->id}/chapters")->assertOk()->json('data'))
+        ->firstWhere('id', $chapter->id);
 
-    expect(collect($body)->firstWhere('id', $chapter->id)['milestonesTotal'])->toBe($before - 1);
-});
-
-it('restores a hidden milestone', function () {
-    [, $child] = family(ageMonths: 6);
-    $milestone = $child->chapters()->first()->milestones()->first();
-
-    $this->postJson("/api/v1/children/{$child->id}/milestones/{$milestone->id}/hide")->assertOk();
-    $this->postJson("/api/v1/children/{$child->id}/milestones/{$milestone->id}/hide", ['hidden' => false])
-        ->assertOk()
-        ->assertJsonPath('data.isHidden', false);
+    expect(collect($returned['milestones'])->firstWhere('id', $milestone->id))->toBeNull()
+        ->and($returned['milestonesTotal'])->toBe($before - 1);
 });
 
 it('reorders the milestones in a chapter', function () {
@@ -47,13 +24,34 @@ it('reorders the milestones in a chapter', function () {
     $chapter = $child->chapters()->first();
     $ids = $chapter->milestones()->orderBy('sort_order')->pluck('id')->all();
 
-    $reversed = array_reverse($ids);
+    // Only the undated ones may move, so the reversal is of those alone: every
+    // dated milestone stays at the index it already held.
+    $undated = $chapter->milestones()->where('is_dated', false)->orderBy('sort_order')->pluck('id')->all();
+    $swapped = array_reverse($undated);
+    $order = array_map(
+        function ($id) use ($undated, &$swapped) {
+            return in_array($id, $undated, true) ? array_shift($swapped) : $id;
+        },
+        $ids,
+    );
 
     $this->postJson("/api/v1/children/{$child->id}/chapters/{$chapter->id}/reorder", [
-        'milestones' => $reversed,
+        'milestones' => $order,
     ])->assertOk();
 
-    expect($chapter->milestones()->orderBy('sort_order')->pluck('id')->all())->toBe($reversed);
+    expect($chapter->milestones()->orderBy('sort_order')->pluck('id')->all())->toBe($order);
+});
+
+it('refuses to shuffle a milestone that names a date', function () {
+    [, $child] = family(ageMonths: 6);
+    $chapter = $child->chapters()->first();
+    $ids = $chapter->milestones()->orderBy('sort_order')->pluck('id')->all();
+
+    $this->postJson("/api/v1/children/{$child->id}/chapters/{$chapter->id}/reorder", [
+        'milestones' => array_reverse($ids),
+    ])->assertJsonValidationErrorFor('milestones');
+
+    expect($chapter->milestones()->orderBy('sort_order')->pluck('id')->all())->toBe($ids);
 });
 
 it('refuses an ordering that is not the chapter it belongs to', function () {
@@ -65,17 +63,31 @@ it('refuses an ordering that is not the chapter it belongs to', function () {
     ])->assertStatus(422);
 });
 
-it('reorders the chapters themselves', function () {
+it('moves a chapter the parent wrote to the front of the map', function () {
+    [, $child] = family(ageMonths: 6);
+
+    $mine = $this->postJson("/api/v1/children/{$child->id}/chapters", ['name' => 'Our summer by the sea'])
+        ->assertCreated()
+        ->json('data.id');
+
+    $guided = $child->chapters()->where('id', '!=', $mine)->orderBy('sort_order')->pluck('id')->all();
+    $order = [$mine, ...$guided];
+
+    $this->postJson("/api/v1/children/{$child->id}/chapters/reorder", ['chapters' => $order])
+        ->assertOk()
+        ->assertJsonPath('data.0.id', $mine);
+
+    expect($child->chapters()->orderBy('sort_order')->pluck('id')->all())->toBe($order);
+});
+
+it('refuses to shuffle the guided chapters out of their age order', function () {
     [, $child] = family(ageMonths: 6);
     $ids = $child->chapters()->orderBy('sort_order')->pluck('id')->all();
 
-    $reversed = array_reverse($ids);
+    $this->postJson("/api/v1/children/{$child->id}/chapters/reorder", ['chapters' => array_reverse($ids)])
+        ->assertJsonValidationErrorFor('chapters');
 
-    $this->postJson("/api/v1/children/{$child->id}/chapters/reorder", ['chapters' => $reversed])
-        ->assertOk()
-        ->assertJsonPath('data.0.id', $reversed[0]);
-
-    expect($child->chapters()->orderBy('sort_order')->pluck('id')->all())->toBe($reversed);
+    expect($child->chapters()->orderBy('sort_order')->pluck('id')->all())->toBe($ids);
 });
 
 it('refuses a chapter ordering that is not this child', function () {
@@ -194,4 +206,83 @@ it('hands back the same prompt all day', function () {
     $again = $this->getJson("/api/v1/children/{$child->id}/prompt")->assertOk()->json('data.id');
 
     expect($again)->toBe($first);
+});
+
+it('refuses to change the age a guided chapter opens at', function () {
+    [, $child] = family(ageMonths: 6);
+    $guided = $child->chapters()->where('months_from', 6)->first();
+
+    $this->patchJson("/api/v1/children/{$child->id}/chapters/{$guided->id}", ['months_from' => 24])
+        ->assertJsonValidationErrorFor('months_from');
+
+    expect($guided->fresh()->months_from)->toBe(6);
+});
+
+it('tells the app that a guided chapter may not be reordered and its own may', function () {
+    [, $child] = family(ageMonths: 6);
+
+    $mine = $this->postJson("/api/v1/children/{$child->id}/chapters", ['name' => 'Our summer by the sea'])
+        ->assertCreated()
+        ->json('data.id');
+
+    $chapters = collect($this->getJson("/api/v1/children/{$child->id}/chapters")->assertOk()->json('data'))
+        ->keyBy('id');
+
+    expect($chapters[$mine]['abilities']['reorder'])->toBeTrue()
+        ->and($chapters->firstWhere('name', 'On the Move')['abilities']['reorder'])->toBeFalse();
+});
+
+it('offers nothing to rearrange in a chapter the child has not reached', function () {
+    [, $child] = family(ageMonths: 6);
+
+    $locked = collect($this->getJson("/api/v1/children/{$child->id}/chapters")->assertOk()->json('data'))
+        ->firstWhere('isUnlocked', false);
+
+    expect($locked)->not->toBeNull()
+        ->and($locked['abilities']['reorder'])->toBeFalse()
+        ->and(collect($locked['milestones'])->every(fn ($m) => $m['abilities']['reorder'] === false))->toBeTrue()
+        ->and(collect($locked['milestones'])->every(fn ($m) => $m['abilities']['move'] === false))->toBeTrue();
+});
+
+it('refuses to reorder the milestones of a chapter that has not opened', function () {
+    [, $child] = family(ageMonths: 6);
+    $locked = $child->chapters()->where('months_from', '>', $child->ageInMonths())->orderBy('sort_order')->first();
+
+    $this->postJson("/api/v1/children/{$child->id}/chapters/{$locked->id}/reorder", [
+        'milestones' => array_reverse($locked->milestones()->orderBy('sort_order')->pluck('id')->all()),
+    ])->assertForbidden();
+});
+
+it('refuses to shuffle a chapter of the parents own that the child has not reached', function () {
+    [$user, $child] = family(ageMonths: 6);
+
+    $ahead = $child->chapters()->create([
+        'name' => 'When she starts school',
+        'months_from' => 60,
+        'sort_order' => 999,
+        'is_editable' => true,
+        'created_by_user_id' => $user->id,
+    ]);
+
+    $chapters = collect($this->getJson("/api/v1/children/{$child->id}/chapters")->assertOk()->json('data'));
+
+    expect($chapters->firstWhere('id', $ahead->id)['abilities']['reorder'])->toBeFalse();
+
+    $ids = $child->chapters()->orderBy('sort_order')->pluck('id')->all();
+    $order = [$ahead->id, ...array_values(array_diff($ids, [$ahead->id]))];
+
+    $this->postJson("/api/v1/children/{$child->id}/chapters/reorder", ['chapters' => $order])
+        ->assertJsonValidationErrorFor('chapters');
+});
+
+it('refuses a reordering that leaves milestones out', function () {
+    [, $child] = family(ageMonths: 6);
+    $chapter = $child->chapters()->first();
+    $ids = $chapter->milestones()->orderBy('sort_order')->pluck('id')->all();
+
+    $this->postJson("/api/v1/children/{$child->id}/chapters/{$chapter->id}/reorder", [
+        'milestones' => array_slice($ids, 0, 3),
+    ])->assertJsonValidationErrorFor('milestones');
+
+    expect($chapter->milestones()->orderBy('sort_order')->pluck('id')->all())->toBe($ids);
 });

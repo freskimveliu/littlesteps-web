@@ -126,9 +126,6 @@ it('never reaches a milestone through the wrong child', function () {
     $this->patchJson("/api/v1/children/{$child->id}/milestones/{$stranger->id}", ['name' => 'Mine now'])
         ->assertNotFound();
 
-    $this->postJson("/api/v1/children/{$child->id}/milestones/{$stranger->id}/hide")
-        ->assertNotFound();
-
     $this->deleteJson("/api/v1/children/{$child->id}/milestones/{$stranger->id}")
         ->assertNotFound();
 
@@ -168,4 +165,64 @@ it('moves a milestone the parent wrote into another chapter the child has reache
 
     expect($milestone->child_chapter_id)->toBe($target->id)
         ->and($milestone->updated_by_user_id)->toBe($user->id);
+});
+
+it('pins a milestone that names a date to the chapter that is that date', function () {
+    [, $child] = family(ageMonths: 12);
+    $dated = $child->milestones()->where('name', 'Month 5')->first();
+    $target = $child->chapters()->where('months_from', 6)->first();
+
+    $this->patchJson("/api/v1/children/{$child->id}/milestones/{$dated->id}", [
+        'child_chapter_id' => $target->id,
+    ])->assertJsonValidationErrorFor('child_chapter_id');
+
+    expect($dated->fresh()->child_chapter_id)->not->toBe($target->id);
+});
+
+it('lets a guided first be moved, because it happens whenever it happens', function () {
+    [, $child] = family(ageMonths: 12);
+    $first = $child->milestones()->where('name', 'Coming Home')->first();
+    $target = $child->chapters()->where('months_from', 6)->first();
+
+    $this->patchJson("/api/v1/children/{$child->id}/milestones/{$first->id}", [
+        'child_chapter_id' => $target->id,
+    ])->assertOk();
+
+    expect($first->fresh()->child_chapter_id)->toBe($target->id);
+});
+
+it('refuses to move a dated milestone in time', function () {
+    [, $child] = family(ageMonths: 12);
+    $dated = $child->milestones()->where('name', 'First Birthday!')->first();
+
+    $this->patchJson("/api/v1/children/{$child->id}/milestones/{$dated->id}", ['months_from' => 30])
+        ->assertJsonValidationErrorFor('months_from');
+
+    expect($dated->fresh()->months_from)->toBe(12);
+});
+
+it('still lets a dated milestone be renamed and deleted', function () {
+    [, $child] = family(ageMonths: 12);
+    $dated = $child->milestones()->where('name', 'Month 5')->first();
+
+    $this->patchJson("/api/v1/children/{$child->id}/milestones/{$dated->id}", ['name' => 'Five months old'])
+        ->assertOk()
+        ->assertJsonPath('data.name', 'Five months old')
+        ->assertJsonPath('data.abilities.rename', true)
+        ->assertJsonPath('data.abilities.delete', true);
+
+    $this->deleteJson("/api/v1/children/{$child->id}/milestones/{$dated->id}")->assertNoContent();
+});
+
+it('tells the app that a date may not be moved and a first may', function () {
+    [, $child] = family(ageMonths: 12);
+
+    $milestones = collect($this->getJson("/api/v1/children/{$child->id}/chapters")->assertOk()->json('data'))
+        ->flatMap(fn ($chapter) => $chapter['milestones'])
+        ->keyBy('name');
+
+    expect($milestones['Month 5']['abilities']['move'])->toBeFalse()
+        ->and($milestones['Month 5']['abilities']['reorder'])->toBeFalse()
+        ->and($milestones['Coming Home']['abilities']['move'])->toBeTrue()
+        ->and($milestones['Coming Home']['abilities']['reorder'])->toBeTrue();
 });

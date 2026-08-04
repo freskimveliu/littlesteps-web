@@ -25,6 +25,13 @@ class Child extends Model implements HasMedia
 
     public const PHOTO = 'photo';
 
+    /**
+     * Who has been found to be allowed to write to this child, this request.
+     *
+     * @var array<int, bool>
+     */
+    private array $writers = [];
+
     protected function casts(): array
     {
         return [
@@ -66,6 +73,37 @@ class Child extends Model implements HasMedia
     public function ageInMonths(?\DateTimeInterface $on = null): int
     {
         return max(0, (int) floor($this->birthday->diffInMonths($on ?? now())));
+    }
+
+    /**
+     * Whether this user may add to this child's story — the same question
+     * ChildPolicy answers, held for the request because a single payload asks it
+     * once per chapter and once per milestone and the answer cannot change
+     * between two rows of it. Keyed by user, so it is memoised and not assumed.
+     */
+    public function allowsWriting(?User $user): bool
+    {
+        if ($user === null) {
+            return false;
+        }
+
+        return $this->writers[$user->id] ??= $user->can('contribute', $this);
+    }
+
+    /**
+     * Everything this user may do to the child itself, in the same shape a chapter
+     * and a milestone answer in. Owning the child and adding to it are different
+     * rights — ChildPolicy draws that line and this reports it.
+     *
+     * @return array<string, bool>
+     */
+    public function abilities(?User $user = null): array
+    {
+        return [
+            'edit' => $user?->can('update', $this) === true,
+            'delete' => $user?->can('delete', $this) === true,
+            'contribute' => $this->allowsWriting($user),
+        ];
     }
 
     /** @return BelongsTo<User, $this> */
