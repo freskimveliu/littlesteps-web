@@ -36,6 +36,7 @@ class ShowChildController extends Controller
                 'name' => $chapter->name,
                 'months_from' => $chapter->months_from,
                 'xp' => $chapter->xp,
+                'is_custom' => $chapter->chapter_id === null,
                 'completed_at' => $chapter->completed_at?->toIso8601String(),
                 'milestones_total' => $chapter->milestones_total,
                 'milestones_recorded' => $chapter->milestones_recorded,

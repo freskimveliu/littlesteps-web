@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { Head, Link, router, useForm } from '@inertiajs/vue3';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
+import ArrowUturnLeftIcon from '@heroicons/vue/24/outline/esm/ArrowUturnLeftIcon.js';
 import EyeIcon from '@heroicons/vue/24/outline/esm/EyeIcon.js';
 import PlusIcon from '@heroicons/vue/24/outline/esm/PlusIcon.js';
+import TrashIcon from '@heroicons/vue/24/outline/esm/TrashIcon.js';
 import AdminLayout from '../../../layouts/AdminLayout.vue';
 import UiPageHeader from '../../../components/ui/UiPageHeader.vue';
 import UiTable from '../../../components/ui/UiTable.vue';
@@ -21,6 +23,7 @@ import UiSelect from '../../../components/ui/UiSelect.vue';
 import UiModal from '../../../components/ui/UiModal.vue';
 import UiInput from '../../../components/ui/UiInput.vue';
 import UiSwitch from '../../../components/ui/UiSwitch.vue';
+import UiConfirmationModal from '../../../components/ui/UiConfirmationModal.vue';
 import { useIndexFilters } from '../../../composables/useIndexFilters';
 import { formatDate } from '../../../support/date';
 
@@ -28,6 +31,7 @@ interface Row {
     id: number;
     name: string;
     email: string | null;
+    share_code: string;
     is_admin: boolean;
     current_streak: number;
     longest_streak: number;
@@ -93,6 +97,57 @@ function startCreate() {
 function submit() {
     form.post('/admin/users', { onSuccess: () => (formOpen.value = false) });
 }
+
+const page = usePage();
+
+const signedInId = computed(() => (page.props.auth as { user: { id: number } | null } | undefined)?.user?.id);
+
+const toDelete = ref<Row | null>(null);
+const deleting = ref(false);
+
+function performDelete() {
+    if (!toDelete.value) return;
+    const user = toDelete.value;
+    deleting.value = true;
+    router.delete(`/admin/users/${user.id}${user.deleted_at ? '/force' : ''}`, {
+        preserveScroll: true,
+        onFinish: () => {
+            deleting.value = false;
+            toDelete.value = null;
+        },
+    });
+}
+
+function restore(user: Row) {
+    router.post(`/admin/users/${user.id}/restore`, {}, { preserveScroll: true });
+}
+
+/**
+ * Closing an account and erasing one are different promises, so they are asked
+ * as different questions — the second says what the database will take with it.
+ */
+const confirmation = computed(() => {
+    const user = toDelete.value;
+    if (!user) return { title: '', message: '', confirmText: 'Delete' };
+
+    if (!user.deleted_at) {
+        return {
+            title: 'Close this account?',
+            message: `${user.name} will be signed out everywhere and scheduled for deletion. Nothing is erased — their children and every memory come back if you restore it.`,
+            confirmText: 'Close account',
+        };
+    }
+
+    const owned = user.owned_children_count;
+
+    return {
+        title: 'Erase this account for good?',
+        message: owned
+            ? `${user.name}, the ${owned === 1 ? 'child' : `${owned} children`} they created and every memory recorded for ${owned === 1 ? 'them' : 'those children'} will be erased. This cannot be undone.`
+            : `${user.name} and everything on the account will be erased. This cannot be undone.`,
+        confirmText: 'Erase',
+    };
+});
 </script>
 
 <template>
@@ -126,6 +181,7 @@ function submit() {
                 <UiSortableTableHeader sort-key="email" :active-key="sortKey" :active-order="sortOrder" @sort="toggleSort">
                     Email
                 </UiSortableTableHeader>
+                <UiTableHeader>Share code</UiTableHeader>
                 <UiTableHeader align="right">Children</UiTableHeader>
                 <UiSortableTableHeader
                     sort-key="current_streak"
@@ -172,6 +228,7 @@ function submit() {
                         <span v-if="user.email">{{ user.email }}</span>
                         <span v-else class="text-slate-300">not signed up</span>
                     </UiTableCell>
+                    <UiTableCell cell-class="font-mono text-slate-500">{{ user.share_code }}</UiTableCell>
                     <UiTableCell align="right">
                         {{ user.children_count }}
                         <span v-if="user.owned_children_count !== user.children_count" class="text-slate-400">
@@ -186,9 +243,25 @@ function submit() {
                         {{ formatDate(user.created_at) }}
                     </UiTableCell>
                     <UiTableCell align="right">
-                        <div class="flex items-center justify-end">
+                        <div class="flex items-center justify-end gap-2">
                             <UiActionButton title="Open" size="sm" :to="`/admin/users/${user.id}`">
                                 <EyeIcon class="h-4 w-4" />
+                            </UiActionButton>
+                            <UiActionButton
+                                v-if="user.deleted_at"
+                                title="Restore"
+                                size="sm"
+                                @click="restore(user)"
+                            >
+                                <ArrowUturnLeftIcon class="h-4 w-4" />
+                            </UiActionButton>
+                            <UiActionButton
+                                v-if="user.id !== signedInId"
+                                :title="user.deleted_at ? 'Erase for good' : 'Close account'"
+                                size="sm"
+                                @click="toDelete = user"
+                            >
+                                <TrashIcon class="h-4 w-4" />
                             </UiActionButton>
                         </div>
                     </UiTableCell>
@@ -236,5 +309,16 @@ function submit() {
                 </div>
             </template>
         </UiModal>
+
+        <UiConfirmationModal
+            :model-value="!!toDelete"
+            :title="confirmation.title"
+            :message="confirmation.message"
+            :confirm-text="confirmation.confirmText"
+            confirm-variant="danger"
+            :loading="deleting"
+            @update:model-value="(v: boolean) => { if (!v) toDelete = null }"
+            @confirm="performDelete"
+        />
     </AdminLayout>
 </template>

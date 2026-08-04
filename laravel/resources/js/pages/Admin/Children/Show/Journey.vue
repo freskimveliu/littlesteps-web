@@ -20,6 +20,7 @@ defineProps<{
         name: string;
         months_from: number | null;
         xp: number;
+        is_custom: boolean;
         completed_at: string | null;
         milestones_total: number;
         milestones_recorded: number;
@@ -63,10 +64,12 @@ function toggleChapter(id: number) {
                                     :class="expanded === chapter.id ? 'rotate-90' : ''"
                                 />
                                 <span class="font-medium text-slate-900">{{ chapter.name }}</span>
+                                <UiBadge v-if="chapter.is_custom" tone="primary">custom</UiBadge>
                             </div>
                         </UiTableCell>
                         <UiTableCell align="right" cell-class="text-slate-500">
-                            {{ chapter.months_from }} mo
+                            <span v-if="chapter.months_from === null" class="text-slate-300">—</span>
+                            <template v-else>{{ chapter.months_from }} mo</template>
                         </UiTableCell>
                         <UiTableCell>
                             <div class="flex items-center gap-2">

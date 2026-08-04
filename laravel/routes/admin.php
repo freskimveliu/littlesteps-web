@@ -42,6 +42,8 @@ use App\Http\Controllers\Admin\Trophies\DestroyTrophyController;
 use App\Http\Controllers\Admin\Trophies\IndexTrophiesController;
 use App\Http\Controllers\Admin\Trophies\StoreTrophyController;
 use App\Http\Controllers\Admin\Trophies\UpdateTrophyController;
+use App\Http\Controllers\Admin\Users\DestroyUserController;
+use App\Http\Controllers\Admin\Users\ForceDeleteUserController;
 use App\Http\Controllers\Admin\Users\IndexUsersController;
 use App\Http\Controllers\Admin\Users\RestoreUserController;
 use App\Http\Controllers\Admin\Users\ShowUserChildrenController;
@@ -107,6 +109,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('users/{user}/profile', ShowUserProfileController::class)->name('users.profile');
         Route::put('users/{user}', UpdateUserController::class)->name('users.update');
         Route::post('users/{user}/restore', RestoreUserController::class)->name('users.restore');
+        Route::delete('users/{user}', DestroyUserController::class)->name('users.destroy');
+        Route::delete('users/{user}/force', ForceDeleteUserController::class)->name('users.force-destroy');
 
         Route::get('children', IndexChildrenController::class)->name('children.index');
         Route::get('children/{child}', ShowChildController::class)->name('children.show');
