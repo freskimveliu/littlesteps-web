@@ -52,11 +52,11 @@ it('stores notification preferences as settings', function () {
     $user = User::factory()->create();
     $this->actingAs($user, 'sanctum');
 
-    $this->getJson('/api/v1/auth/me')->assertJsonPath('data.settings.daily_quests', true);
+    $this->getJson('/api/v1/auth/me')->assertJsonPath('data.settings.dailyQuests', true);
 
-    $this->patchJson('/api/v1/auth/me', ['settings' => ['daily_quests' => false]])
+    $this->patchJson('/api/v1/auth/me', ['settings' => ['dailyQuests' => false]])
         ->assertOk()
-        ->assertJsonPath('data.settings.daily_quests', false);
+        ->assertJsonPath('data.settings.dailyQuests', false);
 });
 
 it('locks everything behind a token', function () {

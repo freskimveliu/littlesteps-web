@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Enums\Mood;
+use App\Models\Child;
 use App\Models\Level;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
@@ -62,6 +63,22 @@ it('shows an admin every family on the service', function () {
             ->has('children.data', 1)
             ->where('children.data.0.name', $child->name)
             ->where('children.data.0.level_name', Level::query()->orderBy('min_xp')->firstOrFail()->name)
+        );
+});
+
+it('opens the children list on the newest arrivals', function () {
+    [, $child] = family();
+    Child::factory()->create(['name' => 'Added last year', 'created_at' => now()->subYear()]);
+
+    $this->actingAs(User::factory()->create(['is_admin' => true]))
+        ->get('/admin/children')
+        ->assertOk()
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->component('Admin/Children/Index')
+            ->where('filters.sort', 'created_at')
+            ->where('filters.order', 'desc')
+            ->where('children.data.0.name', $child->name)
+            ->etc()
         );
 });
 

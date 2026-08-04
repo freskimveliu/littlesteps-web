@@ -7,7 +7,6 @@ use App\Models\Chapter;
 use App\Models\Level;
 use App\Models\Milestone;
 use App\Models\Trophy;
-use App\Models\User;
 
 beforeEach(function () {
     test()->withoutVite();

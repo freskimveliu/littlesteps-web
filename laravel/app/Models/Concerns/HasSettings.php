@@ -7,6 +7,7 @@ namespace App\Models\Concerns;
 use App\Enums\SettingKey;
 use App\Models\Setting;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Support\Str;
 
 trait HasSettings
 {
@@ -33,11 +34,16 @@ trait HasSettings
         $this->unsetRelation('settings');
     }
 
-    /** @return array<string, bool> */
+    /**
+     * Keyed in camelCase for the payload; the enum spells them the way the column
+     * does. A patch back to /auth/me is read either way — see SettingKey::match().
+     *
+     * @return array<string, bool>
+     */
     public function settingsMap(): array
     {
         return collect(SettingKey::cases())
-            ->mapWithKeys(fn (SettingKey $key) => [$key->value => $this->setting($key)])
+            ->mapWithKeys(fn (SettingKey $key) => [Str::camel($key->value) => $this->setting($key)])
             ->all();
     }
 }

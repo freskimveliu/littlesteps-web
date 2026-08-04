@@ -38,30 +38,30 @@ it('starts every child at the bottom of the ladder', function () {
     $level = LevelLadder::for(0);
 
     expect($level['level'])->toBe(1)
-        ->and($level['min_xp'])->toBe(0)
+        ->and($level['minXp'])->toBe(0)
         ->and($level['next']['level'])->toBe(2)
-        ->and($level['xp_to_next'])->toBe($level['next']['min_xp'])
+        ->and($level['xpToNext'])->toBe($level['next']['minXp'])
         ->and($level['progress'])->toBe(0.0);
 });
 
 it('holds a level until the next one is actually reached', function () {
-    $next = LevelLadder::for(0)['next']['min_xp'];
+    $next = LevelLadder::for(0)['next']['minXp'];
 
     expect(LevelLadder::for($next - 1)['level'])->toBe(1)
-        ->and(LevelLadder::for($next - 1)['xp_to_next'])->toBe(1)
+        ->and(LevelLadder::for($next - 1)['xpToNext'])->toBe(1)
         ->and(LevelLadder::for($next)['level'])->toBe(2)
-        ->and(LevelLadder::for($next)['min_xp'])->toBe($next)
+        ->and(LevelLadder::for($next)['minXp'])->toBe($next)
         ->and(LevelLadder::for($next)['progress'])->toBe(0.0);
 });
 
 it('reports how far into a level the child has come', function () {
-    $second = LevelLadder::for(0)['next']['min_xp'];
-    $third = LevelLadder::for($second)['next']['min_xp'];
+    $second = LevelLadder::for(0)['next']['minXp'];
+    $third = LevelLadder::for($second)['next']['minXp'];
 
     $halfway = $second + intdiv($third - $second, 2);
 
     expect(LevelLadder::for($halfway)['progress'])->toBe(0.5)
-        ->and(LevelLadder::for($halfway)['xp_to_next'])->toBe($third - $halfway);
+        ->and(LevelLadder::for($halfway)['xpToNext'])->toBe($third - $halfway);
 });
 
 it('has nowhere left to climb at the top of the ladder', function () {
@@ -69,7 +69,7 @@ it('has nowhere left to climb at the top of the ladder', function () {
 
     expect($top['level'])->toBe(LevelLadder::total())
         ->and($top['next'])->toBeNull()
-        ->and($top['xp_to_next'])->toBeNull()
+        ->and($top['xpToNext'])->toBeNull()
         ->and($top['progress'])->toBe(1.0);
 });
 
@@ -85,7 +85,7 @@ it('never takes xp away', function () {
 
 it('moves the child up a level as the xp crosses the line', function () {
     [, $child] = family();
-    $threshold = LevelLadder::for(0)['next']['min_xp'];
+    $threshold = LevelLadder::for(0)['next']['minXp'];
 
     $child->increment('xp', $threshold - 10);
 

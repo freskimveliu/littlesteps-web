@@ -35,9 +35,9 @@ export interface ChildSummary {
     level: {
         level: number;
         name: string;
-        min_xp: number;
-        next: { level: number; name: string; min_xp: number } | null;
-        xp_to_next: number | null;
+        minXp: number;
+        next: { level: number; name: string; minXp: number } | null;
+        xpToNext: number | null;
         progress: number;
     };
     levelCount: number;

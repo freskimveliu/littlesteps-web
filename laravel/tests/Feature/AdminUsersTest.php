@@ -47,6 +47,22 @@ it('hands the children page the cards it draws', function () {
         );
 });
 
+it('opens the accounts list on the newest sign-ups', function () {
+    User::factory()->create(['name' => 'Joined last year', 'created_at' => now()->subYear()]);
+    User::factory()->create(['name' => 'Joined today']);
+
+    $this->get('/admin/users?search=Joined')
+        ->assertOk()
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->component('Admin/Users/Index')
+            ->where('filters.sort', 'created_at')
+            ->where('filters.order', 'desc')
+            ->where('users.data.0.name', 'Joined today')
+            ->where('users.data.1.name', 'Joined last year')
+            ->etc()
+        );
+});
+
 it('creates an account from the console with its password already hashed', function () {
     $this->post('/admin/users', [
         'name' => 'Freskim',

@@ -30,10 +30,10 @@ it('corrects a child from the console', function () {
     console();
 
     $this->put("/admin/children/{$child->id}", [
-            'name' => 'Elena',
-            'birthday' => '2024-06-01',
-            'gender' => Gender::Boy->value,
-        ])
+        'name' => 'Elena',
+        'birthday' => '2024-06-01',
+        'gender' => Gender::Boy->value,
+    ])
         ->assertRedirect();
 
     $child->refresh();
@@ -49,10 +49,10 @@ it('refuses a birthday that has not happened yet', function () {
     console();
 
     $this->put("/admin/children/{$child->id}", [
-            'name' => $child->name,
-            'birthday' => now()->addDay()->toDateString(),
-            'gender' => $child->gender->value,
-        ])
+        'name' => $child->name,
+        'birthday' => now()->addDay()->toDateString(),
+        'gender' => $child->gender->value,
+    ])
         ->assertSessionHasErrors('birthday');
 
     expect($child->fresh()->name)->toBe($child->name);

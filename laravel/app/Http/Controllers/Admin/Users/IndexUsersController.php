@@ -37,6 +37,7 @@ class IndexUsersController extends Controller
             searchable: ['name', 'email'],
             sortable: ['name', 'email', 'current_streak', 'longest_streak', 'last_entry_date', 'created_at'],
             defaultSort: 'created_at',
+            defaultOrder: 'desc',
         )->paginate(40)->withQueryString();
 
         return Inertia::render('Admin/Users/Index', [

@@ -93,9 +93,9 @@ it('exposes the catalogue to the app', function () {
 
     $this->getJson('/api/v1/catalogue')
         ->assertOk()
-        ->assertJsonPath('data.limits.daily_free_entries', 1)
-        ->assertJsonPath('data.limits.free_entry_xp', 10)
-        ->assertJsonPath('data.limits.daily_milestone_entries', 5)
+        ->assertJsonPath('data.limits.dailyFreeEntries', 1)
+        ->assertJsonPath('data.limits.freeEntryXp', 10)
+        ->assertJsonPath('data.limits.dailyMilestoneEntries', 5)
         ->assertJsonCount(8, 'data.categories')
         ->assertJsonCount(14, 'data.levels');
 });

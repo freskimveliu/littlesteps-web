@@ -23,8 +23,8 @@ class ShowChildController extends Controller
         $record->load([
             'chapters' => fn ($q) => $q->orderBy('sort_order')
                 ->withCount([
-                    'milestones as milestones_total' => fn ($s) => $s->where('is_hidden', false),
-                    'milestones as milestones_recorded' => fn ($s) => $s->where('is_hidden', false)->whereHas('entry'),
+                    'milestones as milestones_total',
+                    'milestones as milestones_recorded' => fn ($s) => $s->whereHas('entry'),
                 ]),
             'chapters.milestones' => fn ($q) => $q->orderBy('sort_order')->with('entry:id,child_milestone_id,date'),
         ]);
@@ -36,7 +36,6 @@ class ShowChildController extends Controller
                 'name' => $chapter->name,
                 'months_from' => $chapter->months_from,
                 'xp' => $chapter->xp,
-                'is_hidden' => $chapter->is_hidden,
                 'completed_at' => $chapter->completed_at?->toIso8601String(),
                 'milestones_total' => $chapter->milestones_total,
                 'milestones_recorded' => $chapter->milestones_recorded,
@@ -45,7 +44,6 @@ class ShowChildController extends Controller
                     'name' => $milestone->name,
                     'months_from' => $milestone->months_from,
                     'xp' => $milestone->xp,
-                    'is_hidden' => $milestone->is_hidden,
                     'is_custom' => $milestone->milestone_id === null,
                     'is_locked' => $milestone->isLockedFor($record),
                     'recorded_on' => $milestone->entry?->date?->toDateString(),

@@ -25,6 +25,7 @@ class IndexChildrenController extends Controller
             searchable: ['name'],
             sortable: ['name', 'birthday', 'xp', 'entries_count', 'trophies_count', 'created_at'],
             defaultSort: 'created_at',
+            defaultOrder: 'desc',
         )->paginate(40)->withQueryString();
 
         $children->getCollection()->transform(fn (Child $child) => [

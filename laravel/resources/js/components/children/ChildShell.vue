@@ -61,7 +61,7 @@ function age(months: number): string {
                     <div class="mb-1.5 flex items-baseline justify-between gap-2">
                         <span class="text-body font-medium text-slate-900">{{ level.name }}</span>
                         <span class="text-body text-slate-500">
-                            {{ child.xp }}<template v-if="level.next"> / {{ level.next.min_xp }}</template> XP
+                            {{ child.xp }}<template v-if="level.next"> / {{ level.next.minXp }}</template> XP
                         </span>
                     </div>
                     <div class="h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
@@ -71,7 +71,7 @@ function age(months: number): string {
                         />
                     </div>
                     <p class="mt-1.5 text-body text-slate-500">
-                        <template v-if="level.next">{{ level.xp_to_next }} XP to {{ level.next.name }}</template>
+                        <template v-if="level.next">{{ level.xpToNext }} XP to {{ level.next.name }}</template>
                         <template v-else>Top of the ladder</template>
                     </p>
                 </div>

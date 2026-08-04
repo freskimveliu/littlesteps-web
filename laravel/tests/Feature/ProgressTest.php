@@ -6,6 +6,7 @@ use App\Enums\AppSettingKey;
 use App\Enums\Mood;
 use App\Models\Trophy;
 use App\Models\User;
+use Illuminate\Support\Str;
 
 it('reports the level, the trophies and what is left of today', function () {
     [, $child] = family();
@@ -51,8 +52,9 @@ it('carries every metric a trophy is judged on', function () {
 
     expect($metrics)->not->toBeEmpty();
 
+    // Spelled the app's way on the way out; the enum keeps the column's spelling.
     foreach (Trophy::active()->get() as $trophy) {
-        expect($metrics)->toHaveKey($trophy->metric->value);
+        expect($metrics)->toHaveKey(Str::camel($trophy->metric->value));
     }
 });
 

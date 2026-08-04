@@ -51,7 +51,7 @@ class ShowUserChildrenController extends Controller
                     'level' => $level['level'],
                     'level_name' => $level['name'],
                     'level_progress' => $level['progress'],
-                    'xp_to_next' => $level['xp_to_next'],
+                    'xp_to_next' => $level['xpToNext'],
                     'entries_count' => $child->entries_count,
                     'trophies_count' => $child->trophies_count,
                     'chapters_done_count' => $child->chapters_done_count,
