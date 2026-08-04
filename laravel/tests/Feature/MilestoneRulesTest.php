@@ -94,15 +94,16 @@ it('gives a milestone the parent wrote its own xp and a place at the end', funct
         ->and($response->json('data.sortOrder'))->toBe($last + 10);
 });
 
-it('gives a milestone the age of the chapter it was added to', function () {
+it('leaves a milestone undated when the parent names no age', function () {
     [, $child] = family(ageMonths: 12);
     $chapter = $child->chapters()->whereNotNull('months_from')->where('months_from', '<=', 12)
         ->orderByDesc('months_from')->first();
 
     ownMilestone($child, $chapter->id)
         ->assertCreated()
-        ->assertJsonPath('data.happensAfter', $chapter->months_from)
-        ->assertJsonPath('data.happensUnit', 'months');
+        ->assertJsonPath('data.happensAfter', null)
+        ->assertJsonPath('data.happensUnit', null)
+        ->assertJsonPath('data.isLocked', false);
 });
 
 it('keeps the age the parent chose when they set one', function () {

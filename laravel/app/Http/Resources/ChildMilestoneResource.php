@@ -25,7 +25,7 @@ class ChildMilestoneResource extends JsonResource
             'name' => $this->name,
             'icon' => $this->icon?->value ?? $this->whenLoaded('category', fn () => $this->category?->icon->value),
             'happensAfter' => $this->happens_after,
-            'happensUnit' => $this->happens_unit->value,
+            'happensUnit' => $this->happens_unit?->value,
             'isDateEditable' => $this->is_date_editable,
             'xp' => $this->xp,
             'sortOrder' => $this->sort_order,

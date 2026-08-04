@@ -52,8 +52,10 @@ class CreateMilestone
             $milestone = $child->milestones()->create([
                 ...$data->toAttributes(),
                 'child_chapter_id' => $chapter->id,
-                'happens_after' => $data->happensAfter ?? $chapter->months_from ?? 0,
-                'happens_unit' => $data->happensUnit ?? TimeUnit::Months,
+                'happens_after' => $data->happensAfter,
+                'happens_unit' => $data->happensAfter === null
+                    ? null
+                    : $data->happensUnit ?? TimeUnit::Months,
                 'xp' => self::XP,
                 'sort_order' => ($chapter->milestones()->max('sort_order') ?? 0) + 10,
                 'is_editable' => true,

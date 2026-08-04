@@ -88,7 +88,7 @@ class ChildMilestone extends Model
             return true;
         }
 
-        return ! $this->isDateEditable() && $this->happensFor($child)->startOfDay()->isFuture();
+        return ! $this->isDateEditable() && $this->happensFor($child)?->startOfDay()->isFuture() === true;
     }
 
     public function isOutOfReachFor(Child $child): bool
@@ -145,13 +145,16 @@ class ChildMilestone extends Model
     /**
      * When this milestone falls — the birthday plus however long it names.
      *
-     * Every milestone answers this, because every one of them happens somewhere.
      * What differs is the weight it carries: a milestone whose date is not editable
      * lands here exactly and a memory filed against it takes this and nothing else,
      * while a first is only estimated here and the parent moves it.
      */
-    public function happensFor(Child $child): CarbonImmutable
+    public function happensFor(Child $child): ?CarbonImmutable
     {
+        if ($this->happens_after === null || $this->happens_unit === null) {
+            return null;
+        }
+
         return $this->happens_unit->after(
             CarbonImmutable::parse($child->birthday),
             $this->happens_after,

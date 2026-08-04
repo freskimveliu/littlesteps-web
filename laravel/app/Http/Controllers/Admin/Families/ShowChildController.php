@@ -43,7 +43,7 @@ class ShowChildController extends Controller
                     'id' => $milestone->id,
                     'name' => $milestone->name,
                     'happens_after' => $milestone->happens_after,
-                    'happens_unit' => $milestone->happens_unit->value,
+                    'happens_unit' => $milestone->happens_unit?->value,
                     'xp' => $milestone->xp,
                     'is_custom' => $milestone->milestone_id === null,
                     'is_locked' => $milestone->isLockedFor($record),
