@@ -38,6 +38,7 @@ interface Milestone {
     description: string | null;
     icon: string | null;
     months_from: number | null;
+    is_dated: boolean;
     xp: number;
     sort_order: number;
     is_active: boolean;
@@ -86,6 +87,7 @@ const form = useForm({
     description: '',
     icon: '',
     months_from: 0,
+    is_dated: false,
     xp: 25,
     sort_order: 0,
     is_active: true,
@@ -101,6 +103,7 @@ function startCreate() {
         description: '',
         icon: '',
         months_from: 0,
+        is_dated: false,
         xp: 25,
         sort_order: 0,
         is_active: true,
@@ -120,6 +123,7 @@ function startEdit(milestone: Milestone) {
         description: milestone.description ?? '',
         icon: milestone.icon ?? '',
         months_from: milestone.months_from ?? 0,
+        is_dated: milestone.is_dated,
         xp: milestone.xp,
         sort_order: milestone.sort_order,
         is_active: milestone.is_active,
@@ -335,6 +339,15 @@ function performDelete() {
                             <XMarkIcon class="h-4 w-4" />
                         </UiActionButton>
                     </div>
+                </div>
+
+                <div class="flex flex-col gap-2">
+                    <UiSwitch v-model="form.is_dated" label="This milestone is a date" />
+                    <p class="text-caption text-slate-500">
+                        On for “Month 5” or “Fourth Birthday” — a fixed point, so a parent cannot move it to
+                        another chapter or change its place in the order. Off for a first, which happens
+                        whenever it happens.
+                    </p>
                 </div>
 
                 <UiSwitch v-model="form.is_active" label="Active" />

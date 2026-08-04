@@ -39,12 +39,22 @@ Every chapter and milestone carries an `abilities` object, computed in
 
 The app renders the buttons it is handed and decides nothing. **Adding a capability is one key in
 that array** — never a new top-level boolean, and never a rule reimplemented client-side. Keep pure
-state (`isUnlocked`, `isCompleted`, `isHidden`, `isLocked`, `isRecorded`) separate: state describes
+state (`isUnlocked`, `isCompleted`, `isLocked`, `isRecorded`) separate: state describes
 the row, abilities grant an action.
 
 `is_editable` records only *where a row came from* — catalogue or parent. It must never gate what may
-be done to it: a guided chapter or milestone can still be renamed, moved and deleted, because the map
-belongs to the parent.
+be done to it: a guided chapter or milestone can still be renamed and deleted, because the
+map belongs to the parent.
+
+**Position is the exception, and it has its own flags.** A milestone with `is_dated` *is* a date —
+"Month 5", "Fourth Birthday" — so it may not change chapter, swap with a neighbour, or have its
+`months_from` edited; a first ("First Haircut") is guided but undated and moves freely. A chapter is
+pinned by `ChildChapter::isGuided()` instead, because all eight catalogue chapters are age gates by
+definition. **Being locked pins a row too**: a chapter or milestone the child has not grown into is a
+date rather than a place in a list, so it neither moves nor is moved past — the same line
+`StoreMilestoneController` already draws for adding. `ChildMilestone::isDated()` is the milestone
+check; the reorder endpoints enforce all of it by requiring the pinned ids keep their relative
+sequence, so the parent's own reached rows still slot in around them.
 
 ## Where logic goes
 

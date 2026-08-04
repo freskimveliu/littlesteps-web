@@ -82,7 +82,6 @@ export const ICONS = {
     'person-circle': '\uf4a9',
     'person-outline': '\uf4ac',
     'phone-portrait-outline': '\uf4b5',
-    'play-skip-forward-outline': '\uf4e2',
     'pricetag': '\uf4ea',
     'restaurant-outline': '\uf536',
     'ribbon': '\uf544',

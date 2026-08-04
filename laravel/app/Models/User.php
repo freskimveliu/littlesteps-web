@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -30,6 +31,65 @@ class User extends Authenticatable implements HasMedia
     use HasApiTokens, HasFactory, HasSettings, InteractsWithMedia, Notifiable, SoftDeletes;
 
     public const PHOTO = 'photo';
+
+    /**
+     * What a share code is spelled from. No O or 0, no I or 1, no S or 5, no B or
+     * 8, no Z or 2 — this gets read down a phone line to a grandparent and typed
+     * in by hand, and a pair that looks alike is a code that does not work.
+     */
+    private const SHARE_ALPHABET = '34679ACDEFGHJKLMNPQRTUVWXY';
+
+    private const SHARE_LENGTH = 6;
+
+    /** How many times a losing race for a share code is worth re-running. */
+    private const SHARE_ATTEMPTS = 5;
+
+    /**
+     * Every account is findable by another the moment it exists — a device that
+     * has never seen a sign-up screen included, since those have no email to be
+     * found by. Assigned here rather than in a controller so no way of making a
+     * user can skip it.
+     */
+    protected static function booted(): void
+    {
+        static::creating(function (User $user): void {
+            $user->share_code ??= self::freshShareCode();
+        });
+    }
+
+    /**
+     * Save a new account, drawing another share code if that one was taken between
+     * choosing it and writing it — freshShareCode() cannot see an uncommitted
+     * insert, so the unique index gets the last word and this listens for it.
+     *
+     * @param  array<string, mixed>  $attributes
+     */
+    public static function open(array $attributes): self
+    {
+        for ($attempt = 1; ; $attempt++) {
+            try {
+                return static::create($attributes);
+            } catch (UniqueConstraintViolationException $e) {
+                if ($attempt >= self::SHARE_ATTEMPTS || ! str_contains($e->getMessage(), 'share_code')) {
+                    throw $e;
+                }
+            }
+        }
+    }
+
+    /** Soft-deleted accounts still hold their code — the unique index says so. */
+    private static function freshShareCode(): string
+    {
+        do {
+            $code = '';
+
+            for ($i = 0; $i < self::SHARE_LENGTH; $i++) {
+                $code .= self::SHARE_ALPHABET[random_int(0, strlen(self::SHARE_ALPHABET) - 1)];
+            }
+        } while (self::withTrashed()->where('share_code', $code)->exists());
+
+        return $code;
+    }
 
     protected function casts(): array
     {

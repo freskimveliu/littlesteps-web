@@ -22,6 +22,7 @@ class MilestoneRequest extends FormRequest
             'description' => ['nullable', 'string', 'max:255'],
             'icon' => ['nullable', Rule::enum(Icon::class)],
             'months_from' => ['nullable', 'integer', 'min:0', 'max:216'],
+            'is_dated' => ['boolean'],
             'xp' => ['required', 'integer', 'min:0', 'max:10000'],
             'sort_order' => ['required', 'integer', 'min:0'],
             'is_active' => ['boolean'],

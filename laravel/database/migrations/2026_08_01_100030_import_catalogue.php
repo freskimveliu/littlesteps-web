@@ -9,8 +9,8 @@ use App\Models\Level;
 use App\Models\Milestone;
 use App\Models\Prompt;
 use App\Models\Trophy;
-use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Migrations\Migration;
 
 /**
  * Loads database/data/*.json into the catalogue.

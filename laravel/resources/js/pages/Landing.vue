@@ -106,7 +106,7 @@ const FEATURES: { icon: IconName; title: string; body: string; tone?: 'wide' }[]
     {
         icon: 'color-wand',
         title: 'Bend the map to your family',
-        body: 'Rename anything, move a milestone to another chapter, add one of your own, or skip what will never apply. The guided map is a starting point, not a cage.',
+        body: 'Rename anything, move a milestone to another chapter, add one of your own, or take off what will never apply. The guided map is a starting point, not a cage.',
     },
     {
         icon: 'image',
@@ -318,7 +318,7 @@ const FEATURES: { icon: IconName; title: string; body: string; tone?: 'wide' }[]
                             v-for="(item, i) in [
                                 { icon: 'footsteps', title: 'It moves with them', body: 'Chapters unlock as your child grows. Nothing ahead is hidden: you can peek, you just cannot capture it yet.' },
                                 { icon: 'checkmark-circle', title: 'Done is done, visibly', body: 'Completed milestones turn violet and stay on the path. The map becomes a picture of the years you have already kept.' },
-                                { icon: 'play-skip-forward-outline', title: 'Skip without guilt', body: 'Not every milestone fits every family. Skip it, unskip it later, or write your own in its place.' },
+                                { icon: 'create-outline', title: 'The map is yours', body: 'Not every milestone fits every family. Rename one, move it, take it off the map, or write your own in its place.' },
                             ]"
                             :key="item.title"
                             class="reveal flex gap-4"
@@ -663,7 +663,7 @@ const FEATURES: { icon: IconName; title: string; body: string; tone?: 'wide' }[]
 
                 <div class="reveal mt-12 space-y-3">
                     <FaqItem question="Do I have to fill in every milestone?">
-                        Not even close. The map is a suggestion, not a checklist. Skip anything that does not fit your
+                        Not even close. The map is a suggestion, not a checklist. Take off anything that does not fit your
                         family, rename a milestone to match what actually happened, or add your own. Nothing nags you about the
                         ones you leave empty.
                     </FaqItem>

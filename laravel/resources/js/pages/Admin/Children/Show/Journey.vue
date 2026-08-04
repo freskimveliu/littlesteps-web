@@ -20,7 +20,6 @@ defineProps<{
         name: string;
         months_from: number | null;
         xp: number;
-        is_hidden: boolean;
         completed_at: string | null;
         milestones_total: number;
         milestones_recorded: number;
@@ -29,7 +28,6 @@ defineProps<{
             name: string;
             months_from: number | null;
             xp: number;
-            is_hidden: boolean;
             is_custom: boolean;
             is_locked: boolean;
             recorded_on: string | null;
@@ -65,7 +63,6 @@ function toggleChapter(id: number) {
                                     :class="expanded === chapter.id ? 'rotate-90' : ''"
                                 />
                                 <span class="font-medium text-slate-900">{{ chapter.name }}</span>
-                                <UiBadge v-if="chapter.is_hidden" tone="neutral">hidden</UiBadge>
                             </div>
                         </UiTableCell>
                         <UiTableCell align="right" cell-class="text-slate-500">
@@ -119,7 +116,6 @@ function toggleChapter(id: number) {
                                         {{ milestone.name }}
                                     </span>
                                     <UiBadge v-if="milestone.is_custom" tone="primary">own</UiBadge>
-                                    <UiBadge v-if="milestone.is_hidden" tone="neutral">hidden</UiBadge>
 
                                     <span class="ml-auto text-slate-400">
                                         {{

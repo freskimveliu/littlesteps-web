@@ -84,7 +84,6 @@ class DemoSeeder extends Seeder
         ));
 
         $open = $child->milestones()
-            ->visible()
             ->whereHas('chapter', fn ($q) => $q->orderBy('sort_order'))
             ->with('chapter')
             ->get()

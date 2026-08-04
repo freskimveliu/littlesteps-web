@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace App\Actions\Children;
 
+use App\Models\Chapter;
 use App\Models\Child;
 use App\Models\ChildChapter;
 use App\Models\ChildMilestone;
-use App\Models\Chapter;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -52,6 +52,7 @@ class ProvisionChild
                         'name' => $milestone->name,
                         'icon' => $milestone->icon,
                         'months_from' => $milestone->months_from,
+                        'is_dated' => $milestone->is_dated,
                         'xp' => $milestone->xp,
                         'sort_order' => $milestone->sort_order,
                         'is_editable' => $milestone->is_editable,
