@@ -21,6 +21,7 @@ class UserSummary
             'id' => $parent->id,
             'name' => $parent->name,
             'email' => $parent->email,
+            'share_code' => $parent->share_code,
             'timezone' => $parent->timezone,
             'language' => $parent->language,
             'is_admin' => $parent->is_admin,

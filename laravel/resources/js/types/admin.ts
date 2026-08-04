@@ -2,6 +2,7 @@ export interface UserSummary {
     id: number;
     name: string;
     email: string | null;
+    share_code: string;
     timezone: string;
     language: string | null;
     is_admin: boolean;

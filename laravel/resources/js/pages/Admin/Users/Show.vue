@@ -33,6 +33,7 @@ const busiest = computed(() => Math.max(1, ...props.contributions.map((child) =>
 
 const facts = computed(() => [
     { label: 'Status', value: props.user.is_registered ? 'Signed up' : 'Guest account' },
+    { label: 'Share code', value: props.user.share_code },
     { label: 'Joined', value: formatDate(props.user.created_at) },
     { label: 'Last memory', value: formatDate(props.user.last_entry_date) },
     { label: 'Photos uploaded', value: String(props.user.photos) },

@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use App\Enums\DevicePlatform;
+use App\Models\Child;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Testing\AssertableInertia;
@@ -151,6 +153,52 @@ it('has nothing to restore for an account that was never deleted', function () {
     $user = User::factory()->create();
 
     $this->post("/admin/users/{$user->id}/restore")->assertNotFound();
+});
+
+it('closes an account from the console without destroying anything under it', function () {
+    [$user, $child] = family();
+    $user->devices()->create(['push_token' => 'expo-token', 'platform' => DevicePlatform::Ios]);
+    $user->createToken('phone');
+
+    console();
+
+    $this->delete("/admin/users/{$user->id}")->assertRedirect();
+
+    expect(User::find($user->id))->toBeNull()
+        ->and(User::withTrashed()->find($user->id))->not->toBeNull()
+        ->and($user->tokens()->count())->toBe(0)
+        ->and($user->devices()->count())->toBe(0)
+        ->and(Child::find($child->id))->not->toBeNull();
+});
+
+it('will not close the account the admin is signed in with', function () {
+    $admin = User::where('is_admin', true)->firstOrFail();
+
+    $this->delete("/admin/users/{$admin->id}")
+        ->assertRedirect()
+        ->assertSessionHas('error');
+
+    expect(User::find($admin->id))->not->toBeNull();
+});
+
+it('erases an account already inside its grace period, and the children it created', function () {
+    [$user, $child] = family();
+    $user->delete();
+
+    console();
+
+    $this->delete("/admin/users/{$user->id}/force")->assertRedirect();
+
+    expect(User::withTrashed()->find($user->id))->toBeNull()
+        ->and(Child::find($child->id))->toBeNull();
+});
+
+it('refuses to erase an account that is still open', function () {
+    $user = User::factory()->create();
+
+    $this->delete("/admin/users/{$user->id}/force")->assertNotFound();
+
+    expect(User::find($user->id))->not->toBeNull();
 });
 
 it('reaches a deleted account to edit it', function () {
