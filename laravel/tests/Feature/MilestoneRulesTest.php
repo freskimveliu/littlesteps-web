@@ -57,8 +57,8 @@ it('refuses a milestone age beyond the end of childhood', function () {
     [, $child] = family();
     $chapter = $child->chapters()->first();
 
-    ownMilestone($child, $chapter->id, ['months_from' => 217])->assertJsonValidationErrorFor('months_from');
-    ownMilestone($child, $chapter->id, ['months_from' => -1])->assertJsonValidationErrorFor('months_from');
+    ownMilestone($child, $chapter->id, ['happens_after' => 6571])->assertJsonValidationErrorFor('happens_after');
+    ownMilestone($child, $chapter->id, ['happens_after' => -1])->assertJsonValidationErrorFor('happens_after');
 });
 
 it('refuses a milestone asking for more than ten measurements', function () {

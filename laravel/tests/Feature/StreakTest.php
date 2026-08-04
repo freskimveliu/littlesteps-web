@@ -11,9 +11,10 @@ use Illuminate\Testing\TestResponse;
 function openMilestone(Child $child): ChildMilestone
 {
     return $child->milestones()
-        ->where(fn ($q) => $q->whereNull('months_from')->orWhere('months_from', '<=', $child->ageInMonths()))
+        ->with('chapter')
         ->orderBy('sort_order')
-        ->firstOrFail();
+        ->get()
+        ->firstOrFail(fn (ChildMilestone $m) => ! $m->isLockedFor($child));
 }
 
 function aMemory(Child $child, array $overrides = []): TestResponse

@@ -108,7 +108,6 @@ it('writes a new catalogue milestone with its measurements', function () {
         'category_id' => $category->id,
         'name' => 'First swim',
         'icon' => 'water-outline',
-        'months_from' => 18,
         'happens_after' => 550,
         'happens_unit' => 'days',
         'xp' => 30,
