@@ -101,16 +101,17 @@ it('gives a milestone the age of the chapter it was added to', function () {
 
     ownMilestone($child, $chapter->id)
         ->assertCreated()
-        ->assertJsonPath('data.monthsFrom', $chapter->months_from);
+        ->assertJsonPath('data.happensAfter', $chapter->months_from)
+        ->assertJsonPath('data.happensUnit', 'months');
 });
 
 it('keeps the age the parent chose when they set one', function () {
     [, $child] = family(ageMonths: 12);
     $chapter = $child->chapters()->first();
 
-    ownMilestone($child, $chapter->id, ['months_from' => 3])
+    ownMilestone($child, $chapter->id, ['happens_after' => 3, 'happens_unit' => 'months'])
         ->assertCreated()
-        ->assertJsonPath('data.monthsFrom', 3);
+        ->assertJsonPath('data.happensAfter', 3);
 });
 
 it('refuses a milestone added to a chapter belonging to another child', function () {
@@ -196,10 +197,10 @@ it('refuses to move a dated milestone in time', function () {
     [, $child] = family(ageMonths: 12);
     $dated = $child->milestones()->where('name', 'First Birthday!')->first();
 
-    $this->patchJson("/api/v1/children/{$child->id}/milestones/{$dated->id}", ['months_from' => 30])
-        ->assertJsonValidationErrorFor('months_from');
+    $this->patchJson("/api/v1/children/{$child->id}/milestones/{$dated->id}", ['happens_after' => 30])
+        ->assertJsonValidationErrorFor('happens_after');
 
-    expect($dated->fresh()->months_from)->toBe(12);
+    expect($dated->fresh()->happens_after)->toBe(12);
 });
 
 it('still lets a dated milestone be renamed and deleted', function () {
@@ -220,10 +221,10 @@ it('refuses to move a milestone the child has not reached in time', function () 
     $chapter = $child->chapters()->where('name', 'Little Explorer')->first();
     $milestone = $chapter->milestones()->where('name', 'First Scribble')->first();
 
-    $this->patchJson("/api/v1/children/{$child->id}/milestones/{$milestone->id}", ['months_from' => 0])
-        ->assertJsonValidationErrorFor('months_from');
+    $this->patchJson("/api/v1/children/{$child->id}/milestones/{$milestone->id}", ['happens_after' => 0])
+        ->assertJsonValidationErrorFor('happens_after');
 
-    expect($milestone->fresh()->months_from)->toBe(12);
+    expect($milestone->fresh()->happens_after)->toBe(450);
 
     $this->postJson("/api/v1/children/{$child->id}/entries", [
         'child_milestone_id' => $milestone->id,
@@ -244,10 +245,10 @@ it('refuses to move a milestone in time once it holds a memory', function () {
         'mood' => Mood::Tender->value,
     ])->assertCreated();
 
-    $this->patchJson("/api/v1/children/{$child->id}/milestones/{$milestone->id}", ['months_from' => 12])
-        ->assertJsonValidationErrorFor('months_from');
+    $this->patchJson("/api/v1/children/{$child->id}/milestones/{$milestone->id}", ['happens_after' => 12])
+        ->assertJsonValidationErrorFor('happens_after');
 
-    expect($milestone->fresh()->months_from)->toBe(0);
+    expect($milestone->fresh()->happens_after)->toBe(450);
 });
 
 it('tells the app when a milestone may be moved in time', function () {

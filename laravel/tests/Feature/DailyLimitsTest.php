@@ -52,7 +52,7 @@ it('awards free entry xp from the settings, not from the code', function () {
 it('allows five milestone memories a day, each worth its own milestone', function () {
     [, $child] = family(ageMonths: 12);
 
-    $milestones = $child->milestones()->whereNull('months_from')->orWhere('months_from', '<=', 12)
+    $milestones = $child->milestones()->where('is_date_editable', true)
         ->orderBy('sort_order')->take(6)->get();
 
     foreach ($milestones->take(5) as $milestone) {
