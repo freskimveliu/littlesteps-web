@@ -360,7 +360,7 @@ function performDelete() {
 
                 <div class="flex flex-col gap-2">
                     <UiSwitch v-model="form.is_dated" label="This milestone is a date" />
-                    <p class="text-caption text-slate-500">
+                    <p class="text-label text-slate-500">
                         On for “Month 5” or “Fourth Birthday” — a fixed point, so a parent cannot move it to
                         another chapter or change its place in the order. Off for a first, which happens
                         whenever it happens.
