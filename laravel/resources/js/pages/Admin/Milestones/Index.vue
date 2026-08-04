@@ -37,7 +37,6 @@ interface Milestone {
     name: string;
     description: string | null;
     icon: string | null;
-    months_from: number | null;
     happens_after: number;
     happens_unit: 'days' | 'months';
     is_date_editable: boolean;
@@ -88,7 +87,6 @@ const form = useForm({
     name: '',
     description: '',
     icon: '',
-    months_from: 0,
     happens_after: 0,
     happens_unit: 'days' as 'days' | 'months',
     is_date_editable: true,
@@ -106,7 +104,6 @@ function startCreate() {
         name: '',
         description: '',
         icon: '',
-        months_from: 0,
         happens_after: 0,
         happens_unit: 'days',
         is_date_editable: true,
@@ -128,7 +125,6 @@ function startEdit(milestone: Milestone) {
         name: milestone.name,
         description: milestone.description ?? '',
         icon: milestone.icon ?? '',
-        months_from: milestone.months_from ?? 0,
         happens_after: milestone.happens_after,
         happens_unit: milestone.happens_unit,
         is_date_editable: milestone.is_date_editable,
@@ -199,13 +195,13 @@ function performDelete() {
                 <UiTableHeader>Category</UiTableHeader>
                 <UiTableHeader>Asks for</UiTableHeader>
                 <UiSortableTableHeader
-                    sort-key="months_from"
+                    sort-key="happens_after"
                     align="right"
                     :active-key="sortKey"
                     :active-order="sortOrder"
                     @sort="toggleSort"
                 >
-                    Unlocks
+                    Happens
                 </UiSortableTableHeader>
                 <UiSortableTableHeader
                     sort-key="xp"
@@ -239,12 +235,8 @@ function performDelete() {
                         </div>
                     </UiTableCell>
                     <UiTableCell align="right">
-                        {{ milestone.months_from }} mo
-                        <span class="text-slate-400">
-                            · {{ milestone.is_date_editable ? '~' : '' }}{{ milestone.happens_after }}{{
-                                milestone.happens_unit === 'months' ? 'mo' : 'd'
-                            }}
-                        </span>
+                        {{ milestone.is_date_editable ? '~' : '' }}{{ milestone.happens_after
+                        }}{{ milestone.happens_unit === 'months' ? ' mo' : ' d' }}
                     </UiTableCell>
                     <UiTableCell align="right">{{ milestone.xp }}</UiTableCell>
                     <UiTableCell align="right">
@@ -305,13 +297,7 @@ function performDelete() {
                     :options="[{ value: '', label: '— use the category icon —' }, ...icons.map((i) => ({ value: i, label: i }))]"
                 />
 
-                <div class="grid grid-cols-3 gap-3">
-                    <UiInput
-                        v-model="form.months_from"
-                        type="number"
-                        label="Unlocks at (months)"
-                        :error="form.errors.months_from"
-                    />
+                <div class="grid grid-cols-2 gap-3">
                     <UiInput v-model="form.xp" type="number" label="XP" required :error="form.errors.xp" />
                     <UiInput
                         v-model="form.sort_order"
