@@ -71,19 +71,25 @@ class ChildChapter extends Model
      * `reorder` survives, because where a finished chapter sits among its
      * siblings is a fact about the journey, not about the keepsake.
      *
+     * A chapter the child has not grown into is a preview, not a shelf — its map
+     * can still be renamed, reordered and deleted, but nothing may be added to it
+     * or recorded in it, which is the same line `StoreMilestoneController` draws.
+     *
      * @return array<string, bool>
      */
     public function abilities(): array
     {
         $limits = app(Limits::class);
         $completed = $this->isCompleted();
+        $child = $this->child;
+        $locked = $child ? ! $this->isUnlockedFor($child) : false;
 
         return [
             'rename' => ! $completed,
             'reorder' => true,
             'delete' => $this->isDeletable(),
             'complete' => $limits->canCompleteChapter($this),
-            'addMilestone' => ! $completed && $limits->canAddCustomMilestone($this),
+            'addMilestone' => ! $completed && ! $locked && $limits->canAddCustomMilestone($this),
             'viewRecap' => $completed,
         ];
     }

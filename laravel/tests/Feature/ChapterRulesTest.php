@@ -77,6 +77,36 @@ it('saves the description, the icon and the age on a chapter the parent wrote', 
         ->assertJsonPath('data.monthsFrom', 4);
 });
 
+it('does not offer to add a milestone to a chapter the child has not grown into', function () {
+    [, $child] = family(ageMonths: 0);
+
+    $chapters = collect($this->getJson("/api/v1/children/{$child->id}/chapters")->assertOk()->json('data'));
+    $locked = $chapters->firstWhere('isUnlocked', false);
+    $open = $chapters->firstWhere('isUnlocked', true);
+
+    expect($locked['abilities']['addMilestone'])->toBeFalse()
+        ->and($open['abilities']['addMilestone'])->toBeTrue();
+
+    $this->postJson("/api/v1/children/{$child->id}/milestones", [
+        'child_chapter_id' => $locked['id'],
+        'name' => 'First trip to the sea',
+    ])->assertJsonValidationErrorFor('child_chapter_id');
+});
+
+it('still lets a chapter the child has not grown into be renamed and deleted', function () {
+    [, $child] = family(ageMonths: 0);
+
+    $locked = $child->chapters()->where('months_from', '>', 0)->orderBy('sort_order')->first();
+
+    $this->patchJson("/api/v1/children/{$child->id}/chapters/{$locked->id}", ['name' => 'Later on'])
+        ->assertOk()
+        ->assertJsonPath('data.name', 'Later on')
+        ->assertJsonPath('data.abilities.rename', true)
+        ->assertJsonPath('data.abilities.delete', true);
+
+    $this->deleteJson("/api/v1/children/{$child->id}/chapters/{$locked->id}")->assertNoContent();
+});
+
 it('refuses a chapter description longer than a line on an edit too', function () {
     [, $child] = family();
     $id = ownChapter($child)->assertCreated()->json('data.id');
