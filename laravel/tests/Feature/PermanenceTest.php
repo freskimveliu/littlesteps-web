@@ -113,6 +113,82 @@ it('keeps a memory attached to a milestone forever, but allows editing it', func
     ])->assertOk()->assertJsonPath('data.description', 'The longest, best night.');
 });
 
+it('stops a memory being edited once its chapter is finished', function () {
+    [, $child] = family(ageMonths: 12);
+    $milestone = $child->milestones()->where('name', 'Birth Day')->first();
+
+    $entry = $this->postJson("/api/v1/children/{$child->id}/entries", [
+        'child_milestone_id' => $milestone->id,
+        'date' => now()->toDateString(),
+        'description' => 'The longest night.',
+        'mood' => Mood::Tender->value,
+    ])->assertCreated()->json('data.entry.id');
+
+    $child->chapters()->whereKey($milestone->child_chapter_id)->update(['completed_at' => now()]);
+
+    $this->patchJson("/api/v1/children/{$child->id}/entries/{$entry}", [
+        'description' => 'Second thoughts.',
+    ])->assertForbidden();
+
+    expect($child->entries()->whereKey($entry)->value('description'))->toBe('The longest night.');
+});
+
+it('hands a memory in a finished chapter neither edit nor delete', function () {
+    [, $child] = family(ageMonths: 12);
+    $milestone = $child->milestones()->where('name', 'Birth Day')->first();
+
+    $this->postJson("/api/v1/children/{$child->id}/entries", [
+        'child_milestone_id' => $milestone->id,
+        'date' => now()->toDateString(),
+        'description' => 'Day one.',
+        'mood' => Mood::Tender->value,
+    ])->assertCreated();
+
+    $child->chapters()->whereKey($milestone->child_chapter_id)->update(['completed_at' => now()]);
+
+    $map = $this->getJson("/api/v1/children/{$child->id}/chapters")->assertOk()->json('data');
+    $sealed = collect($map)->firstWhere('id', $milestone->child_chapter_id);
+    $recorded = collect($sealed['milestones'])->firstWhere('id', $milestone->id);
+
+    expect($recorded['entry']['abilities']['edit'])->toBeFalse()
+        ->and($recorded['entry']['abilities']['delete'])->toBeFalse();
+
+    $timeline = $this->getJson("/api/v1/children/{$child->id}/entries")->assertOk()->json('data.items');
+
+    expect(collect($timeline)->firstWhere('id', $recorded['entry']['id'])['abilities']['edit'])->toBeFalse();
+});
+
+it('keeps the photos in a finished chapter', function () {
+    [, $child] = family(ageMonths: 12);
+    $milestone = $child->milestones()->where('name', 'Birth Day')->first();
+
+    $entry = $this->postJson("/api/v1/children/{$child->id}/entries", [
+        'child_milestone_id' => $milestone->id,
+        'date' => now()->toDateString(),
+        'description' => 'Day one.',
+        'mood' => Mood::Tender->value,
+    ])->assertCreated()->json('data.entry.id');
+
+    $child->chapters()->whereKey($milestone->child_chapter_id)->update(['completed_at' => now()]);
+
+    $this->deleteJson("/api/v1/children/{$child->id}/entries/{$entry}/media/1")->assertForbidden();
+});
+
+it('leaves a free memory editable however many chapters are finished', function () {
+    [, $child] = family(ageMonths: 12);
+    $child->chapters()->update(['completed_at' => now()]);
+
+    $entry = $this->postJson("/api/v1/children/{$child->id}/entries", [
+        'description' => 'A quiet afternoon.',
+        'date' => now()->toDateString(),
+        'mood' => Mood::Joyful->value,
+    ])->assertCreated()->assertJsonPath('data.entry.abilities.edit', true)->json('data.entry.id');
+
+    $this->patchJson("/api/v1/children/{$child->id}/entries/{$entry}", [
+        'description' => 'A quiet, warm afternoon.',
+    ])->assertOk();
+});
+
 it('lets a free memory be deleted', function () {
     [, $child] = family();
 

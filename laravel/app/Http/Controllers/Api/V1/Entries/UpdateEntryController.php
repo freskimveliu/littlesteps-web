@@ -24,6 +24,7 @@ class UpdateEntryController extends Controller
     ): JsonResponse {
         $this->authorize('contribute', $child);
         abort_unless($entry->child_id === $child->id, 404);
+        abort_if($entry->isSealed(), 403, 'This chapter is finished — the memories in it keep the words they were closed with.');
 
         $entry = $update->handle($entry, $child, $request->user(), EntryChangeData::fromRequest($request));
 

@@ -272,14 +272,15 @@ it('refuses to empty a chapter into a finished one', function () {
         ->and($finished->milestones()->whereDoesntHave('entry')->count())->toBe(0);
 });
 
-it('still lets the memories inside a finished chapter be edited', function () {
+it('seals the memories inside a finished chapter against editing', function () {
     [, $child] = family(ageMonths: 6);
     $chapter = finishChapter($child, $child->chapters()->first());
     $entry = $chapter->milestones()->first()->entry;
+    $written = $entry->description;
 
     $this->patchJson("/api/v1/children/{$child->id}/entries/{$entry->id}", [
         'description' => 'Remembered it slightly differently.',
-    ])->assertOk();
+    ])->assertForbidden();
 
-    expect($entry->fresh()->description)->toBe('Remembered it slightly differently.');
+    expect($entry->fresh()->description)->toBe($written);
 });

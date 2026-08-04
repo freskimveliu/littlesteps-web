@@ -60,7 +60,7 @@ class RecordEntry
         $this->streak->handle($user, $entry);
 
         return [
-            'entry' => $entry->load(['properties', 'milestone', 'media', 'creator', 'editor'])->bindMediaOwner(),
+            'entry' => $entry->load(['properties', 'milestone.chapter', 'media', 'creator', 'editor'])->bindMediaOwner(),
             'xp' => $xp,
             'unlocked' => $this->trophies->handle($child->refresh()),
         ];

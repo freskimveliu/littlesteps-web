@@ -55,6 +55,6 @@ class UpdateEntry
         // simply has it unlocked next time it is read.
         $this->trophies->handle($child);
 
-        return $entry->fresh()->load(['milestone', 'properties', 'media', 'creator', 'editor'])->bindMediaOwner();
+        return $entry->fresh()->load(['milestone.chapter', 'properties', 'media', 'creator', 'editor'])->bindMediaOwner();
     }
 }

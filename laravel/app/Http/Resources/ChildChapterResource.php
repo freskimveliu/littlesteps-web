@@ -29,7 +29,15 @@ class ChildChapterResource extends JsonResource
         // anything that later walked the graph would not come back.
         if ($this->relationLoaded('milestones')) {
             $sealer = $this->resource->withoutRelations();
-            $this->milestones->each(fn (ChildMilestone $milestone) => $milestone->setRelation('chapter', $sealer));
+            $sealed = $this->isCompleted();
+
+            $this->milestones->each(function (ChildMilestone $milestone) use ($sealer, $sealed) {
+                $milestone->setRelation('chapter', $sealer);
+
+                if ($milestone->relationLoaded('entry')) {
+                    $milestone->entry?->bindSeal($sealed);
+                }
+            });
         }
 
         return [

@@ -32,6 +32,8 @@ class ChildEntry extends Model implements HasMedia
      */
     public const ACCEPTS = ['image/jpeg', 'image/png', 'image/webp', 'image/heic'];
 
+    private ?bool $sealed = null;
+
     protected function casts(): array
     {
         return [
@@ -122,6 +124,28 @@ class ChildEntry extends Model implements HasMedia
         return $this->isFree();
     }
 
+    public function isSealed(): bool
+    {
+        if ($this->sealed !== null) {
+            return $this->sealed;
+        }
+
+        if ($this->isFree()) {
+            return false;
+        }
+
+        $milestone = $this->relationLoaded('milestone') ? $this->milestone : $this->milestone()->first();
+
+        return (bool) $milestone?->isSealed();
+    }
+
+    public function bindSeal(bool $sealed): static
+    {
+        $this->sealed = $sealed;
+
+        return $this;
+    }
+
     /**
      * What may be done to this memory, in the same shape a chapter and a milestone
      * answer in. `$mayWrite` arrives from the resource for the reason given on
@@ -132,7 +156,7 @@ class ChildEntry extends Model implements HasMedia
     public function abilities(bool $mayWrite): array
     {
         return [
-            'edit' => $mayWrite,
+            'edit' => $mayWrite && ! $this->isSealed(),
             'delete' => $mayWrite && $this->isDeletable(),
         ];
     }

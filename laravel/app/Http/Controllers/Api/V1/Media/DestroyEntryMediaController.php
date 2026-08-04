@@ -23,6 +23,7 @@ class DestroyEntryMediaController extends Controller
     ): JsonResponse {
         $this->authorize('contribute', $child);
         abort_unless($entry->child_id === $child->id, 404);
+        abort_if($entry->isSealed(), 403, 'This chapter is finished — the photos in it are part of the keepsake now.');
 
         $delete->handle($entry, $media);
 
