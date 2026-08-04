@@ -248,7 +248,7 @@ it('refuses to move a milestone in time once it holds a memory', function () {
     $this->patchJson("/api/v1/children/{$child->id}/milestones/{$milestone->id}", ['happens_after' => 12])
         ->assertJsonValidationErrorFor('happens_after');
 
-    expect($milestone->fresh()->happens_after)->toBe(450);
+    expect($milestone->fresh()->happens_after)->toBe(3);
 });
 
 it('tells the app when a milestone may be moved in time', function () {
