@@ -59,7 +59,7 @@ it('stores a photo for the parent', function () {
     $user = User::factory()->create();
     $this->actingAs($user, 'sanctum');
 
-    $response = $this->postJson('/api/v1/auth/me/photo', [
+    $response = $this->patchJson('/api/v1/auth/me', [
         'photo' => UploadedFile::fake()->image('me.jpg'),
     ])->assertOk();
 
@@ -71,7 +71,7 @@ it('refuses a parent photo that is not an image', function () {
     Storage::fake('public');
     $this->actingAs(User::factory()->create(), 'sanctum');
 
-    $this->postJson('/api/v1/auth/me/photo', [
+    $this->patchJson('/api/v1/auth/me', [
         'photo' => UploadedFile::fake()->create('notes.pdf', 100, 'application/pdf'),
     ])->assertJsonValidationErrorFor('photo');
 });
@@ -124,6 +124,26 @@ it('forgets a device on the way out', function () {
     $this->deleteJson('/api/v1/devices', ['push_token' => 'expo-token-1'])->assertNoContent();
 
     expect($user->devices()->count())->toBe(0);
+});
+
+it('gives a device that has never signed up a code it can be shared by', function () {
+    $created = $this->postJson('/api/v1/auth/guest', ['name' => 'A parent', 'timezone' => 'UTC'])
+        ->assertCreated();
+
+    $code = User::whereKey($created->json('data.user.id'))->value('share_code');
+
+    expect($code)->toHaveLength(6)
+        ->and($code)->toMatch('/^[34679ACDEFGHJKLMNPQRTUVWXY]+$/');
+
+    // The parent has to be able to read it out, so it rides on the account payload.
+    $created->assertJsonPath('data.user.shareCode', $code);
+});
+
+it('never spells the same share code twice', function () {
+    $codes = User::factory()->count(25)->create()->pluck('share_code');
+
+    expect($codes->filter())->toHaveCount(25)
+        ->and($codes->unique())->toHaveCount(25);
 });
 
 it('leaves another parents device alone', function () {

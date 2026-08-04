@@ -6,6 +6,7 @@ use App\Enums\Mood;
 use App\Models\Child;
 use App\Models\ChildEntry;
 use App\Support\Limits;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Testing\TestResponse;
@@ -132,4 +133,56 @@ it('refuses to remove the last attachment from a wordless memory', function () {
         ->assertJsonValidationErrorFor('file');
 
     expect(ChildEntry::find($entry)->mediaCount())->toBe(1);
+});
+
+it('files a dated memory on the day the calendar fixed, whatever the app sent', function () {
+    [, $child] = family(ageMonths: 12);
+    $dated = $child->milestones()->where('name', 'First Birthday!')->first();
+    $birthday = $child->birthday instanceof DateTimeInterface
+        ? CarbonImmutable::parse($child->birthday)
+        : CarbonImmutable::parse((string) $child->birthday);
+
+    $this->postJson("/api/v1/children/{$child->id}/entries", [
+        'child_milestone_id' => $dated->id,
+        'description' => 'Cake everywhere.',
+        'date' => now()->subDays(3)->toDateString(),
+        'mood' => Mood::Joyful->value,
+    ])
+        ->assertCreated()
+        ->assertJsonPath('data.entry.date', $birthday->addMonths(12)->toDateString());
+});
+
+it('refuses to let an edit move a dated memory off its day', function () {
+    [, $child] = family(ageMonths: 12);
+    $dated = $child->milestones()->where('name', 'First Birthday!')->first();
+
+    $entry = $this->postJson("/api/v1/children/{$child->id}/entries", [
+        'child_milestone_id' => $dated->id,
+        'description' => 'Cake everywhere.',
+        'date' => now()->toDateString(),
+        'mood' => Mood::Joyful->value,
+    ])->assertCreated()->json('data.entry');
+
+    $this->patchJson("/api/v1/children/{$child->id}/entries/{$entry['id']}", [
+        'date' => now()->subMonths(2)->toDateString(),
+        'description' => 'Cake everywhere, and a nap.',
+    ])
+        ->assertOk()
+        ->assertJsonPath('data.date', $entry['date'])
+        ->assertJsonPath('data.description', 'Cake everywhere, and a nap.');
+});
+
+it('still lets a free memory and an undated milestone keep the date the parent chose', function () {
+    [, $child] = family(ageMonths: 12);
+    $first = $child->milestones()->where('name', 'Coming Home')->first();
+    $chosen = now()->subDays(5)->toDateString();
+
+    $this->postJson("/api/v1/children/{$child->id}/entries", [
+        'child_milestone_id' => $first->id,
+        'description' => 'Home at last.',
+        'date' => $chosen,
+        'mood' => Mood::Joyful->value,
+    ])
+        ->assertCreated()
+        ->assertJsonPath('data.entry.date', $chosen);
 });

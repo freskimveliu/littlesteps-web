@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\ChildChapterResource;
 use App\Http\Responses\ApiResponse;
 use App\Models\Child;
+use App\Models\ChildChapter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -16,9 +17,8 @@ use Illuminate\Http\Request;
  * properties and any memory already written, plus the flags the app must not
  * work out for itself.
  *
- * Skipped milestones come back too, carrying isHidden. A parent who skipped
- * something has to be able to see it to change their mind, and the counts in
- * the resource already leave them out.
+ * Every milestone the child has comes back: there is nowhere for one to hide any
+ * more, so what the map draws and what the counts add up are the same set.
  */
 class IndexChaptersController extends Controller
 {
@@ -27,11 +27,7 @@ class IndexChaptersController extends Controller
         $this->authorize('view', $child);
 
         $chapters = $child->chapters()
-            ->with([
-                'child',
-                'milestones' => fn ($q) => $q->orderBy('sort_order')
-                    ->with(['category', 'properties', 'entry.properties', 'entry.media', 'child']),
-            ])
+            ->with(ChildChapter::map())
             ->orderBy('sort_order')
             ->get();
 

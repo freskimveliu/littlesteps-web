@@ -25,14 +25,15 @@ class CompleteChapterController extends Controller
         $this->authorize('contribute', $child);
         abort_unless($chapter->child_id === $child->id, 404);
 
+        // Said here rather than left to the action, which can only report that a
+        // finished chapter is not completable — and does so by asking for the
+        // memories it already has.
+        abort_if($chapter->isCompleted(), 403, 'This chapter is already finished.');
+
         $result = $complete->handle($chapter, $request->user());
 
         return ApiResponse::success([
-            'chapter' => new ChildChapterResource($result['chapter']->load([
-                'child',
-                'milestones' => fn ($q) => $q->orderBy('sort_order')
-                    ->with(['category', 'properties', 'entry.properties', 'entry.media', 'child']),
-            ])),
+            'chapter' => new ChildChapterResource($result['chapter']->load(ChildChapter::map())),
             'xpEarned' => $result['xp'],
             'unlocked' => $result['unlocked']->map(
                 fn ($held) => new EarnedTrophyResource($held)

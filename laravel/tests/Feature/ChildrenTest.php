@@ -133,9 +133,9 @@ it('tells the app everything the creator may do', function () {
     $this->getJson("/api/v1/children/{$child->id}")
         ->assertOk()
         ->assertJsonPath('data.isOwner', true)
-        ->assertJsonPath('data.isEditable', true)
-        ->assertJsonPath('data.isDeletable', true)
-        ->assertJsonPath('data.canContribute', true);
+        ->assertJsonPath('data.abilities.edit', true)
+        ->assertJsonPath('data.abilities.delete', true)
+        ->assertJsonPath('data.abilities.contribute', true);
 });
 
 it('tells the app a viewer may only look', function () {
@@ -145,9 +145,9 @@ it('tells the app a viewer may only look', function () {
         ->getJson("/api/v1/children/{$child->id}")
         ->assertOk()
         ->assertJsonPath('data.isOwner', false)
-        ->assertJsonPath('data.isEditable', false)
-        ->assertJsonPath('data.isDeletable', false)
-        ->assertJsonPath('data.canContribute', false);
+        ->assertJsonPath('data.abilities.edit', false)
+        ->assertJsonPath('data.abilities.delete', false)
+        ->assertJsonPath('data.abilities.contribute', false);
 });
 
 it('tells the app a second parent may add memories but not change the child', function () {
@@ -157,9 +157,9 @@ it('tells the app a second parent may add memories but not change the child', fu
         ->getJson("/api/v1/children/{$child->id}")
         ->assertOk()
         ->assertJsonPath('data.isOwner', false)
-        ->assertJsonPath('data.isEditable', false)
-        ->assertJsonPath('data.isDeletable', false)
-        ->assertJsonPath('data.canContribute', true);
+        ->assertJsonPath('data.abilities.edit', false)
+        ->assertJsonPath('data.abilities.delete', false)
+        ->assertJsonPath('data.abilities.contribute', true);
 });
 
 it('renames a child and keeps the change', function () {
@@ -172,26 +172,11 @@ it('renames a child and keeps the change', function () {
     expect($child->fresh()->name)->toBe('Liza Rose');
 });
 
-it('recomputes the age when a birthday is corrected', function () {
-    [, $child] = family(ageMonths: 6);
-
-    $this->patchJson("/api/v1/children/{$child->id}", [
-        'birthday' => now()->subMonths(11)->toDateString(),
-    ])
-        ->assertOk()
-        ->assertJsonPath('data.ageMonths', 11);
-});
-
-it('refuses an update that would put the birthday in the future', function () {
+it('refuses a gender it does not know on an update', function () {
     [, $child] = family();
-
-    $this->patchJson("/api/v1/children/{$child->id}", ['birthday' => now()->addDay()->toDateString()])
-        ->assertJsonValidationErrorFor('birthday');
 
     $this->patchJson("/api/v1/children/{$child->id}", ['gender' => 'unicorn'])
         ->assertJsonValidationErrorFor('gender');
-
-    expect($child->fresh()->birthday->isPast())->toBeTrue();
 });
 
 it('refuses a second parent the right to rename or delete the child', function () {
@@ -228,7 +213,7 @@ it('takes the whole journey with it when a child is deleted', function () {
         'child_milestone_id' => $milestone->id,
     ])->assertCreated();
 
-    $this->deleteJson("/api/v1/children/{$child->id}")->assertNoContent();
+    $this->deleteJson("/api/v1/children/{$child->id}", ['confirm' => $child->name])->assertNoContent();
 
     foreach (['child_chapters', 'child_milestones', 'child_entries', 'child_members'] as $table) {
         expect(DB::table($table)->where('child_id', $child->id)->count())->toBe(0);

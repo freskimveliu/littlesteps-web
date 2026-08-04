@@ -6,11 +6,11 @@ namespace App\Http\Controllers\Api\V1\Auth;
 
 use App\Enums\Language;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\V1\GuestRequest;
 use App\Http\Resources\UserResource;
 use App\Http\Responses\ApiResponse;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 /**
  * A user exists from first launch, before anybody has typed an email.
@@ -20,15 +20,11 @@ use Illuminate\Http\Request;
  */
 class GuestController extends Controller
 {
-    public function __invoke(Request $request): JsonResponse
+    public function __invoke(GuestRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'name' => ['nullable', 'string', 'max:60'],
-            'language' => ['nullable', 'string', 'in:en'],
-            'timezone' => ['nullable', 'string', 'timezone'],
-        ]);
+        $validated = $request->validated();
 
-        $user = User::create([
+        $user = User::open([
             'name' => $validated['name'] ?? 'Parent',
             'language' => Language::tryFrom($validated['language'] ?? '') ?? Language::English,
             'timezone' => $validated['timezone'] ?? 'UTC',

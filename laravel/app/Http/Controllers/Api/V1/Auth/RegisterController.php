@@ -8,18 +8,18 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\RegisterRequest;
 use App\Http\Resources\UserResource;
 use App\Http\Responses\ApiResponse;
-use App\Models\User;
 use Illuminate\Http\JsonResponse;
 
 /**
  * Puts credentials on the user who is already signed in, so everything they
- * recorded before signing up comes with them.
+ * recorded before signing up comes with them. The route is behind auth:sanctum,
+ * so there is always one to put them on.
  */
 class RegisterController extends Controller
 {
     public function __invoke(RegisterRequest $request): JsonResponse
     {
-        $user = $request->user() ?? new User(['name' => $request->string('name')->toString()]);
+        $user = $request->user();
 
         $user->fill($request->safe()->only(['name', 'email', 'password']))->save();
 

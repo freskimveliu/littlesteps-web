@@ -24,6 +24,11 @@ class DeleteAccountController extends Controller
     {
         $user = $request->user();
         $user->tokens()->delete();
+
+        // The phone stops being reachable too, or a closed account carries on
+        // getting told about a streak nobody is keeping.
+        $user->devices()->delete();
+
         $user->delete();
 
         return ApiResponse::success(

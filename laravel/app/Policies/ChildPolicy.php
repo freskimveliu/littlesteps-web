@@ -30,6 +30,15 @@ class ChildPolicy
         return $child->created_by_user_id === $user->id;
     }
 
+    /**
+     * Who else gets into the map. The creator's alone: an editor may add memories
+     * without being able to hand the key to anybody they like.
+     */
+    public function share(User $user, Child $child): bool
+    {
+        return $child->created_by_user_id === $user->id;
+    }
+
     /** Adding and editing memories, milestones and chapters. */
     public function contribute(User $user, Child $child): bool
     {

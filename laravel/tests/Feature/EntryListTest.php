@@ -80,3 +80,13 @@ it('has an empty album before anything is written', function () {
         ->assertJsonCount(0, 'data.items')
         ->assertJsonPath('data.meta.total', 0);
 });
+
+it('refuses to hand over the whole album in one page', function () {
+    [, $child] = family();
+
+    $this->getJson("/api/v1/children/{$child->id}/entries?per_page=100000")
+        ->assertJsonValidationErrorFor('per_page');
+
+    $this->getJson("/api/v1/children/{$child->id}/entries?per_page=-1")
+        ->assertJsonValidationErrorFor('per_page');
+});

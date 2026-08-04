@@ -140,7 +140,7 @@ it('reserves a gift unclaimed rather than generating it', function () {
     [, $child] = family(ageMonths: 6);
     $chapter = $child->chapters()->first();
 
-    foreach ($chapter->milestones()->visible()->get() as $milestone) {
+    foreach ($chapter->milestones()->get() as $milestone) {
         $child->entries()->create([
             'child_milestone_id' => $milestone->id,
             'date' => now()->toDateString(),
@@ -163,7 +163,7 @@ it('starts a generation only when the parent claims it', function () {
     [, $child] = family(ageMonths: 6);
     $chapter = $child->chapters()->first();
 
-    foreach ($chapter->milestones()->visible()->get() as $milestone) {
+    foreach ($chapter->milestones()->get() as $milestone) {
         $child->entries()->create([
             'child_milestone_id' => $milestone->id, 'date' => now()->toDateString(),
             'mood' => Mood::Joyful,

@@ -43,16 +43,17 @@ it('caps how many accounts one address can open on first launch', function () {
     $this->postJson('/api/v1/auth/guest')->assertStatus(429);
 });
 
-it('puts every api route behind the everyday cap', function () {
+it('leaves no api route uncapped', function () {
     // The cap rides on the api group rather than on the routes, so the stack has
     // to be resolved the way the router resolves it before anything is asserted.
+    // Which limiter is not the point here — that none is missing entirely is.
     $router = app(Router::class);
 
     $uncapped = collect(Route::getRoutes()->getRoutes())
         ->filter(fn ($route) => str_starts_with($route->uri(), 'api/'))
         ->reject(fn ($route) => collect($router->gatherRouteMiddleware($route))
             ->contains(fn ($middleware) => is_string($middleware)
-                && str_ends_with($middleware, ThrottleRequests::class.':api')))
+                && str_starts_with($middleware, ThrottleRequests::class.':')))
         ->map(fn ($route) => $route->uri())
         ->unique()
         ->values();
@@ -60,8 +61,23 @@ it('puts every api route behind the everyday cap', function () {
     expect($uncapped)->toBeEmpty();
 });
 
-it('sets the everyday cap at 300 a minute', function () {
-    $limiter = app(RateLimiter::class)->limiter('api');
+it('counts photos on their own meter, not the api one', function () {
+    $router = app(Router::class);
 
-    expect($limiter(Request::create('/api/v1/children'))->maxAttempts)->toBe(300);
+    $media = collect(Route::getRoutes()->getRoutes())
+        ->first(fn ($route) => str_starts_with($route->uri(), 'api/v1/media'));
+
+    $throttles = collect($router->gatherRouteMiddleware($media))
+        ->filter(fn ($middleware) => is_string($middleware) && str_starts_with($middleware, ThrottleRequests::class.':'))
+        ->values();
+
+    expect($throttles->all())->toBe([ThrottleRequests::class.':media']);
+});
+
+it('sets the everyday cap at 300 a minute, and photos well above it', function () {
+    $limiter = app(RateLimiter::class)->limiter('api');
+    $media = app(RateLimiter::class)->limiter('media');
+
+    expect($limiter(Request::create('/api/v1/children'))->maxAttempts)->toBe(300)
+        ->and($media(Request::create('/api/v1/media/abc'))->maxAttempts)->toBe(1200);
 });

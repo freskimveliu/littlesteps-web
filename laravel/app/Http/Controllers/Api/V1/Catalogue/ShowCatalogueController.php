@@ -12,6 +12,7 @@ use App\Models\AppSetting;
 use App\Models\Category;
 use App\Support\Progress\LevelLadder;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Str;
 
 /**
  * The bits of the catalogue the app renders but does not own: categories, the
@@ -31,8 +32,11 @@ class ShowCatalogueController extends Controller
                 'icon' => $level->icon,
                 'minXp' => $level->min_xp,
             ]),
+            // Keyed in camelCase like every other payload. The enum spells these in
+            // snake_case because that is what the column holds; what leaves here is
+            // the app's own vocabulary — `dailyFreeEntries`, not `daily_free_entries`.
             'limits' => collect(AppSettingKey::cases())
-                ->mapWithKeys(fn (AppSettingKey $key) => [$key->value => AppSetting::number($key)]),
+                ->mapWithKeys(fn (AppSettingKey $key) => [Str::camel($key->value) => AppSetting::number($key)]),
         ]);
     }
 }

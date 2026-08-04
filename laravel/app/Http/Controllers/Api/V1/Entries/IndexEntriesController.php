@@ -5,23 +5,23 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api\V1\Entries;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\V1\IndexEntriesRequest;
 use App\Http\Resources\ChildEntryResource;
 use App\Http\Responses\ApiResponse;
 use App\Models\Child;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 class IndexEntriesController extends Controller
 {
-    public function __invoke(Request $request, Child $child): JsonResponse
+    public function __invoke(IndexEntriesRequest $request, Child $child): JsonResponse
     {
         $this->authorize('view', $child);
 
         $entries = $child->entries()
-            ->with(['milestone', 'properties', 'media'])
+            ->with(['milestone', 'properties', 'media', 'creator', 'editor'])
             ->orderByDesc('date')
             ->orderByDesc('id')
-            ->paginate($request->integer('per_page', 30));
+            ->paginate($request->perPage());
 
         $entries->getCollection()->each->bindMediaOwner();
 

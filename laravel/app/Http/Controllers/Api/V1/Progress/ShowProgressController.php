@@ -14,6 +14,7 @@ use App\Support\Progress\LevelLadder;
 use App\Support\Progress\Metrics;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 /**
  * Everything the Awards screen needs: level, trophies with their progress, and
@@ -49,7 +50,8 @@ class ShowProgressController extends Controller
             'xp' => $child->xp,
             'level' => LevelLadder::for($child->xp),
             'levelCount' => LevelLadder::total(),
-            'metrics' => $counts,
+            // Counted against the enum internally, spelled the app's way on the way out.
+            'metrics' => collect($counts)->mapWithKeys(fn (int $count, string $key) => [Str::camel($key) => $count]),
             'trophies' => $trophies,
             'trophiesUnlocked' => $unlocked->count(),
             'trophiesTotal' => $trophies->count(),

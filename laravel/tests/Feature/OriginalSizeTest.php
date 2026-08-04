@@ -48,7 +48,7 @@ it('shrinks the photo on a profile too', function () {
     Storage::fake('public');
     [$user] = family();
 
-    $this->postJson('/api/v1/auth/me/photo', [
+    $this->patchJson('/api/v1/auth/me', [
         'photo' => UploadedFile::fake()->image('me.jpg', 2600, 1300),
     ])->assertOk();
 

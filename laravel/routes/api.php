@@ -31,9 +31,11 @@ use App\Http\Controllers\Api\V1\Entries\StoreEntryController;
 use App\Http\Controllers\Api\V1\Entries\UpdateEntryController;
 use App\Http\Controllers\Api\V1\Media\DestroyEntryMediaController;
 use App\Http\Controllers\Api\V1\Media\ShowMediaController;
-use App\Http\Controllers\Api\V1\Media\StoreUserPhotoController;
+use App\Http\Controllers\Api\V1\Members\DestroyMemberController;
+use App\Http\Controllers\Api\V1\Members\IndexMembersController;
+use App\Http\Controllers\Api\V1\Members\StoreMemberController;
+use App\Http\Controllers\Api\V1\Members\UpdateMemberController;
 use App\Http\Controllers\Api\V1\Milestones\DestroyMilestoneController;
-use App\Http\Controllers\Api\V1\Milestones\HideMilestoneController;
 use App\Http\Controllers\Api\V1\Milestones\StoreMilestoneController;
 use App\Http\Controllers\Api\V1\Milestones\UpdateMilestoneController;
 use App\Http\Controllers\Api\V1\Progress\ClaimRewardController;
@@ -53,7 +55,10 @@ Route::prefix('v1')->group(function () {
     // An <Image> tag cannot carry a token, so the uuid in the path is the key.
     // It only ever leaves the server inside a payload the caller was allowed
     // to see, and what it leads to is a signed link that goes stale.
+    // Counted on its own meter, not the API's — see the 'media' limiter.
     Route::get('media/{uuid}/{conversion?}', ShowMediaController::class)
+        ->withoutMiddleware('throttle:api')
+        ->middleware('throttle:media')
         ->whereIn('conversion', ['thumb', 'display'])
         ->name('media.show');
 
@@ -63,7 +68,6 @@ Route::prefix('v1')->group(function () {
         Route::get('auth/me', MeController::class);
         Route::patch('auth/me', UpdateProfileController::class);
         Route::delete('auth/me', DeleteAccountController::class);
-        Route::post('auth/me/photo', StoreUserPhotoController::class);
 
         Route::get('catalogue', ShowCatalogueController::class);
 
@@ -84,7 +88,13 @@ Route::prefix('v1')->group(function () {
         Route::post('children/{child}/milestones', StoreMilestoneController::class);
         Route::patch('children/{child}/milestones/{milestone}', UpdateMilestoneController::class);
         Route::delete('children/{child}/milestones/{milestone}', DestroyMilestoneController::class);
-        Route::post('children/{child}/milestones/{milestone}/hide', HideMilestoneController::class);
+
+        // Adding somebody takes a six-character code, so it is capped harder.
+        Route::get('children/{child}/members', IndexMembersController::class);
+        Route::post('children/{child}/members', StoreMemberController::class)
+            ->middleware('throttle:share');
+        Route::patch('children/{child}/members/{member}', UpdateMemberController::class);
+        Route::delete('children/{child}/members/{member}', DestroyMemberController::class);
 
         Route::get('children/{child}/entries', IndexEntriesController::class);
         Route::post('children/{child}/entries', StoreEntryController::class);
