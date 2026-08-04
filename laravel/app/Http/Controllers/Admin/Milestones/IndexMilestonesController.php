@@ -35,7 +35,7 @@ class IndexMilestonesController extends Controller
             $query,
             $request,
             searchable: ['name', 'description'],
-            sortable: ['name', 'months_from', 'xp', 'sort_order'],
+            sortable: ['name', 'happens_after', 'xp', 'sort_order'],
         )->paginate(50)->withQueryString();
 
         return Inertia::render('Admin/Milestones/Index', [

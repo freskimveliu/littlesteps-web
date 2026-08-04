@@ -9,9 +9,11 @@ use Illuminate\Support\Facades\Schema;
 /**
  * The guided milestones.
  *
- * is_dated marks the ones that *are* a date rather than something that happens
- * near one — "Month 5", "Fourth Birthday". Those may not be rehomed or shuffled
- * once they are on a child's map; a first ("First Haircut") moves freely.
+ * months_from gates when one opens on the map. happens_after and its unit say
+ * when it actually occurs, which is what dates a memory and where the photo
+ * gallery opens. is_date_editable is false for the ones that *are* a date
+ * — "Month 5", "Fourth Birthday" — which land on their exact day and may not be
+ * rehomed or shuffled; a first ("First Haircut") moves freely.
  */
 return new class extends Migration
 {
@@ -24,9 +26,9 @@ return new class extends Migration
             $table->string('name');
             $table->string('description')->nullable();
             $table->string('icon')->nullable();
-            $table->unsignedSmallInteger('months_from')->nullable();
-            $table->unsignedSmallInteger('typical_days')->nullable();
-            $table->boolean('is_dated')->default(false);
+            $table->unsignedSmallInteger('happens_after')->default(0);
+            $table->string('happens_unit')->default('days');
+            $table->boolean('is_date_editable')->default(true);
             $table->unsignedSmallInteger('xp')->default(25);
             $table->unsignedSmallInteger('sort_order')->default(0);
             $table->boolean('is_editable')->default(false);

@@ -111,21 +111,27 @@ class Metrics
 
     /**
      * A milestone caught while the child was actually that age — recorded inside the
-     * quarter that opens at the milestone's months_from. Backfilling the first smile
-     * at age four is still a memory, just not this trophy.
+     * quarter that opens when the milestone happens. Backfilling the first smile at
+     * age four is still a memory, just not this trophy.
+     *
+     * Months are counted as thirty days here rather than joined to the calendar: the
+     * window is a quarter wide, and no trophy turns on the difference.
      */
     public function onTimeMilestones(Child $child): int
     {
+        $happensInDays = "(CASE WHEN child_milestones.happens_unit = 'months'
+            THEN child_milestones.happens_after * 30
+            ELSE child_milestones.happens_after END)";
+
         return ChildEntry::query()
             ->where('child_entries.child_id', $child->id)
             ->join('child_milestones', 'child_milestones.id', '=', 'child_entries.child_milestone_id')
-            ->whereNotNull('child_milestones.months_from')
             ->whereRaw(
-                'child_entries.date >= DATE_ADD(?, INTERVAL child_milestones.months_from MONTH)',
+                "child_entries.date >= DATE_ADD(?, INTERVAL {$happensInDays} DAY)",
                 [$child->birthday->toDateString()]
             )
             ->whereRaw(
-                'child_entries.date < DATE_ADD(?, INTERVAL child_milestones.months_from + 3 MONTH)',
+                "child_entries.date < DATE_ADD(?, INTERVAL {$happensInDays} + 90 DAY)",
                 [$child->birthday->toDateString()]
             )
             ->count();

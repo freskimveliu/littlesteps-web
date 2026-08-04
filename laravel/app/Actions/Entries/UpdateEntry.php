@@ -28,8 +28,8 @@ class UpdateEntry
     {
         $attributes = $data->toAttributes();
 
-        // dateFor(), not isDated(): a dated milestone with no age names no
-        // particular day, so there is nothing fixed and the date stays the parent's.
+        // A milestone whose date is not the parent's to set answers dateFor();
+        // everything else returns null and keeps the day the parent chose.
         if ($entry->milestone?->dateFor($child) !== null) {
             unset($attributes['date']);
         }

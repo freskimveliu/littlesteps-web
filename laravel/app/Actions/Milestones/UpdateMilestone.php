@@ -16,16 +16,16 @@ class UpdateMilestone
     {
         // A dated milestone is the date it names: "Month 5" filed under a summer
         // holiday is not a month five. Rename it, delete it, but it stays put.
-        if ($milestone->isDated()) {
+        if (! $milestone->isDateEditable()) {
             if ($data->sent('child_chapter_id')) {
                 throw ValidationException::withMessages([
                     'child_chapter_id' => 'This milestone is a date and cannot be moved to another chapter.',
                 ]);
             }
 
-            if ($data->sent('months_from')) {
+            if ($data->sent('happens_after') || $data->sent('happens_unit')) {
                 throw ValidationException::withMessages([
-                    'months_from' => 'This milestone is a date and cannot be moved in time.',
+                    'happens_after' => 'This milestone is a date and cannot be moved in time.',
                 ]);
             }
         }
@@ -38,16 +38,16 @@ class UpdateMilestone
             ]);
         }
 
-        if ($data->sent('months_from')) {
+        if ($data->sent('happens_after') || $data->sent('happens_unit')) {
             if ($milestone->isLockedFor($child)) {
                 throw ValidationException::withMessages([
-                    'months_from' => 'This milestone has not opened yet, so its age cannot be changed.',
+                    'happens_after' => 'This milestone has not opened yet, so its age cannot be changed.',
                 ]);
             }
 
             if ($milestone->isRecorded()) {
                 throw ValidationException::withMessages([
-                    'months_from' => 'This milestone already holds a memory, so its age is part of the story now.',
+                    'happens_after' => 'This milestone already holds a memory, so its age is part of the story now.',
                 ]);
             }
         }

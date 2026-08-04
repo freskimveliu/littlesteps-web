@@ -46,7 +46,7 @@ class DeleteChapter
         );
 
         abort_if(
-            $target !== null && $chapter->milestones()->where('is_dated', true)->exists(),
+            $target !== null && $chapter->milestones()->where('is_date_editable', false)->exists(),
             403,
             'This chapter holds a milestone that names a date, which cannot be carried anywhere else. Delete it first.',
         );

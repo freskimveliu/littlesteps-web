@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Enums\TimeUnit;
 use App\Models\Category;
 use App\Models\Chapter;
 use App\Models\Level;
@@ -108,6 +109,8 @@ it('writes a new catalogue milestone with its measurements', function () {
         'name' => 'First swim',
         'icon' => 'water-outline',
         'months_from' => 18,
+        'happens_after' => 550,
+        'happens_unit' => 'days',
         'xp' => 30,
         'sort_order' => 900,
         'properties' => [['key' => 'custom', 'name' => 'Depth']],
@@ -116,7 +119,9 @@ it('writes a new catalogue milestone with its measurements', function () {
     $milestone = Milestone::where('name', 'First swim')->first();
 
     expect($milestone)->not->toBeNull()
-        ->and($milestone->properties()->count())->toBe(1);
+        ->and($milestone->properties()->count())->toBe(1)
+        ->and($milestone->happens_after)->toBe(550)
+        ->and($milestone->happens_unit)->toBe(TimeUnit::Days);
 });
 
 it('refuses a measurement the parent would never be asked to name', function () {

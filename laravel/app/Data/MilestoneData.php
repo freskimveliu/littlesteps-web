@@ -7,6 +7,7 @@ namespace App\Data;
 use App\Data\Concerns\RemembersWhatWasSent;
 use App\Enums\Icon;
 use App\Enums\PropertyKey;
+use App\Enums\TimeUnit;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
@@ -26,7 +27,8 @@ readonly class MilestoneData
         public ?string $name = null,
         public ?Icon $icon = null,
         public ?int $categoryId = null,
-        public ?int $monthsFrom = null,
+        public ?int $happensAfter = null,
+        public ?TimeUnit $happensUnit = null,
         public array $properties = [],
         private array $sent = [],
     ) {}
@@ -47,7 +49,8 @@ readonly class MilestoneData
             name: $validated['name'] ?? null,
             icon: isset($validated['icon']) ? Icon::from($validated['icon']) : null,
             categoryId: ($validated['category_id'] ?? null) ? (int) $validated['category_id'] : null,
-            monthsFrom: isset($validated['months_from']) ? (int) $validated['months_from'] : null,
+            happensAfter: isset($validated['happens_after']) ? (int) $validated['happens_after'] : null,
+            happensUnit: isset($validated['happens_unit']) ? TimeUnit::from($validated['happens_unit']) : null,
             properties: $properties,
             sent: array_keys($validated),
         );
@@ -61,7 +64,8 @@ readonly class MilestoneData
             'name' => $this->name,
             'icon' => $this->icon,
             'category_id' => $this->categoryId,
-            'months_from' => $this->monthsFrom,
+            'happens_after' => $this->happensAfter,
+            'happens_unit' => $this->happensUnit,
         ]);
     }
 }

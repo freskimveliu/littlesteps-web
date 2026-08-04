@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\Icon;
+use App\Enums\TimeUnit;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
@@ -14,19 +15,20 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 #[Fillable([
     'child_id', 'child_chapter_id', 'milestone_id', 'category_id',
-    'name', 'icon', 'months_from', 'typical_days', 'is_dated', 'xp', 'sort_order',
-    'is_editable', 'created_by_user_id', 'updated_by_user_id',
+    'name', 'icon', 'happens_after', 'happens_unit', 'is_date_editable',
+    'xp', 'sort_order', 'is_editable', 'created_by_user_id', 'updated_by_user_id',
 ])]
 class ChildMilestone extends Model
 {
     /** A milestone a parent writes is never a date — only the catalogue sets this. */
-    protected $attributes = ['is_dated' => false];
+    protected $attributes = ['is_date_editable' => true];
 
     protected function casts(): array
     {
         return [
             'icon' => Icon::class,
-            'is_dated' => 'boolean',
+            'happens_unit' => TimeUnit::class,
+            'is_date_editable' => 'boolean',
             'is_editable' => 'boolean',
         ];
     }
@@ -68,20 +70,35 @@ class ChildMilestone extends Model
             : $this->entry()->exists();
     }
 
+    /**
+     * A milestone the child has not reached yet.
+     *
+     * The two halves of the map answer this differently, and the difference is
+     * whether `happens_after` is a promise or a guess. A milestone that owns its
+     * date keeps until that date arrives — nobody records a fifth month in the
+     * fourth. A first only *estimates* when it happens, so it cannot gate on that:
+     * a baby who smiles three weeks early is still a baby who smiled, and the
+     * parent must be able to write it down. Those open with their chapter.
+     */
     public function isLockedFor(Child $child): bool
     {
-        return $this->months_from !== null && $child->ageInMonths() < $this->months_from;
+        $chapter = $this->chapterFor();
+
+        if ($chapter !== null && ! $chapter->isUnlockedFor($child)) {
+            return true;
+        }
+
+        return ! $this->isDateEditable() && $this->happensFor($child)->startOfDay()->isFuture();
     }
 
     public function isOutOfReachFor(Child $child): bool
     {
-        if ($this->isLockedFor($child)) {
-            return true;
-        }
+        return $this->isLockedFor($child);
+    }
 
-        $chapter = $this->relationLoaded('chapter') ? $this->chapter : $this->chapter()->first();
-
-        return $chapter !== null && ! $chapter->isUnlockedFor($child);
+    private function chapterFor(): ?ChildChapter
+    {
+        return $this->relationLoaded('chapter') ? $this->chapter : $this->chapter()->first();
     }
 
     /**
@@ -99,26 +116,20 @@ class ChildMilestone extends Model
     }
 
     /**
-     * This milestone *is* a date rather than something that happens near one.
-     * "Month 5" is the fifth month and "Fourth Birthday" is one day; both are fixed
-     * points on the calendar, so neither may change chapter, swap with a neighbour
-     * or have its age edited. A first haircut is not dated — it happens when it
-     * happens, and belongs wherever the parent files the memory.
+     * Whether the parent chooses this milestone's day, or the calendar already has.
+     *
+     * False for the ones that *are* a date — "Month 5" is the fifth month and
+     * "Fourth Birthday" is one day. Both are fixed points, so neither may change
+     * chapter, swap with a neighbour or have its age edited. True for a first
+     * haircut, which happens when it happens.
      *
      * Coming from the catalogue is not the test: most guided milestones are firsts.
      */
-    public function isDated(): bool
+    public function isDateEditable(): bool
     {
-        return $this->is_dated;
+        return $this->is_date_editable;
     }
 
-    /**
-     * The day a dated milestone falls on — the birthday plus the months it names.
-     * A memory filed against it takes this and nothing else, because the parent is
-     * not choosing a date, they are filling in a day the calendar already fixed.
-     *
-     * Null for everything else: a first has no day until it happens.
-     */
     /**
      * Where this milestone sits is not the parent's to change.
      *
@@ -128,16 +139,31 @@ class ChildMilestone extends Model
      */
     public function isPinned(?Child $child = null): bool
     {
-        return $this->isDated() || ($child !== null && $this->isLockedFor($child));
+        return ! $this->isDateEditable() || ($child !== null && $this->isLockedFor($child));
     }
 
+    /**
+     * When this milestone falls — the birthday plus however long it names.
+     *
+     * Every milestone answers this, because every one of them happens somewhere.
+     * What differs is the weight it carries: a milestone whose date is not editable
+     * lands here exactly and a memory filed against it takes this and nothing else,
+     * while a first is only estimated here and the parent moves it.
+     */
+    public function happensFor(Child $child): CarbonImmutable
+    {
+        return $this->happens_unit->after(
+            CarbonImmutable::parse($child->birthday),
+            $this->happens_after,
+        );
+    }
+
+    /**
+     * The day a memory must take, or null when the parent is free to choose.
+     */
     public function dateFor(Child $child): ?CarbonImmutable
     {
-        if (! $this->isDated() || $this->months_from === null) {
-            return null;
-        }
-
-        return CarbonImmutable::parse($child->birthday)->addMonths($this->months_from);
+        return $this->isDateEditable() ? null : $this->happensFor($child);
     }
 
     /**
@@ -161,8 +187,8 @@ class ChildMilestone extends Model
      * The map is the parent's, guided or not — a name that does not match the child
      * is worse than no name, and a guided node that will never happen can still go.
      * is_editable records where the row came from; it does not decide what may be
-     * done to it. is_dated does, and only over position: a milestone that names a
-     * date cannot be carried to a chapter that is not that date.
+     * done to it. is_date_editable does, and only over position: a milestone that
+     * names a date cannot be carried to a chapter that is not that date.
      *
      * Nor does a locked one move. It sits in a stretch of the map the child has not
      * reached, and rearranging what has not happened yet is arranging a preview —
@@ -190,8 +216,8 @@ class ChildMilestone extends Model
             'rename' => $mayWrite && ! $sealed,
             'move' => $mayWrite && ! $sealed && ! $pinned,
             'reorder' => $mayWrite && ! $sealed && ! $pinned,
-            'retime' => $mayWrite && ! $sealed && ! $this->isDated() && ! $locked && ! $recorded,
-            'setDate' => $mayWrite && ! $this->isDated(),
+            'retime' => $mayWrite && ! $sealed && $this->isDateEditable() && ! $locked && ! $recorded,
+            'setDate' => $mayWrite && $this->isDateEditable(),
             'delete' => $mayWrite && $this->isDeletable(),
             'record' => $mayWrite && ! $recorded && ! $outOfReach,
         ];

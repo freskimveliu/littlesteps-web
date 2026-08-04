@@ -6,6 +6,7 @@ namespace App\Http\Requests\Admin;
 
 use App\Enums\Icon;
 use App\Enums\PropertyKey;
+use App\Enums\TimeUnit;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -21,9 +22,9 @@ class MilestoneRequest extends FormRequest
             'name' => ['required', 'string', 'max:80'],
             'description' => ['nullable', 'string', 'max:255'],
             'icon' => ['nullable', Rule::enum(Icon::class)],
-            'months_from' => ['nullable', 'integer', 'min:0', 'max:216'],
-            'typical_days' => ['nullable', 'integer', 'min:0', 'max:6570'],
-            'is_dated' => ['boolean'],
+            'happens_after' => ['required', 'integer', 'min:0', 'max:6570'],
+            'happens_unit' => ['required', Rule::enum(TimeUnit::class)],
+            'is_date_editable' => ['boolean'],
             'xp' => ['required', 'integer', 'min:0', 'max:10000'],
             'sort_order' => ['required', 'integer', 'min:0'],
             'is_active' => ['boolean'],

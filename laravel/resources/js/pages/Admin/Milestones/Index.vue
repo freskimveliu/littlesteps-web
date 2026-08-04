@@ -38,8 +38,9 @@ interface Milestone {
     description: string | null;
     icon: string | null;
     months_from: number | null;
-    typical_days: number | null;
-    is_dated: boolean;
+    happens_after: number;
+    happens_unit: 'days' | 'months';
+    is_date_editable: boolean;
     xp: number;
     sort_order: number;
     is_active: boolean;
@@ -88,8 +89,9 @@ const form = useForm({
     description: '',
     icon: '',
     months_from: 0,
-    typical_days: null as number | null,
-    is_dated: false,
+    happens_after: 0,
+    happens_unit: 'days' as 'days' | 'months',
+    is_date_editable: true,
     xp: 25,
     sort_order: 0,
     is_active: true,
@@ -105,8 +107,9 @@ function startCreate() {
         description: '',
         icon: '',
         months_from: 0,
-        typical_days: null,
-        is_dated: false,
+        happens_after: 0,
+        happens_unit: 'days',
+        is_date_editable: true,
         xp: 25,
         sort_order: 0,
         is_active: true,
@@ -126,8 +129,9 @@ function startEdit(milestone: Milestone) {
         description: milestone.description ?? '',
         icon: milestone.icon ?? '',
         months_from: milestone.months_from ?? 0,
-        typical_days: milestone.typical_days,
-        is_dated: milestone.is_dated,
+        happens_after: milestone.happens_after,
+        happens_unit: milestone.happens_unit,
+        is_date_editable: milestone.is_date_editable,
         xp: milestone.xp,
         sort_order: milestone.sort_order,
         is_active: milestone.is_active,
@@ -236,8 +240,10 @@ function performDelete() {
                     </UiTableCell>
                     <UiTableCell align="right">
                         {{ milestone.months_from }} mo
-                        <span v-if="milestone.typical_days !== null" class="text-slate-400">
-                            · ~{{ milestone.typical_days }}d
+                        <span class="text-slate-400">
+                            · {{ milestone.is_date_editable ? '~' : '' }}{{ milestone.happens_after }}{{
+                                milestone.happens_unit === 'months' ? 'mo' : 'd'
+                            }}
                         </span>
                     </UiTableCell>
                     <UiTableCell align="right">{{ milestone.xp }}</UiTableCell>
@@ -316,13 +322,30 @@ function performDelete() {
                     />
                 </div>
 
-                <UiInput
-                    v-model="form.typical_days"
-                    type="number"
-                    label="Typically happens at (days old)"
-                    hint="Where the app opens the photo gallery. Leave empty to fall back to the month above. Ignored for a dated milestone, which lands on its exact day."
-                    :error="form.errors.typical_days"
-                />
+                <div class="grid grid-cols-2 gap-3">
+                    <UiInput
+                        v-model="form.happens_after"
+                        type="number"
+                        label="Happens after"
+                        required
+                        :hint="
+                            form.is_date_editable
+                                ? 'Roughly when it happens — seeds the date and opens the photo gallery there.'
+                                : 'Exactly when it falls. The parent cannot move it.'
+                        "
+                        :error="form.errors.happens_after"
+                    />
+                    <UiSelect
+                        v-model="form.happens_unit"
+                        label="Counted in"
+                        required
+                        :options="[
+                            { value: 'days', label: 'days after birth' },
+                            { value: 'months', label: 'months after birth' },
+                        ]"
+                        :error="form.errors.happens_unit"
+                    />
+                </div>
 
                 <div>
                     <div class="mb-2 flex items-center justify-between">
@@ -359,11 +382,11 @@ function performDelete() {
                 </div>
 
                 <div class="flex flex-col gap-2">
-                    <UiSwitch v-model="form.is_dated" label="This milestone is a date" />
+                    <UiSwitch v-model="form.is_date_editable" label="The parent sets the date" />
                     <p class="text-label text-slate-500">
-                        On for “Month 5” or “Fourth Birthday” — a fixed point, so a parent cannot move it to
-                        another chapter or change its place in the order. Off for a first, which happens
-                        whenever it happens.
+                        On for a first, which happens whenever it happens — “Happens after” only estimates it.
+                        Off for “Month 5” or “Fourth Birthday”, which land on their exact day and cannot be
+                        moved to another chapter or shuffled in the order.
                     </p>
                 </div>
 

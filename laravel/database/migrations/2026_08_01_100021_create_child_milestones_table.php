@@ -11,8 +11,9 @@ use Illuminate\Support\Facades\Schema;
  *
  * is_editable records only where the row came from — the catalogue or the parent —
  * and grants nothing: a guided milestone can be renamed, moved and deleted like
- * any other, because the map belongs to the parent. is_dated is the one flag that
- * does decide something: a milestone that names a date cannot be rehomed.
+ * any other, because the map belongs to the parent. is_date_editable is the one
+ * flag that does decide something: a milestone that names a date cannot be rehomed,
+ * and its day is the calendar's rather than the parent's.
  *
  * There is no hidden flag. A milestone that will never happen is deleted, and its
  * memory outlives it — see child_entries.
@@ -29,9 +30,9 @@ return new class extends Migration
             $table->foreignId('category_id')->nullable()->constrained()->nullOnDelete();
             $table->string('name');
             $table->string('icon')->nullable();
-            $table->unsignedSmallInteger('months_from')->nullable();
-            $table->unsignedSmallInteger('typical_days')->nullable();
-            $table->boolean('is_dated')->default(false);
+            $table->unsignedSmallInteger('happens_after')->default(0);
+            $table->string('happens_unit')->default('days');
+            $table->boolean('is_date_editable')->default(true);
             $table->unsignedSmallInteger('xp')->default(25);
             $table->unsignedSmallInteger('sort_order')->default(0);
             $table->boolean('is_editable')->default(false);

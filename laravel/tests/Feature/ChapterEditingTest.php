@@ -26,7 +26,7 @@ it('reorders the milestones in a chapter', function () {
 
     // Only the undated ones may move, so the reversal is of those alone: every
     // dated milestone stays at the index it already held.
-    $undated = $chapter->milestones()->where('is_dated', false)->orderBy('sort_order')->pluck('id')->all();
+    $undated = $chapter->milestones()->where('is_date_editable', true)->orderBy('sort_order')->pluck('id')->all();
     $swapped = array_reverse($undated);
     $order = array_map(
         function ($id) use ($undated, &$swapped) {

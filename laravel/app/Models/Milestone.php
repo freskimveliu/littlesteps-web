@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\Icon;
+use App\Enums\TimeUnit;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -14,7 +15,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[Fillable([
     'chapter_id', 'category_id', 'name', 'description',
-    'icon', 'months_from', 'typical_days', 'is_dated', 'xp', 'sort_order', 'is_editable', 'is_active',
+    'icon', 'happens_after', 'happens_unit', 'is_date_editable',
+    'xp', 'sort_order', 'is_editable', 'is_active',
 ])]
 class Milestone extends Model
 {
@@ -24,7 +26,8 @@ class Milestone extends Model
     {
         return [
             'icon' => Icon::class,
-            'is_dated' => 'boolean',
+            'happens_unit' => TimeUnit::class,
+            'is_date_editable' => 'boolean',
             'is_editable' => 'boolean',
             'is_active' => 'boolean',
         ];

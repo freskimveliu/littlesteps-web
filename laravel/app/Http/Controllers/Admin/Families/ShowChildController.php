@@ -42,7 +42,8 @@ class ShowChildController extends Controller
                 'milestones' => $chapter->milestones->map(fn ($milestone) => [
                     'id' => $milestone->id,
                     'name' => $milestone->name,
-                    'months_from' => $milestone->months_from,
+                    'happens_after' => $milestone->happens_after,
+                    'happens_unit' => $milestone->happens_unit->value,
                     'xp' => $milestone->xp,
                     'is_custom' => $milestone->milestone_id === null,
                     'is_locked' => $milestone->isLockedFor($record),

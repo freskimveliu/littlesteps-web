@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Actions\Milestones;
 
 use App\Data\MilestoneData;
+use App\Enums\TimeUnit;
 use App\Models\Child;
 use App\Models\ChildMilestone;
 use App\Models\User;
@@ -51,7 +52,8 @@ class CreateMilestone
             $milestone = $child->milestones()->create([
                 ...$data->toAttributes(),
                 'child_chapter_id' => $chapter->id,
-                'months_from' => $data->monthsFrom ?? $chapter->months_from,
+                'happens_after' => $data->happensAfter ?? $chapter->months_from ?? 0,
+                'happens_unit' => $data->happensUnit ?? TimeUnit::Months,
                 'xp' => self::XP,
                 'sort_order' => ($chapter->milestones()->max('sort_order') ?? 0) + 10,
                 'is_editable' => true,

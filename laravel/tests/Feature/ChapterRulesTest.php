@@ -183,7 +183,7 @@ it('refuses to carry a milestone that names a date into another chapter', functi
     $from = $child->chapters()->where('name', 'Little Explorer')->first();
     $to = $child->chapters()->where('name', 'The First Hello')->first();
 
-    $dated = $from->milestones()->where('is_dated', true)->firstOrFail();
+    $dated = $from->milestones()->where('is_date_editable', false)->firstOrFail();
 
     $this->deleteJson("/api/v1/children/{$child->id}/chapters/{$from->id}", [
         'move_milestones_to' => $to->id,
