@@ -8,6 +8,7 @@ use App\Data\ChildData;
 use App\Enums\MemberRole;
 use App\Models\Child;
 use App\Models\User;
+use App\Support\SmallerOriginal;
 use Illuminate\Support\Facades\DB;
 
 class CreateChild
@@ -16,7 +17,7 @@ class CreateChild
 
     public function handle(User $user, ChildData $data): Child
     {
-        return DB::transaction(function () use ($user, $data) {
+        $child = DB::transaction(function () use ($user, $data) {
             $child = Child::create([
                 ...$data->toAttributes(),
                 'created_by_user_id' => $user->id,
@@ -34,5 +35,13 @@ class CreateChild
             // memory carries null until the row is read back.
             return $child->refresh();
         });
+
+        // Outside the transaction: resizing a phone photo takes longer than every
+        // insert above put together, and a rollback could not take the file back.
+        if ($data->photo) {
+            $child->addMedia(SmallerOriginal::of($data->photo))->toMediaCollection(Child::PHOTO);
+        }
+
+        return $child;
     }
 }

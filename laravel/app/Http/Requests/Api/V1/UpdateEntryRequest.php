@@ -6,6 +6,7 @@ namespace App\Http\Requests\Api\V1;
 
 use App\Enums\Mood;
 use App\Enums\PropertyKey;
+use App\Http\Requests\Api\V1\Concerns\BoundsTheDate;
 use App\Models\ChildEntry;
 use App\Support\Limits;
 use Illuminate\Contracts\Validation\Validator;
@@ -14,12 +15,14 @@ use Illuminate\Validation\Rule;
 
 class UpdateEntryRequest extends FormRequest
 {
+    use BoundsTheDate;
+
     /** @return array<string, mixed> */
     public function rules(): array
     {
         return [
             'description' => ['nullable', 'string', 'max:5000'],
-            'date' => ['sometimes', 'date', 'before_or_equal:today'],
+            'date' => ['sometimes', 'date', 'before_or_equal:today', ...$this->notBeforeBirth()],
             'mood' => ['sometimes', 'required', Rule::enum(Mood::class)],
             'media' => ['array'],
             'media.*' => ['file', 'mimetypes:'.implode(',', ChildEntry::ACCEPTS), 'max:20480'],
@@ -73,6 +76,7 @@ class UpdateEntryRequest extends FormRequest
     {
         return [
             'mood.required' => 'Tell us how this memory feels.',
+            'date.after_or_equal' => 'A memory cannot be older than the child.',
         ];
     }
 }

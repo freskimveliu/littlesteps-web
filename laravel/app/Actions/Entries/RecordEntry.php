@@ -34,9 +34,13 @@ class RecordEntry
 
         $this->guardLimits($child, $user, $data);
 
-        $entry = DB::transaction(function () use ($child, $user, $data) {
+        // A dated milestone brings its own day — the parent never picked one.
+        $fixed = $milestone?->dateFor($child);
+
+        $entry = DB::transaction(function () use ($child, $user, $data, $fixed) {
             $entry = $child->entries()->create([
                 ...$data->toAttributes(),
+                ...($fixed ? ['date' => $fixed->toDateString()] : []),
                 'created_by_user_id' => $user->id,
             ]);
 
@@ -56,7 +60,7 @@ class RecordEntry
         $this->streak->handle($user, $entry);
 
         return [
-            'entry' => $entry->load(['properties', 'milestone', 'media'])->bindMediaOwner(),
+            'entry' => $entry->load(['properties', 'milestone', 'media', 'creator', 'editor'])->bindMediaOwner(),
             'xp' => $xp,
             'unlocked' => $this->trophies->handle($child->refresh()),
         ];

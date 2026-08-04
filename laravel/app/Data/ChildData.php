@@ -7,6 +7,7 @@ namespace App\Data;
 use App\Enums\Gender;
 use App\Enums\Relation;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 
 readonly class ChildData
 {
@@ -15,6 +16,7 @@ readonly class ChildData
         public string $birthday,
         public Gender $gender,
         public Relation $relation,
+        public ?UploadedFile $photo = null,
     ) {}
 
     public static function fromRequest(Request $request): self
@@ -24,6 +26,7 @@ readonly class ChildData
             birthday: $request->string('birthday')->toString(),
             gender: Gender::from($request->string('gender')->toString()),
             relation: Relation::from($request->string('relation')->toString()),
+            photo: $request->file('photo'),
         );
     }
 
