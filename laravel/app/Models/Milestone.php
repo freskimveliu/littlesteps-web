@@ -14,7 +14,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[Fillable([
     'chapter_id', 'category_id', 'name', 'description',
-    'icon', 'months_from', 'is_dated', 'xp', 'sort_order', 'is_editable', 'is_active',
+    'icon', 'months_from', 'typical_days', 'is_dated', 'xp', 'sort_order', 'is_editable', 'is_active',
 ])]
 class Milestone extends Model
 {

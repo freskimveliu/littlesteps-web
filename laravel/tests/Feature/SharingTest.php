@@ -173,6 +173,71 @@ it('tells a guest they may not share, and the parent that they may', function ()
         ->toBe(['edit' => false, 'remove' => false]);
 });
 
+it('lets anybody say how they are related to the child', function () {
+    [$owner, $child] = family();
+    $nana = User::factory()->create();
+    $member = share($child->id, $nana)->assertCreated()->json('data.id');
+
+    $this->actingAs($nana, 'sanctum')
+        ->patchJson("/api/v1/children/{$child->id}/members/{$member}", [
+            'relation' => Relation::AuntUncle->value,
+        ])
+        ->assertOk()
+        ->assertJsonPath('data.relation', Relation::AuntUncle->value);
+
+    // Including the parent who started it, whose own row is otherwise untouchable.
+    $theirs = $child->memberships()->where('user_id', $owner->id)->firstOrFail();
+
+    $this->actingAs($owner, 'sanctum')
+        ->patchJson("/api/v1/children/{$child->id}/members/{$theirs->id}", [
+            'relation' => Relation::Father->value,
+        ])
+        ->assertOk()
+        ->assertJsonPath('data.relation', Relation::Father->value);
+});
+
+it('will not let a guest promote themselves', function () {
+    [, $child] = family();
+    $nana = User::factory()->create();
+    $member = share($child->id, $nana)->assertCreated()->json('data.id');
+
+    $this->actingAs($nana, 'sanctum')
+        ->patchJson("/api/v1/children/{$child->id}/members/{$member}", ['role' => 'editor'])
+        ->assertForbidden();
+});
+
+it('will not let one guest rename another', function () {
+    [, $child] = family();
+    $nana = User::factory()->create();
+    $grandad = User::factory()->create();
+
+    $nanasRow = share($child->id, $nana)->assertCreated()->json('data.id');
+    share($child->id, $grandad)->assertCreated();
+
+    $this->actingAs($grandad, 'sanctum')
+        ->patchJson("/api/v1/children/{$child->id}/members/{$nanasRow}", [
+            'relation' => Relation::Other->value,
+        ])
+        ->assertForbidden();
+});
+
+it('says on the child itself who may hand out the key', function () {
+    [, $child] = family();
+    $nana = User::factory()->create();
+    share($child->id, $nana, 'editor')->assertCreated();
+
+    $this->getJson("/api/v1/children/{$child->id}")
+        ->assertOk()
+        ->assertJsonPath('data.abilities.share', true);
+
+    // An editor writes memories and still cannot let anybody else in.
+    $this->actingAs($nana, 'sanctum')
+        ->getJson("/api/v1/children/{$child->id}")
+        ->assertOk()
+        ->assertJsonPath('data.abilities.share', false)
+        ->assertJsonPath('data.abilities.contribute', true);
+});
+
 it('says who wrote a memory and who last changed it', function () {
     [$owner, $child] = family();
     $nana = User::factory()->create(['name' => 'Nana']);

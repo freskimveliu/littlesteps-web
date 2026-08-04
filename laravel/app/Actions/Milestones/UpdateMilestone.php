@@ -38,6 +38,20 @@ class UpdateMilestone
             ]);
         }
 
+        if ($data->sent('months_from')) {
+            if ($milestone->isLockedFor($child)) {
+                throw ValidationException::withMessages([
+                    'months_from' => 'This milestone has not opened yet, so its age cannot be changed.',
+                ]);
+            }
+
+            if ($milestone->isRecorded()) {
+                throw ValidationException::withMessages([
+                    'months_from' => 'This milestone already holds a memory, so its age is part of the story now.',
+                ]);
+            }
+        }
+
         if ($data->childChapterId !== null) {
             $chapter = $child->chapters()->findOrFail($data->childChapterId);
 

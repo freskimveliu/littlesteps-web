@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Enums\Mood;
 use App\Enums\PropertyKey;
 use App\Models\Child;
 use App\Models\ChildMilestone;
@@ -212,6 +213,80 @@ it('still lets a dated milestone be renamed and deleted', function () {
         ->assertJsonPath('data.abilities.delete', true);
 
     $this->deleteJson("/api/v1/children/{$child->id}/milestones/{$dated->id}")->assertNoContent();
+});
+
+it('refuses to move a milestone the child has not reached in time', function () {
+    [, $child] = family(ageMonths: 6);
+    $chapter = $child->chapters()->where('name', 'Little Explorer')->first();
+    $milestone = $chapter->milestones()->where('name', 'First Scribble')->first();
+
+    $this->patchJson("/api/v1/children/{$child->id}/milestones/{$milestone->id}", ['months_from' => 0])
+        ->assertJsonValidationErrorFor('months_from');
+
+    expect($milestone->fresh()->months_from)->toBe(12);
+
+    $this->postJson("/api/v1/children/{$child->id}/entries", [
+        'child_milestone_id' => $milestone->id,
+        'description' => 'Too soon.',
+        'date' => now()->toDateString(),
+        'mood' => Mood::Proud->value,
+    ])->assertJsonValidationErrorFor('child_milestone_id');
+});
+
+it('refuses to move a milestone in time once it holds a memory', function () {
+    [, $child] = family(ageMonths: 12);
+    $milestone = $child->milestones()->where('name', 'Coming Home')->first();
+
+    $this->postJson("/api/v1/children/{$child->id}/entries", [
+        'child_milestone_id' => $milestone->id,
+        'description' => 'Home at last.',
+        'date' => now()->toDateString(),
+        'mood' => Mood::Tender->value,
+    ])->assertCreated();
+
+    $this->patchJson("/api/v1/children/{$child->id}/milestones/{$milestone->id}", ['months_from' => 12])
+        ->assertJsonValidationErrorFor('months_from');
+
+    expect($milestone->fresh()->months_from)->toBe(0);
+});
+
+it('tells the app when a milestone may be moved in time', function () {
+    [, $child] = family(ageMonths: 6);
+
+    $milestones = collect($this->getJson("/api/v1/children/{$child->id}/chapters")->assertOk()->json('data'))
+        ->flatMap(fn ($chapter) => $chapter['milestones'])
+        ->keyBy('name');
+
+    expect($milestones['Coming Home']['abilities']['retime'])->toBeTrue()
+        ->and($milestones['Month 5']['abilities']['retime'])->toBeFalse()
+        ->and($milestones['First Scribble']['abilities']['retime'])->toBeFalse();
+});
+
+it('refuses to record into a chapter the child has not reached', function () {
+    [, $child] = family(ageMonths: 6);
+
+    $chapter = $this->postJson("/api/v1/children/{$child->id}/chapters", [
+        'name' => 'School days', 'months_from' => 0,
+    ])->assertCreated()->json('data.id');
+
+    $milestone = $this->postJson("/api/v1/children/{$child->id}/milestones", [
+        'child_chapter_id' => $chapter, 'name' => 'First day',
+    ])->assertCreated()->json('data.id');
+
+    $this->patchJson("/api/v1/children/{$child->id}/chapters/{$chapter}", ['months_from' => 60])
+        ->assertOk();
+
+    $returned = collect($this->getJson("/api/v1/children/{$child->id}/chapters")->json('data'))
+        ->firstWhere('id', $chapter);
+
+    expect(collect($returned['milestones'])->firstWhere('id', $milestone)['abilities']['record'])->toBeFalse();
+
+    $this->postJson("/api/v1/children/{$child->id}/entries", [
+        'child_milestone_id' => $milestone,
+        'description' => 'Not yet.',
+        'date' => now()->toDateString(),
+        'mood' => Mood::Proud->value,
+    ])->assertJsonValidationErrorFor('child_milestone_id');
 });
 
 it('tells the app that a date may not be moved and a first may', function () {

@@ -64,7 +64,7 @@ it('returns the map with the flags the app must not compute itself', function ()
         ->and($first['abilities'])->toHaveKeys(['rename', 'reorder', 'delete', 'complete', 'addMilestone', 'viewRecap'])
         ->and($first['milestones'][0])->toHaveKeys(['isLocked', 'isRecorded', 'abilities', 'isEditable'])
         ->and($first['milestones'][0]['abilities'])
-        ->toHaveKeys(['rename', 'move', 'reorder', 'delete', 'record']);
+        ->toHaveKeys(['rename', 'move', 'reorder', 'retime', 'delete', 'record']);
 });
 
 it('locks milestones the child is not old enough for', function () {

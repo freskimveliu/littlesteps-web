@@ -14,7 +14,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 #[Fillable([
     'child_id', 'child_chapter_id', 'milestone_id', 'category_id',
-    'name', 'icon', 'months_from', 'is_dated', 'xp', 'sort_order',
+    'name', 'icon', 'months_from', 'typical_days', 'is_dated', 'xp', 'sort_order',
     'is_editable', 'created_by_user_id', 'updated_by_user_id',
 ])]
 class ChildMilestone extends Model
@@ -71,6 +71,17 @@ class ChildMilestone extends Model
     public function isLockedFor(Child $child): bool
     {
         return $this->months_from !== null && $child->ageInMonths() < $this->months_from;
+    }
+
+    public function isOutOfReachFor(Child $child): bool
+    {
+        if ($this->isLockedFor($child)) {
+            return true;
+        }
+
+        $chapter = $this->relationLoaded('chapter') ? $this->chapter : $this->chapter()->first();
+
+        return $chapter !== null && ! $chapter->isUnlockedFor($child);
     }
 
     /**
@@ -170,6 +181,7 @@ class ChildMilestone extends Model
     {
         $child = $this->child;
         $locked = $child ? $this->isLockedFor($child) : false;
+        $outOfReach = $child ? $this->isOutOfReachFor($child) : false;
         $recorded = $this->isRecorded();
         $sealed = $this->isSealed();
         $pinned = $this->isPinned($child);
@@ -178,8 +190,10 @@ class ChildMilestone extends Model
             'rename' => $mayWrite && ! $sealed,
             'move' => $mayWrite && ! $sealed && ! $pinned,
             'reorder' => $mayWrite && ! $sealed && ! $pinned,
+            'retime' => $mayWrite && ! $sealed && ! $this->isDated() && ! $locked && ! $recorded,
+            'setDate' => $mayWrite && ! $this->isDated(),
             'delete' => $mayWrite && $this->isDeletable(),
-            'record' => $mayWrite && ! $recorded && ! $locked,
+            'record' => $mayWrite && ! $recorded && ! $outOfReach,
         ];
     }
 }

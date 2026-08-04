@@ -68,7 +68,7 @@ class RecordEntry
 
     private function milestone(Child $child, int $milestoneId): ChildMilestone
     {
-        $milestone = $child->milestones()->with('entry')->find($milestoneId);
+        $milestone = $child->milestones()->with(['entry', 'chapter'])->find($milestoneId);
 
         if (! $milestone) {
             throw ValidationException::withMessages([
@@ -82,7 +82,7 @@ class RecordEntry
             ]);
         }
 
-        if ($milestone->isLockedFor($child)) {
+        if ($milestone->isOutOfReachFor($child)) {
             throw ValidationException::withMessages([
                 'child_milestone_id' => 'This milestone is not open yet.',
             ]);

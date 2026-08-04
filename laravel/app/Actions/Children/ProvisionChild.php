@@ -52,6 +52,7 @@ class ProvisionChild
                         'name' => $milestone->name,
                         'icon' => $milestone->icon,
                         'months_from' => $milestone->months_from,
+                        'typical_days' => $milestone->typical_days,
                         'is_dated' => $milestone->is_dated,
                         'xp' => $milestone->xp,
                         'sort_order' => $milestone->sort_order,

@@ -16,7 +16,7 @@ it('lets a parent delete their own milestone while it is still empty', function 
     $this->deleteJson("/api/v1/children/{$child->id}/milestones/{$milestone}")->assertNoContent();
 });
 
-it('keeps the memory and the xp when a recorded milestone is deleted', function () {
+it('takes the memory with it when a recorded milestone is deleted, but keeps the xp', function () {
     [, $child] = family();
     $chapter = $child->chapters()->first();
 
@@ -36,8 +36,7 @@ it('keeps the memory and the xp when a recorded milestone is deleted', function 
 
     $this->deleteJson("/api/v1/children/{$child->id}/milestones/{$milestone}")->assertNoContent();
 
-    expect($child->entries()->whereKey($entry)->value('child_milestone_id'))->toBeNull()
-        ->and($child->entries()->whereKey($entry)->exists())->toBeTrue()
+    expect($child->entries()->whereKey($entry)->exists())->toBeFalse()
         ->and($child->fresh()->xp)->toBe($xp);
 });
 
@@ -77,7 +76,7 @@ it('lets a guided milestone that will never happen be deleted while it is empty'
     expect($child->milestones()->whereKey($milestone->id)->exists())->toBeFalse();
 });
 
-it('takes a recorded guided milestone off the map and leaves its memory in the story', function () {
+it('takes a recorded guided milestone off the map, and its memory out of the story', function () {
     [, $child] = family(ageMonths: 12);
     $milestone = $child->milestones()->where('name', 'Birth Day')->first();
 
@@ -89,11 +88,11 @@ it('takes a recorded guided milestone off the map and leaves its memory in the s
     $this->deleteJson("/api/v1/children/{$child->id}/milestones/{$milestone->id}")->assertNoContent();
 
     expect($child->milestones()->whereKey($milestone->id)->exists())->toBeFalse()
-        ->and($child->entries()->whereKey($entry)->exists())->toBeTrue();
+        ->and($child->entries()->whereKey($entry)->exists())->toBeFalse();
 
     $timeline = $this->getJson("/api/v1/children/{$child->id}/entries")->assertOk()->json('data.items');
 
-    expect(collect($timeline)->firstWhere('id', $entry))->not->toBeNull();
+    expect(collect($timeline)->firstWhere('id', $entry))->toBeNull();
 });
 
 it('keeps a memory attached to a milestone forever, but allows editing it', function () {

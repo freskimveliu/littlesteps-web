@@ -12,9 +12,7 @@ use Illuminate\Support\Facades\Schema;
  *
  * child_milestone_id is unique so a milestone holds one memory, and nullable so
  * the free memories — which have no milestone — can repeat: MySQL does not collide
- * on repeated NULLs. It is SET NULL rather than a cascade because losing the
- * milestone must not take the memory with it: a parent who clears a node off the
- * map keeps what they wrote under it, as a free memory in the timeline.
+ * on repeated NULLs.
  */
 return new class extends Migration
 {
@@ -23,7 +21,7 @@ return new class extends Migration
         Schema::create('child_entries', function (Blueprint $table) {
             $table->id();
             $table->foreignId('child_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('child_milestone_id')->nullable()->unique()->constrained()->nullOnDelete();
+            $table->foreignId('child_milestone_id')->nullable()->unique()->constrained()->cascadeOnDelete();
             $table->text('description')->nullable();
             $table->date('date');
             // Every memory carries how it felt — the one thing a parent always knows.

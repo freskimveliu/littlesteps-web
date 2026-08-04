@@ -102,6 +102,7 @@ class Child extends Model implements HasMedia
         return [
             'edit' => $user?->can('update', $this) === true,
             'delete' => $user?->can('delete', $this) === true,
+            'share' => $user?->can('share', $this) === true,
             'contribute' => $this->allowsWriting($user),
         ];
     }

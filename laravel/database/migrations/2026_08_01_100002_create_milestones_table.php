@@ -25,6 +25,7 @@ return new class extends Migration
             $table->string('description')->nullable();
             $table->string('icon')->nullable();
             $table->unsignedSmallInteger('months_from')->nullable();
+            $table->unsignedSmallInteger('typical_days')->nullable();
             $table->boolean('is_dated')->default(false);
             $table->unsignedSmallInteger('xp')->default(25);
             $table->unsignedSmallInteger('sort_order')->default(0);

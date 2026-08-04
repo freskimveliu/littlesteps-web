@@ -40,6 +40,18 @@ class DeleteChapter
         );
 
         abort_if(
+            $target !== null && ! $target->isUnlockedFor($child),
+            403,
+            'That chapter has not opened yet and cannot take new milestones.',
+        );
+
+        abort_if(
+            $target !== null && $chapter->milestones()->where('is_dated', true)->exists(),
+            403,
+            'This chapter holds a milestone that names a date, which cannot be carried anywhere else. Delete it first.',
+        );
+
+        abort_if(
             ! $target && $chapter->milestones()->whereHas('entry')->exists(),
             403,
             'This chapter holds a memory. Move its milestones somewhere else first.',

@@ -22,10 +22,10 @@ class UpdateMemberController extends Controller
         ChildMember $member,
         UpdateMember $update,
     ): JsonResponse {
-        $this->authorize('share', $child);
+        $this->authorize('view', $child);
         abort_unless($member->child_id === $child->id, 404);
 
-        $member = $update->handle($member, $child, MemberData::fromRequest($request));
+        $member = $update->handle($member, $child, MemberData::fromRequest($request), $request->user());
 
         return ApiResponse::success(new ChildMemberResource($member->load('user')), 'Saved.');
     }

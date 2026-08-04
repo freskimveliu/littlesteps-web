@@ -161,6 +161,43 @@ it('carries the milestones over when a chapter is deleted with somewhere to put 
         ->and($child->entries()->where('child_milestone_id', $milestone)->exists())->toBeTrue();
 });
 
+it('refuses to empty a chapter into one the child has not reached', function () {
+    [, $child] = family(ageMonths: 6);
+    $locked = $child->chapters()->where('months_from', '>', 6)->orderBy('sort_order')->first();
+    $from = ownChapter($child)->assertCreated()->json('data.id');
+
+    $this->postJson("/api/v1/children/{$child->id}/milestones", [
+        'child_chapter_id' => $from,
+        'name' => 'A day out',
+    ])->assertCreated();
+
+    $this->deleteJson("/api/v1/children/{$child->id}/chapters/{$from}", [
+        'move_milestones_to' => $locked->id,
+    ])->assertForbidden();
+
+    $this->assertDatabaseHas('child_chapters', ['id' => $from]);
+});
+
+it('refuses to carry a milestone that names a date into another chapter', function () {
+    [, $child] = family(ageMonths: 24);
+    $from = $child->chapters()->where('name', 'Little Explorer')->first();
+    $to = $child->chapters()->where('name', 'The First Hello')->first();
+
+    $dated = $from->milestones()->where('is_dated', true)->firstOrFail();
+
+    $this->deleteJson("/api/v1/children/{$child->id}/chapters/{$from->id}", [
+        'move_milestones_to' => $to->id,
+    ])->assertForbidden();
+
+    expect($dated->fresh()->child_chapter_id)->toBe($from->id);
+
+    $this->deleteJson("/api/v1/children/{$child->id}/milestones/{$dated->id}")->assertNoContent();
+
+    $this->deleteJson("/api/v1/children/{$child->id}/chapters/{$from->id}", [
+        'move_milestones_to' => $to->id,
+    ])->assertNoContent();
+});
+
 it('refuses to move milestones into a chapter belonging to another child', function () {
     [, $child] = family();
     $from = ownChapter($child)->assertCreated()->json('data.id');

@@ -38,6 +38,7 @@ interface Milestone {
     description: string | null;
     icon: string | null;
     months_from: number | null;
+    typical_days: number | null;
     is_dated: boolean;
     xp: number;
     sort_order: number;
@@ -87,6 +88,7 @@ const form = useForm({
     description: '',
     icon: '',
     months_from: 0,
+    typical_days: null as number | null,
     is_dated: false,
     xp: 25,
     sort_order: 0,
@@ -103,6 +105,7 @@ function startCreate() {
         description: '',
         icon: '',
         months_from: 0,
+        typical_days: null,
         is_dated: false,
         xp: 25,
         sort_order: 0,
@@ -123,6 +126,7 @@ function startEdit(milestone: Milestone) {
         description: milestone.description ?? '',
         icon: milestone.icon ?? '',
         months_from: milestone.months_from ?? 0,
+        typical_days: milestone.typical_days,
         is_dated: milestone.is_dated,
         xp: milestone.xp,
         sort_order: milestone.sort_order,
@@ -230,7 +234,12 @@ function performDelete() {
                             </UiBadge>
                         </div>
                     </UiTableCell>
-                    <UiTableCell align="right">{{ milestone.months_from }} mo</UiTableCell>
+                    <UiTableCell align="right">
+                        {{ milestone.months_from }} mo
+                        <span v-if="milestone.typical_days !== null" class="text-slate-400">
+                            · ~{{ milestone.typical_days }}d
+                        </span>
+                    </UiTableCell>
                     <UiTableCell align="right">{{ milestone.xp }}</UiTableCell>
                     <UiTableCell align="right">
                         <div class="flex items-center justify-end gap-2">
@@ -306,6 +315,14 @@ function performDelete() {
                         :error="form.errors.sort_order"
                     />
                 </div>
+
+                <UiInput
+                    v-model="form.typical_days"
+                    type="number"
+                    label="Typically happens at (days old)"
+                    hint="Where the app opens the photo gallery. Leave empty to fall back to the month above. Ignored for a dated milestone, which lands on its exact day."
+                    :error="form.errors.typical_days"
+                />
 
                 <div>
                     <div class="mb-2 flex items-center justify-between">
