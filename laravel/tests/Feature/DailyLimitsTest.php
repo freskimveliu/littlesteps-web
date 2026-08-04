@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use App\Enums\AppSettingKey;
 use App\Enums\Mood;
-use App\Models\AppSetting;
 use App\Models\Child;
 use Illuminate\Testing\TestResponse;
 
@@ -44,7 +43,7 @@ it('awards free entry xp from the settings, not from the code', function () {
 
     freeMemory($child)->assertCreated()->assertJsonPath('data.xpEarned', 10);
 
-    AppSetting::where('key', AppSettingKey::FreeEntryXp->value)->update(['value' => '25']);
+    setting(AppSettingKey::FreeEntryXp, 25);
     $child->entries()->delete();
 
     freeMemory($child)->assertCreated()->assertJsonPath('data.xpEarned', 25);
@@ -87,7 +86,7 @@ it('caps how many of a parent own milestones one chapter can hold', function () 
     [, $child] = family();
     $chapter = $child->chapters()->first();
 
-    AppSetting::where('key', AppSettingKey::MaxCustomMilestonesPerChapter->value)->update(['value' => '2']);
+    setting(AppSettingKey::MaxCustomMilestonesPerChapter, 2);
 
     foreach (range(1, 2) as $i) {
         $this->postJson("/api/v1/children/{$child->id}/milestones", [

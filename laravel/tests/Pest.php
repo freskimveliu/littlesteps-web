@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 use App\Actions\Children\CreateChild;
 use App\Data\ChildData;
+use App\Enums\AppSettingKey;
 use App\Enums\Gender;
 use App\Enums\MemberRole;
 use App\Enums\Relation;
+use App\Models\AppSetting;
 use App\Models\Child;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -39,6 +41,18 @@ function family(int $ageMonths = 6): array
     test()->actingAs($user, 'sanctum');
 
     return [$user, $child];
+}
+
+/**
+ * Change one of the numbers that pace the app.
+ *
+ * Written through the model rather than the query builder, because App\Support\Settings
+ * holds them for the request and only a model write tells it to let go — the same
+ * path the console takes.
+ */
+function setting(AppSettingKey $key, int $value): void
+{
+    AppSetting::updateOrCreate(['key' => $key->value], ['value' => (string) $value]);
 }
 
 /**
