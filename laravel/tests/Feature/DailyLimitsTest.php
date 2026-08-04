@@ -52,8 +52,10 @@ it('awards free entry xp from the settings, not from the code', function () {
 it('allows five milestone memories a day, each worth its own milestone', function () {
     [, $child] = family(ageMonths: 12);
 
-    $milestones = $child->milestones()->where('is_date_editable', true)
-        ->orderBy('sort_order')->take(6)->get();
+    $milestones = $child->milestones()->with('chapter')->orderBy('sort_order')->get()
+        ->reject(fn ($milestone) => $milestone->isLockedFor($child))
+        ->take(6)
+        ->values();
 
     foreach ($milestones->take(5) as $milestone) {
         milestoneMemory($child, $milestone->id)->assertCreated();
