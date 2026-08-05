@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head } from '@inertiajs/vue3';
+import { Head, Link } from '@inertiajs/vue3';
 
 import { useReveal } from '@/composables/useReveal';
 import BrandMark from '@/components/landing/BrandMark.vue';
@@ -739,8 +739,15 @@ const FEATURES: { icon: IconName; title: string; body: string; tone?: 'wide' }[]
                     </div>
                 </div>
 
-                <p class="text-sm text-ink/40">© {{ new Date().getFullYear() }} LittleSteps. Made for the ones who keep growing.</p>
+                <div class="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm">
+                    <Link href="/terms" class="font-semibold text-ink/50 transition-colors hover:text-primary">Terms &amp; Conditions</Link>
+                    <Link href="/privacy" class="font-semibold text-ink/50 transition-colors hover:text-primary">Privacy Policy</Link>
+                </div>
             </div>
+
+            <p class="mx-auto mt-8 max-w-7xl text-center text-sm text-ink/40 sm:text-left">
+                © {{ new Date().getFullYear() }} LittleSteps. Made for the ones who keep growing.
+            </p>
         </footer>
     </div>
 </template>

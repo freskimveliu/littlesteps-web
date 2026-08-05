@@ -142,6 +142,33 @@ html:has(.landing-root) {
     scroll-margin-top: 88px;
 }
 
+.legal-prose a {
+    @apply font-semibold text-primary underline decoration-primary/30 underline-offset-2 transition-colors hover:decoration-primary;
+}
+
+.legal-prose strong {
+    @apply font-semibold text-ink;
+}
+
+.legal-prose ul {
+    @apply space-y-2.5;
+}
+
+.legal-prose li {
+    @apply relative pl-6;
+}
+
+.legal-prose li::before {
+    content: '';
+    position: absolute;
+    top: 0.6em;
+    left: 0.25rem;
+    height: 6px;
+    width: 6px;
+    border-radius: 9999px;
+    background-color: rgba(var(--color-primary-rgb), 0.45);
+}
+
 .ion {
     font-family: 'Ionicons';
     font-weight: 400;
