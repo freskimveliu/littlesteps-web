@@ -138,6 +138,16 @@ class User extends Authenticatable implements HasMedia
     }
 
     /**
+     * What has to be typed back to delete the account. The name it goes by,
+     * unless it never gave one — a device that has not signed up still has a
+     * share code, and something has to be typed.
+     */
+    public function deletionPhrase(): string
+    {
+        return filled($this->name) ? $this->name : $this->share_code;
+    }
+
+    /**
      * Children this user created — the only ones they may edit or delete.
      *
      * @return HasMany<Child, $this>

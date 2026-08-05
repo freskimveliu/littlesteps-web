@@ -7,11 +7,13 @@ use App\Data\ChildData;
 use App\Enums\AppSettingKey;
 use App\Enums\Gender;
 use App\Enums\MemberRole;
+use App\Enums\Mood;
 use App\Enums\Relation;
 use App\Models\AppSetting;
 use App\Models\Child;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 
 pest()->extend(TestCase::class)
@@ -80,6 +82,20 @@ function viewer(Child $child): User
     ]);
 
     return $user;
+}
+
+/**
+ * A memory recorded the way the app records one, so a test only has to say the
+ * part it is about.
+ */
+function memory(Child $child, array $overrides = []): TestResponse
+{
+    return test()->postJson("/api/v1/children/{$child->id}/entries", [
+        'description' => 'She laughed at the cat.',
+        'date' => now()->toDateString(),
+        'mood' => Mood::Joyful->value,
+        ...$overrides,
+    ]);
 }
 
 /**

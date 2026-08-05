@@ -75,10 +75,26 @@ class ChildEntry extends Model implements HasMedia
     public function getAttribute($key)
     {
         if ($key === 'user_id') {
-            return $this->created_by_user_id;
+            return $this->created_by_user_id ?? $this->childOwnerId();
         }
 
         return parent::getAttribute($key);
+    }
+
+    /**
+     * Whose folder this memory's files live in once its author is gone. A
+     * memory outlives the account that wrote it — the child's family keeps it,
+     * so the family keeps the photos too. PurgeUserAccount moves the files to
+     * match before the author's row goes.
+     *
+     * Read straight off the table rather than through child(), which a memory
+     * in this state is rarely holding and lazy loading would refuse to fetch.
+     */
+    private function childOwnerId(): ?int
+    {
+        $owner = Child::query()->whereKey($this->child_id)->value('created_by_user_id');
+
+        return $owner === null ? null : (int) $owner;
     }
 
     public function isFree(): bool

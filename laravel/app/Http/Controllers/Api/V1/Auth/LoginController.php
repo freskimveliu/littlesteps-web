@@ -23,6 +23,6 @@ class LoginController extends Controller
         return ApiResponse::success([
             'user' => new UserResource($result['user']),
             'token' => $result['token'],
-        ], $result['reopened'] ? 'Welcome back. Your account is open again.' : 'Welcome back.');
+        ], 'Welcome back.');
     }
 }

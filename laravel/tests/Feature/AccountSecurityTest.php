@@ -46,7 +46,7 @@ it('asks a guest for nothing, since there is no password to prove', function () 
     $this->patchJson('/api/v1/auth/me', ['name' => 'Named at last'])->assertOk();
 });
 
-it('stops talking to the phone when the account closes', function () {
+it('stops talking to the phone when the account goes', function () {
     $user = User::factory()->create();
     $this->actingAs($user, 'sanctum');
 
@@ -55,7 +55,7 @@ it('stops talking to the phone when the account closes', function () {
         'platform' => 'ios',
     ])->assertCreated();
 
-    $this->deleteJson('/api/v1/auth/me')->assertOk();
+    $this->deleteJson('/api/v1/auth/me', ['confirm' => $user->deletionPhrase()])->assertOk();
 
     expect(Device::where('user_id', $user->id)->count())->toBe(0);
 });

@@ -9,17 +9,6 @@ use App\Support\Limits;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Testing\TestResponse;
-
-function memory(Child $child, array $overrides = []): TestResponse
-{
-    return test()->postJson("/api/v1/children/{$child->id}/entries", [
-        'description' => 'She laughed at the cat.',
-        'date' => now()->toDateString(),
-        'mood' => Mood::Joyful->value,
-        ...$overrides,
-    ]);
-}
 
 it('refuses a memory with no mood', function () {
     [, $child] = family();

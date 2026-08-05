@@ -19,6 +19,16 @@ use Spatie\MediaLibrary\Support\PathGenerator\PathGenerator;
  */
 class UserScopedPathGenerator implements PathGenerator
 {
+    /**
+     * Where a file sits for a given account. Public because closing an account
+     * has to carry what its owner left in somebody else's album over to that
+     * family's folder before the row this path is spelled from goes.
+     */
+    public static function directory(Media $media, int|string $userId): string
+    {
+        return "users/{$userId}/{$media->collection_name}/{$media->getKey()}";
+    }
+
     public function getPath(Media $media): string
     {
         return $this->basePath($media).'/';
@@ -43,6 +53,6 @@ class UserScopedPathGenerator implements PathGenerator
             default => $model->user_id ?? 'orphaned',
         };
 
-        return "users/{$userId}/{$media->collection_name}/{$media->getKey()}";
+        return self::directory($media, $userId);
     }
 }

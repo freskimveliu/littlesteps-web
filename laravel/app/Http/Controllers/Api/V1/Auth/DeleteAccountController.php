@@ -5,35 +5,35 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api\V1\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\V1\DeleteAccountRequest;
 use App\Http\Responses\ApiResponse;
+use App\Jobs\PurgeUserAccount;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 /**
- * Closes the account: every token is revoked, so the login stops working at
- * once, and the row is soft-deleted. Nothing is destroyed — signing back in
- * reopens it, whenever that is. See LoginController.
+ * Deletes the account. Every token is revoked and the phone stops being
+ * reachable, so nothing can be signed in with or told about a streak the
+ * moment this returns.
  *
- * The children are deliberately left untouched. They belong to the account
- * rather than to the deletion, and leaving them where they are is what makes
- * coming back a reopening rather than a rebuild.
+ * The rest — the children, the memories, the photos, the row itself — is
+ * PurgeUserAccount's job, because a family album is a lot of files and the
+ * parent has already been told it is gone. Nothing is kept back and nothing is
+ * only marked as deleted: signing up again starts an empty account.
  */
 class DeleteAccountController extends Controller
 {
-    public function __invoke(Request $request): JsonResponse
+    public function __invoke(DeleteAccountRequest $request): JsonResponse
     {
         $user = $request->user();
-        $user->tokens()->delete();
 
-        // The phone stops being reachable too, or a closed account carries on
-        // getting told about a streak nobody is keeping.
+        $user->tokens()->delete();
         $user->devices()->delete();
 
-        $user->delete();
+        PurgeUserAccount::dispatch($user->id);
 
         return ApiResponse::success(
             null,
-            'Your account is closed. Sign in again any time to reopen it.',
+            'Your account is being deleted. Everything on it goes with it.',
         );
     }
 }
