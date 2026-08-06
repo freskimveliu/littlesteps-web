@@ -30,7 +30,7 @@ it('keeps no more of a memory photo than the largest copy could want', function 
 
     $media = ChildEntry::first()->getFirstMedia(ChildEntry::MEDIA);
 
-    expect(dimensions($media->getPath()))->toBe([2000, 1500]);
+    expect(dimensions($media->getPath()))->toBe([1200, 900]);
 });
 
 it('shrinks a child photo on the way in', function () {
@@ -41,7 +41,7 @@ it('shrinks a child photo on the way in', function () {
         'photo' => UploadedFile::fake()->image('liza.jpg', 3200, 3200),
     ])->assertOk();
 
-    expect(dimensions($child->fresh()->getFirstMedia(Child::PHOTO)->getPath()))->toBe([2000, 2000]);
+    expect(dimensions($child->fresh()->getFirstMedia(Child::PHOTO)->getPath()))->toBe([1200, 1200]);
 });
 
 it('shrinks the photo on a profile too', function () {
@@ -52,7 +52,7 @@ it('shrinks the photo on a profile too', function () {
         'photo' => UploadedFile::fake()->image('me.jpg', 2600, 1300),
     ])->assertOk();
 
-    expect(dimensions($user->fresh()->getFirstMedia(User::PHOTO)->getPath()))->toBe([2000, 1000]);
+    expect(dimensions($user->fresh()->getFirstMedia(User::PHOTO)->getPath()))->toBe([1200, 600]);
 });
 
 it('leaves a photo that is already small enough at its own size', function () {

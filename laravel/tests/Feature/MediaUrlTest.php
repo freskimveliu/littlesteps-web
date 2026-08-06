@@ -95,8 +95,8 @@ it('knows nothing of a uuid it never handed out', function () {
     $this->get('/api/v1/media/'.fake()->uuid())->assertNotFound();
 });
 
-/** A HEIC lands whole because nothing on the server can read it — see the
- *  conversions on ChildEntry. The link for its thumb must still work. */
+/** Conversions are queued, so a photo is stored before its thumb exists. The
+ *  link for that thumb must still work in the meantime. */
 it('falls back to the original when the conversion was never made', function () {
     privateDisk();
     [$user, $child] = family();

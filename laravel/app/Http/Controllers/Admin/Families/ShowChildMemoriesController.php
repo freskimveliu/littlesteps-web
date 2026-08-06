@@ -47,7 +47,7 @@ class ShowChildMemoriesController extends Controller
                     'mime' => $media->mime_type,
                     'size' => $media->size,
                     'thumb' => MediaUrl::for($media, 'thumb'),
-                    'display' => MediaUrl::for($media, 'display'),
+                    'display' => MediaUrl::for($media),
                     'original' => MediaUrl::for($media),
                 ])->values(),
                 'properties' => $entry->properties->map(fn ($p) => [

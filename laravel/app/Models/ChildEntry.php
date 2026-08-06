@@ -5,11 +5,14 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\Mood;
+use App\Support\Dimensions;
+use App\Support\SmallerOriginal;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Http\UploadedFile;
 use Spatie\Image\Enums\Fit;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
@@ -30,7 +33,7 @@ class ChildEntry extends Model implements HasMedia
      * nothing above this list knows that — widen it here and the collection, the upload
      * rules and the API move together.
      */
-    public const ACCEPTS = ['image/jpeg', 'image/png', 'image/webp', 'image/heic'];
+    public const ACCEPTS = ['image/jpeg', 'image/png', 'image/webp'];
 
     private ?bool $sealed = null;
 
@@ -48,6 +51,16 @@ class ChildEntry extends Model implements HasMedia
             ->acceptsMimeTypes(self::ACCEPTS);
     }
 
+    public function attachPhoto(UploadedFile $file): void
+    {
+        $photo = SmallerOriginal::of($file);
+        $shape = Dimensions::of($photo);
+
+        $this->addMedia($photo)
+            ->withCustomProperties($shape)
+            ->toMediaCollection(self::MEDIA);
+    }
+
     /**
      * Queued, unlike the single-photo collections elsewhere. A memory can carry
      * several full-size photos at once, and resizing them all before answering is
@@ -60,15 +73,9 @@ class ChildEntry extends Model implements HasMedia
     public function registerMediaConversions(?Media $media = null): void
     {
         $this->addMediaConversion('thumb')
-            ->fit(Fit::Crop, 320, 320)
+            ->fit(Fit::Crop, 640, 640)
             ->format('webp')
             ->quality(80)
-            ->optimize();
-
-        $this->addMediaConversion('display')
-            ->fit(Fit::Max, 1600, 1600)
-            ->format('webp')
-            ->quality(82)
             ->optimize();
     }
 

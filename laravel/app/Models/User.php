@@ -105,7 +105,7 @@ class User extends Authenticatable implements HasMedia
     {
         $this->addMediaCollection(self::PHOTO)
             ->singleFile()
-            ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/webp', 'image/heic']);
+            ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/webp']);
     }
 
     public function registerMediaConversions(?Media $media = null): void

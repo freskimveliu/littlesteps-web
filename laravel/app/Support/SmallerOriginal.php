@@ -12,11 +12,10 @@ use Throwable;
 /**
  * Shrinks a photo before it is ever stored.
  *
- * The app already resizes at pick time, but only past 2000px and only when the
- * device obliges — a photo that arrives untouched is kept forever at whatever
- * size the camera chose. This is the floor under that: what we keep is never
- * bigger than what the largest conversion could want, re-encoded at a quality
- * nobody can see the difference in.
+ * No camera-size original is kept. What we store is the biggest thing anything
+ * asks for — a full-screen photo on a 3x phone — and the conversions below it
+ * are smaller again. A photo that arrives untouched is otherwise kept forever
+ * at whatever size the camera chose.
  *
  * Re-encoding drops the metadata with it, which is how the coordinates of the
  * room a baby was photographed in stop travelling along with the picture.
@@ -27,10 +26,10 @@ use Throwable;
  */
 final class SmallerOriginal
 {
-    /** Comfortably above the 1600px `display` conversion, and well under a camera. */
-    private const MAX_EDGE = 2000;
+    /** A full-screen photo on a 3x phone, and nothing beyond it. */
+    private const MAX_EDGE = 1200;
 
-    private const QUALITY = 82;
+    private const QUALITY = 78;
 
     /** What GD can open and write back, and the extension it writes it as. */
     private const READABLE = [
@@ -57,6 +56,7 @@ final class SmallerOriginal
             Image::load($path)
                 ->fit(Fit::Max, self::MAX_EDGE, self::MAX_EDGE)
                 ->quality(self::QUALITY)
+                ->optimize()
                 ->save($named);
 
             rename($named, $path);
@@ -66,5 +66,43 @@ final class SmallerOriginal
         }
 
         return $file;
+    }
+
+    public static function ofBytes(string $contents, ?string $mimeType): ?string
+    {
+        $extension = self::READABLE[$mimeType] ?? null;
+
+        if ($extension === null) {
+            return null;
+        }
+
+        $stem = tempnam(sys_get_temp_dir(), 'shrink');
+
+        if ($stem === false) {
+            return null;
+        }
+
+        $source = $stem.'.'.$extension;
+        $shrunk = $stem.'.smaller.'.$extension;
+
+        try {
+            file_put_contents($source, $contents);
+
+            Image::load($source)
+                ->fit(Fit::Max, self::MAX_EDGE, self::MAX_EDGE)
+                ->quality(self::QUALITY)
+                ->optimize()
+                ->save($shrunk);
+
+            $bytes = file_get_contents($shrunk);
+
+            return $bytes === false ? null : $bytes;
+        } catch (Throwable) {
+            return null;
+        } finally {
+            @unlink($stem);
+            @unlink($source);
+            @unlink($shrunk);
+        }
     }
 }

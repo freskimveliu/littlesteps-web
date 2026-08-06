@@ -25,7 +25,7 @@ class GuestController extends Controller
         $validated = $request->validated();
 
         $user = User::open([
-            'name' => $validated['name'] ?? 'Parent',
+            'name' => $validated['name'] ?? 'User',
             'language' => Language::tryFrom($validated['language'] ?? '') ?? Language::English,
             'timezone' => $validated['timezone'] ?? 'UTC',
         ]);

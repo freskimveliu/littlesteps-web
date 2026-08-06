@@ -40,6 +40,7 @@ class StoreEntryRequest extends FormRequest
             'description.required_without' => 'A memory needs a few words or something to show for it.',
             'mood.required' => 'Tell us how this memory feels.',
             'media.max' => 'A memory holds up to :max attachments.',
+            'media.*.max' => 'Each photo has to be under 20 MB.',
             'date.after_or_equal' => 'A memory cannot be older than the child.',
         ];
     }

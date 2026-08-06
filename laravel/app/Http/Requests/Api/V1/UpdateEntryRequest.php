@@ -76,6 +76,7 @@ class UpdateEntryRequest extends FormRequest
     {
         return [
             'mood.required' => 'Tell us how this memory feels.',
+            'media.*.max' => 'Each photo has to be under 20 MB.',
             'date.after_or_equal' => 'A memory cannot be older than the child.',
         ];
     }

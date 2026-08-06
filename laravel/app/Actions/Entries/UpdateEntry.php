@@ -9,7 +9,6 @@ use App\Data\EntryChangeData;
 use App\Models\Child;
 use App\Models\ChildEntry;
 use App\Models\User;
-use App\Support\SmallerOriginal;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -46,7 +45,7 @@ class UpdateEntry
             }
 
             foreach ($data->media as $file) {
-                $entry->addMedia(SmallerOriginal::of($file))->toMediaCollection(ChildEntry::MEDIA);
+                $entry->attachPhoto($file);
             }
         });
 
